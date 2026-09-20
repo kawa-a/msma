@@ -46,6 +46,7 @@ jobs:
           use-public-rspm: true
 
       - name: Install build dependencies
+        if: runner.os != 'macOS'
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           packages: |
@@ -54,6 +55,17 @@ jobs:
             any::rmarkdown
             any::testthat
           needs: check
+
+      - name: Install build dependencies on macOS from source
+        if: runner.os == 'macOS'
+        shell: Rscript {0}
+        run: |
+          options(repos = c(CRAN = "https://cloud.r-project.org"))
+          install.packages(
+            c("roxygen2", "knitr", "rmarkdown", "testthat"),
+            type = "source",
+            dependencies = c("Depends", "Imports", "LinkingTo")
+          )
 
       - name: Generate, build, install, and check package
         shell: Rscript {0}
