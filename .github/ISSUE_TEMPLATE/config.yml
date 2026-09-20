@@ -1,0 +1,7 @@
+blank_issues_enabled: false
+contact_links:
+  - name: CRAN version documentation
+    url: https://CRAN.R-project.org/package=msma
+    about: Documentation for the current CRAN release
+
+

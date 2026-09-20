@@ -1,0 +1,43 @@
+name: RC usability feedback
+description: Provide feedback on the new Version 4.0 workflow and documentation
+title: "[RC feedback]: "
+labels: [feedback, rc-testing]
+body:
+  - type: input
+    id: tag
+    attributes:
+      label: Release tag or commit
+      placeholder: v4.0.0-rc1
+    validations:
+      required: true
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Main topic
+      options:
+        - Backward compatibility
+        - Soft-structured PCA
+        - Hard-exclusive PCA
+        - Reconstruction
+        - Model selection
+        - Documentation
+        - Performance
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Dataset dimensions and workflow tested
+  - type: textarea
+    id: good
+    attributes:
+      label: What worked well?
+  - type: textarea
+    id: improve
+    attributes:
+      label: What should be improved before CRAN submission?
+    validations:
+      required: true
+
+

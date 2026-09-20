@@ -1,0 +1,171 @@
+---
+title: "Model and Parameter Selection in msma"
+author: "Atsushi Kawaguchi"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Model and Parameter Selection in msma}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
+library(msma)
+```
+
+# Overview
+
+The package provides functions for selecting component numbers and
+regularization parameters:
+
+- `ncompsearch()`: number of components;
+- `regparasearch()`: regularization parameters;
+- `optparasearch()`: combined selection.
+
+BIC is useful for a quick deterministic search. Cross-validation may be more
+computationally expensive.
+
+```{r data}
+dat <- simdata(n = 35, rho = 0.8, Xps = c(4, 4), Yps = c(3, 3), seed = 4)
+X <- dat$X
+Y <- dat$Y
+```
+
+# Selecting the number of components
+
+```{r ncomp-bic}
+search_comp <- ncompsearch(X, comps = 1:3, criterion = "BIC", intseed = 1)
+search_comp
+```
+
+```{r ncomp-plot}
+plot(search_comp)
+```
+
+For nested analysis, candidates may be supplied as a list for root and super
+components.
+
+```{r nested-search, eval=FALSE}
+search_nested <- ncompsearch(
+  X,
+  comps = list(1:4, 1:3),
+  criterion = "BIC",
+  intseed = 1
+)
+```
+
+# Selecting regularization parameters
+
+The following example is shown but not evaluated during package building to
+keep the vignette lightweight.
+
+```{r regularization-search, eval=FALSE}
+search_lambda <- regparasearch(
+  X = X,
+  comp = 2,
+  criterion = "BIC",
+  maxrep = 5,
+  intseed = 1
+)
+search_lambda
+```
+
+# Combined selection
+
+`optparasearch()` supports four workflows:
+
+- `"regparaonly"`: regularization search for fixed components;
+- `"ncomp1st"`: component search followed by regularization search;
+- `"regpara1st"`: regularization search followed by component search;
+- `"simultaneous"`: repeated joint search.
+
+```{r combined-search, eval=FALSE}
+opt <- optparasearch(
+  X = X,
+  search.method = "ncomp1st",
+  criterion = "BIC",
+  intseed = 1
+)
+
+fit <- msma(
+  X = X,
+  comp = opt$optncomp,
+  lambdaX = opt$optlambdaX,
+  lambdaXsup = opt$optlambdaXsup,
+  intseed = 1
+)
+```
+
+# PLS selection
+
+X-side and Y-side parameters are selected separately in PLS.
+
+```{r pls-selection, eval=FALSE}
+opt_pls <- optparasearch(
+  X = X, Y = Y,
+  search.method = "regparaonly",
+  criterion = "BIC",
+  intseed = 1
+)
+
+fit_pls <- msma(
+  X = X, Y = Y,
+  comp = opt_pls$optncomp,
+  lambdaX = opt_pls$optlambdaX,
+  lambdaY = opt_pls$optlambdaY,
+  lambdaXsup = opt_pls$optlambdaXsup,
+  lambdaYsup = opt_pls$optlambdaYsup,
+  intseed = 1
+)
+```
+
+# Cross-validation
+
+```{r cv-example, eval=FALSE}
+cv <- cvmsma(
+  X = X, Y = Y,
+  comp = 1,
+  lambdaX = c(0.1, 0.1),
+  lambdaY = c(0.1, 0.1),
+  nfold = 5,
+  seed = 1,
+  intseed = 1
+)
+cv
+```
+
+# Version 3.2 super-level methods
+
+Model-selection functions accept the super-level method arguments where
+applicable.
+
+```{r snmf-selection, eval=FALSE}
+search_snmf <- ncompsearch(
+  X,
+  comps = list(1:3, 1:3),
+  criterion = "BIC",
+  sprmethod = "sNMF",
+  nneg = "posneg",
+  intseed = 1
+)
+```
+
+# Computational recommendations
+
+- Start with a small candidate grid.
+- Use BIC to screen candidate models before cross-validation.
+- Fix `seed` for fold allocation and `intseed` for model estimation.
+- Keep expensive searches as explicit user actions rather than vignette build
+  steps.
+
+# Session information
+
+```{r session-info}
+sessionInfo()
+```
+
+

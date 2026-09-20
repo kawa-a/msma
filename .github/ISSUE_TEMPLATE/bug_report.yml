@@ -1,0 +1,67 @@
+name: Bug report
+description: Report a reproducible problem in the msma 4.0 release candidate
+title: "[Bug]: "
+labels: [bug, rc-testing]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for testing msma 4.0 RC. Please avoid confidential data.
+  - type: input
+    id: version
+    attributes:
+      label: msma version or Git commit
+      placeholder: v4.0.0-rc1 or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: r-version
+    attributes:
+      label: R version and operating system
+      placeholder: R 4.5.2, Windows 11 x64
+    validations:
+      required: true
+  - type: dropdown
+    id: analysis
+    attributes:
+      label: Analysis type
+      options:
+        - Existing PCA or supervised PCA
+        - Existing multiblock analysis
+        - Soft-structured PCA
+        - Hard-exclusive PCA
+        - Reconstruction
+        - Model selection
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: dimensions
+    attributes:
+      label: Data dimensions and settings
+      description: Include dimensions of X, Y, and Z, scaling, random seed, and parameter values.
+  - type: textarea
+    id: reproducible
+    attributes:
+      label: Minimal reproducible example
+      render: r
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed result, warning, or error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+  - type: textarea
+    id: session
+    attributes:
+      label: sessionInfo()
+      render: text
+    validations:
+      required: true
+
+

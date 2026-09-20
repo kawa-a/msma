@@ -1,0 +1,23 @@
+bibentry(bibtype = "Article",
+  title        = "Supervised multiblock sparse multivariable analysis with application to multimodal brain imaging genetics",
+  author       = c(person(given = "Atsushi",
+                          family = "Kawaguchi"),
+                   person(given = c("Fumio"),
+                          family = "Yamashita")),
+  journal      = "Biostatistics",
+  year         = "2017",
+  volume       = "18",
+  number       = "4",
+  pages        = "651--665",
+  doi          = "10.1093/biostatistics/kxx011",
+
+  header       = "To cite msma in publications use:",
+  textVersion  =
+  paste("Atsushi Kawaguchi, Fumio Yamashita (2017).",
+        "Supervised multiblock sparse multivariable analysis with application to multimodal brain imaging genetics.",
+        "Biostatistics, 18(4), 651-665.",
+        "doi:10.1093/biostatistics/kxx011")
+)
+
+
+

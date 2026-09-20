@@ -1,0 +1,25 @@
+# R project files
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rproj
+
+# Generated package and check outputs
+*.tar.gz
+*.Rcheck/
+msma/
+
+# Local validation artifacts
+validation/msma_3.2.tar.gz
+validation/*.html
+validation/mand-revdep/
+mand.Rcheck/
+validation/RELEASE-MANIFEST.tsv
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+
+

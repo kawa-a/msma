@@ -1,0 +1,149 @@
+---
+title: "Multiblock and Nested Component Analysis"
+author: "Atsushi Kawaguchi"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Multiblock and Nested Component Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
+library(msma)
+```
+
+# Multiblock data
+
+Multiblock data are represented by a list of matrices. Rows are observations,
+columns are variables, and every block must have the same number of rows.
+
+```{r data}
+dat <- simdata(
+  n = 40, rho = 0.8,
+  Xps = c(4, 5), Yps = c(3, 4),
+  seed = 2
+)
+X <- dat$X
+Y <- dat$Y
+names(X) <- c("X_block_1", "X_block_2")
+names(Y) <- c("Y_block_1", "Y_block_2")
+lapply(X, dim)
+lapply(Y, dim)
+```
+
+# Multiblock PCA
+
+```{r mb-pca}
+fit_mb_pca <- msma(X = X, comp = 2, intseed = 1)
+fit_mb_pca
+```
+
+For X, the fitted object contains block-level weights and scores (`wbX`,
+`sbX`) and super-level weights and scores (`wsX`, `ssX`).
+
+```{r mb-components}
+lapply(fit_mb_pca$wbX, dim)
+lapply(fit_mb_pca$sbX, dim)
+lapply(fit_mb_pca$wsX, dim)
+lapply(fit_mb_pca$ssX, dim)
+```
+
+```{r mb-pca-plot, fig.show='hold'}
+plot(fit_mb_pca, axes = 1, plottype = "bar", block = "block", las = 2)
+plot(fit_mb_pca, axes = 1, plottype = "bar", block = "super")
+```
+
+# Sparse multiblock PCA
+
+`lambdaX` has one value per X block. `lambdaXsup` controls sparsity at the
+super level.
+
+```{r sparse-mb-pca}
+fit_sparse <- msma(
+  X = X, comp = 2,
+  lambdaX = c(0.10, 0.15),
+  lambdaXsup = 0.05,
+  intseed = 1
+)
+fit_sparse$nzwbX
+fit_sparse$nzwsX
+```
+
+# Nested components
+
+A two-element `comp` specifies the numbers of root and super components:
+
+```r
+comp = c(number_of_root_components, number_of_super_components)
+```
+
+For example, `comp = c(2, 3)` estimates three super components for each of two
+root components.
+
+```{r nested}
+fit_nested <- msma(X = X, comp = c(2, 3), intseed = 1)
+lapply(fit_nested$wsX, dim)
+lapply(fit_nested$ssX, dim)
+```
+
+```{r nested-plot, fig.show='hold'}
+plot(fit_nested, axes = 1, axes2 = 1, plottype = "bar", block = "super")
+plot(fit_nested, axes = 1, axes2 = 2, plottype = "bar", block = "super")
+```
+
+# Supervised multiblock PCA
+
+```{r supervised-mb-pca}
+set.seed(2)
+Z <- rnorm(nrow(X[[1]]))
+fit_supervised <- msma(
+  X = X, Z = Z, comp = 2,
+  lambdaX = c(0.10, 0.10),
+  muX = 0.20,
+  intseed = 1
+)
+fit_supervised$predictiv
+```
+
+# Multiblock PLS
+
+```{r mb-pls}
+fit_mb_pls <- msma(
+  X = X, Y = Y, comp = 2,
+  lambdaX = c(0.10, 0.10),
+  lambdaY = c(0.10, 0.10),
+  intseed = 1
+)
+fit_mb_pls
+```
+
+The four regularization arguments have distinct roles:
+
+- `lambdaX` and `lambdaY`: block-level weights;
+- `lambdaXsup` and `lambdaYsup`: super-level weights.
+
+```{r nested-mb-pls}
+fit_nested_pls <- msma(
+  X = X, Y = Y, comp = c(2, 2),
+  lambdaX = c(0.10, 0.10),
+  lambdaY = c(0.10, 0.10),
+  lambdaXsup = 0.05,
+  lambdaYsup = 0.05,
+  intseed = 1
+)
+lapply(fit_nested_pls$ssX, dim)
+lapply(fit_nested_pls$ssY, dim)
+```
+
+# Session information
+
+```{r session-info}
+sessionInfo()
+```
+
+

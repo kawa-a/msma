@@ -1,0 +1,522 @@
+---
+title: "msma 3.2: Version 3.1 Compatibility Test"
+author: "Atsushi Kawaguchi"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+params:
+  legacy_source: "msma_3.1.tar.gz"
+  latest_source: "../src.r"
+  tolerance: 1.0e-8
+  strict: true
+  run_cv: true
+  run_search: false
+---
+
+# Purpose
+
+This document checks whether **msma 3.2** reproduces the results of the
+existing **msma 3.1** implementation when only the pre-existing/default
+functionality is used.
+
+The new features introduced in version 3.2, including
+`sprmethod = "sNMF"` and matrix-valued `Z`, are intentionally excluded from
+the backward-compatibility comparisons. Separate smoke tests for these new
+features are included at the end of this document.
+
+The comparison is performed by loading the two implementations into separate
+R environments. Therefore, the functions with the same names do not overwrite
+each other.
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = TRUE,
+  warning = TRUE,
+  collapse = TRUE,
+  comment = "#>"
+)
+
+required_packages <- c("knitr")
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages)) {
+  stop("Install the following package(s): ", paste(missing_packages, collapse = ", "))
+}
+```
+
+```{r configuration}
+cat("Legacy source:", params$legacy_source, "\n")
+cat("Latest source:", params$latest_source, "\n")
+cat("Tolerance:", format(params$tolerance, scientific = TRUE), "\n")
+cat("Strict mode:", params$strict, "\n")
+cat("R version:", R.version.string, "\n")
+cat("Platform:", R.version$platform, "\n")
+```
+
+# Load the two implementations
+
+The legacy input may be either:
+
+- the CRAN source archive `msma_3.1.tar.gz`;
+- an extracted package directory containing `R/src.r`; or
+- a standalone R source file.
+
+The latest input is normally the version 3.2 `src.r` file, but an extracted
+package directory or source archive is also accepted.
+
+```{r loader-functions}
+find_r_sources <- function(path, label) {
+  if (!file.exists(path) && !dir.exists(path)) {
+    stop(label, " was not found: ", path)
+  }
+
+  if (dir.exists(path)) {
+    r_dir <- file.path(path, "R")
+    if (!dir.exists(r_dir)) {
+      stop(label, " is a directory but does not contain an R/ directory: ", path)
+    }
+    files <- list.files(r_dir, pattern = "[.]r$|[.]R$", full.names = TRUE)
+    if (!length(files)) stop("No R source files were found in ", r_dir)
+    return(sort(files))
+  }
+
+  if (grepl("[.]tar[.]gz$|[.]tgz$", path, ignore.case = TRUE)) {
+    exdir <- tempfile(paste0(label, "_"))
+    dir.create(exdir)
+    utils::untar(path, exdir = exdir)
+    candidates <- list.files(
+      exdir,
+      pattern = "[.]r$|[.]R$",
+      recursive = TRUE,
+      full.names = TRUE
+    )
+    candidates <- candidates[grepl("[/\\\\]R[/\\\\]", candidates)]
+    if (!length(candidates)) stop("No package R source files were found in ", path)
+    return(sort(candidates))
+  }
+
+  path
+}
+
+load_implementation <- function(path, label) {
+  files <- find_r_sources(path, label)
+  env <- new.env(parent = globalenv())
+  for (f in files) {
+    sys.source(f, envir = env, keep.source = TRUE)
+  }
+
+  required <- c(
+    "msma.default", "predict.msma", "cvmsma",
+    "ncompsearch", "regparasearch", "simdata"
+  )
+  absent <- required[!vapply(required, exists, logical(1), envir = env, inherits = FALSE)]
+  if (length(absent)) {
+    stop(label, " is missing function(s): ", paste(absent, collapse = ", "))
+  }
+
+  list(env = env, files = files)
+}
+
+legacy <- load_implementation(params$legacy_source, "legacy_source")
+latest <- load_implementation(params$latest_source, "latest_source")
+
+cat("Legacy files loaded:\n", paste(legacy$files, collapse = "\n"), "\n\n")
+cat("Latest files loaded:\n", paste(latest$files, collapse = "\n"), "\n")
+```
+
+# Comparison utilities
+
+Numerical quantities are compared using `all.equal()` with the tolerance in
+`params$tolerance`. Calls and environments are removed before comparison,
+because they necessarily refer to different source environments.
+
+```{r comparison-functions}
+normalize_for_comparison <- function(x) {
+  if (inherits(x, "msma")) {
+    x$call <- NULL
+  }
+  if (is.list(x)) {
+    x <- lapply(x, normalize_for_comparison)
+    attributes(x) <- attributes(x)
+  }
+  x
+}
+
+compare_objects <- function(old, new, tolerance = params$tolerance) {
+  old <- normalize_for_comparison(old)
+  new <- normalize_for_comparison(new)
+  result <- all.equal(
+    old,
+    new,
+    tolerance = tolerance,
+    check.attributes = TRUE
+  )
+  list(
+    equal = isTRUE(result),
+    detail = if (isTRUE(result)) "OK" else paste(result, collapse = "; ")
+  )
+}
+
+results <- list()
+add_result <- function(test, object, old, new) {
+  z <- compare_objects(old, new)
+  results[[length(results) + 1L]] <<- data.frame(
+    test = test,
+    object = object,
+    equal = z$equal,
+    detail = z$detail,
+    stringsAsFactors = FALSE
+  )
+  invisible(z)
+}
+
+compare_fit_elements <- function(test, old_fit, new_fit, elements) {
+  for (nm in elements) {
+    old_value <- if (nm %in% names(old_fit)) old_fit[[nm]] else structure(NULL, missing = TRUE)
+    new_value <- if (nm %in% names(new_fit)) new_fit[[nm]] else structure(NULL, missing = TRUE)
+    add_result(test, nm, old_value, new_value)
+  }
+  invisible(NULL)
+}
+
+run_fit_pair <- function(args) {
+  old_args <- args
+  new_args <- args
+  old_args$X <- args$X
+  new_args$X <- args$X
+
+  set.seed(1001)
+  old_fit <- do.call(legacy$env$msma.default, old_args)
+  set.seed(1001)
+  new_fit <- do.call(latest$env$msma.default, new_args)
+  list(old = old_fit, new = new_fit)
+}
+```
+
+# Fixed test data
+
+The same matrices are supplied directly to both implementations. This avoids
+confounding compatibility of the fitting functions with compatibility of the
+simulation function.
+
+```{r test-data}
+set.seed(20250808)
+n <- 36L
+
+latent1 <- rnorm(n)
+latent2 <- rnorm(n)
+
+X1 <- cbind(
+  x11 = latent1 + rnorm(n, sd = 0.25),
+  x12 = -0.7 * latent1 + rnorm(n, sd = 0.30),
+  x13 = latent2 + rnorm(n, sd = 0.25),
+  x14 = rnorm(n),
+  x15 = 0.4 * latent1 + 0.3 * latent2 + rnorm(n, sd = 0.35)
+)
+
+X2 <- cbind(
+  x21 = 0.8 * latent1 + rnorm(n, sd = 0.30),
+  x22 = latent2 + rnorm(n, sd = 0.25),
+  x23 = -0.6 * latent2 + rnorm(n, sd = 0.30),
+  x24 = rnorm(n)
+)
+
+Y1 <- cbind(
+  y11 = 0.9 * latent1 + rnorm(n, sd = 0.30),
+  y12 = latent2 + rnorm(n, sd = 0.30),
+  y13 = 0.4 * latent1 - 0.5 * latent2 + rnorm(n, sd = 0.35)
+)
+
+Y2 <- cbind(
+  y21 = -0.7 * latent1 + rnorm(n, sd = 0.30),
+  y22 = 0.8 * latent2 + rnorm(n, sd = 0.25)
+)
+
+X <- list(modality1 = X1, modality2 = X2)
+Y <- list(outcome1 = Y1, outcome2 = Y2)
+Z <- as.numeric(scale(0.8 * latent1 - 0.4 * latent2 + rnorm(n, sd = 0.35)))
+
+str(list(X = X, Y = Y, Z = Z), max.level = 2)
+```
+
+# Compatibility tests
+
+## Single-block PCA
+
+```{r test-single-pca}
+fit <- run_fit_pair(list(
+  X = X1,
+  comp = 2,
+  intseed = 11
+))
+
+compare_fit_elements(
+  "Single-block PCA",
+  fit$old,
+  fit$new,
+  c("dmode", "comp", "X", "Xscale", "wbX", "sbX", "ssX", "wsX",
+    "nzwbX", "nzwsX", "selectXnames", "cpevX", "avX", "bic", "bic2")
+)
+```
+
+## Multiblock PCA
+
+```{r test-multiblock-pca}
+fit_mb_pca <- run_fit_pair(list(
+  X = X,
+  comp = c(2, 1),
+  intseed = 11
+))
+
+compare_fit_elements(
+  "Multiblock PCA",
+  fit_mb_pca$old,
+  fit_mb_pca$new,
+  c("dmode", "comp", "X", "Xscale", "wbX", "sbX", "ssX", "wsX",
+    "nzwbX", "nzwsX", "selectXnames", "cpevX", "avX", "bic", "bic2")
+)
+```
+
+## Sparse multiblock PCA
+
+```{r test-sparse-pca}
+fit_sparse_pca <- run_fit_pair(list(
+  X = X,
+  comp = c(2, 1),
+  lambdaX = c(0.15, 0.10),
+  lambdaXsup = 0.05,
+  intseed = 11
+))
+
+compare_fit_elements(
+  "Sparse multiblock PCA",
+  fit_sparse_pca$old,
+  fit_sparse_pca$new,
+  c("wbX", "sbX", "ssX", "wsX", "nzwbX", "nzwsX", "selectXnames",
+    "cpevX", "avX", "bic", "bic2")
+)
+```
+
+## Supervised multiblock PCA with vector-valued Z
+
+```{r test-supervised-pca}
+fit_sup_pca <- run_fit_pair(list(
+  X = X,
+  Z = Z,
+  comp = c(2, 1),
+  lambdaX = c(0.10, 0.10),
+  muX = 0.20,
+  intseed = 11
+))
+
+compare_fit_elements(
+  "Supervised multiblock PCA",
+  fit_sup_pca$old,
+  fit_sup_pca$new,
+  c("Z", "muX", "wbX", "sbX", "ssX", "wsX", "nzwbX", "nzwsX",
+    "cpevX", "avX", "bic", "bic2", "predictiv")
+)
+```
+
+## Multiblock PLS
+
+```{r test-multiblock-pls}
+fit_pls <- run_fit_pair(list(
+  X = X,
+  Y = Y,
+  comp = c(2, 1),
+  lambdaX = c(0.10, 0.10),
+  lambdaY = c(0.10, 0.10),
+  intseed = 11
+))
+
+compare_fit_elements(
+  "Multiblock PLS",
+  fit_pls$old,
+  fit_pls$new,
+  c("dmode", "comp", "X", "Y", "Xscale", "Yscale", "wbX", "sbX",
+    "wbY", "sbY", "ssX", "wsX", "ssY", "wsY", "nzwbX", "nzwbY",
+    "nzwsX", "nzwsY", "selectXnames", "selectYnames", "cpevX", "cpevY",
+    "avX", "avY", "bic", "bicX", "bicY", "bic2", "bic2X", "bic2Y")
+)
+```
+
+## Prediction
+
+```{r test-prediction}
+set.seed(1001)
+pred_old <- legacy$env$predict.msma(fit_pls$old, newX = X, newY = Y)
+set.seed(1001)
+pred_new <- latest$env$predict.msma(fit_pls$new, newX = X, newY = Y)
+
+for (nm in c("X", "sbX", "Y", "sbY")) {
+  add_result("Prediction", nm, pred_old[[nm]], pred_new[[nm]])
+}
+```
+
+## Cross-validation
+
+```{r test-cv, eval=params$run_cv}
+cv_args <- list(
+  X = X,
+  Y = Y,
+  comp = 1,
+  lambdaX = c(0.10, 0.10),
+  lambdaY = c(0.10, 0.10),
+  nfold = 3,
+  seed = 71,
+  intseed = 11
+)
+
+set.seed(1001)
+cv_old <- do.call(legacy$env$cvmsma, cv_args)
+set.seed(1001)
+cv_new <- do.call(latest$env$cvmsma, cv_args)
+add_result("Cross-validation", "cvmsma result", cv_old, cv_new)
+```
+
+## Optional component search
+
+This test is disabled by default because it takes longer. Set
+`params$run_search: true` when rendering to activate it.
+
+```{r test-search, eval=params$run_search}
+search_args <- list(
+  X = X,
+  Y = Y,
+  comps = 1:2,
+  lambdaX = c(0.10, 0.10),
+  lambdaY = c(0.10, 0.10),
+  criterion = "BIC",
+  intseed = 11
+)
+
+set.seed(1001)
+search_old <- do.call(legacy$env$ncompsearch, search_args)
+set.seed(1001)
+search_new <- do.call(latest$env$ncompsearch, search_args)
+add_result("Component search", "ncompsearch result", search_old, search_new)
+```
+
+# Simulation-function compatibility
+
+```{r test-simulation}
+set.seed(1001)
+sim_old <- legacy$env$simdata(n = 20, rho = 0.6, Xps = c(4, 3), Yps = c(3, 2), seed = 41)
+set.seed(1001)
+sim_new <- latest$env$simdata(n = 20, rho = 0.6, Xps = c(4, 3), Yps = c(3, 2), seed = 41)
+add_result("Simulation", "simdata result", sim_old, sim_new)
+```
+
+# Results
+
+```{r compatibility-results}
+result_table <- do.call(rbind, results)
+rownames(result_table) <- NULL
+
+knitr::kable(
+  result_table,
+  caption = "Compatibility results for msma 3.1 and msma 3.2"
+)
+
+n_pass <- sum(result_table$equal)
+n_fail <- sum(!result_table$equal)
+cat("\nPassed:", n_pass, "\n")
+cat("Failed:", n_fail, "\n")
+```
+
+```{r strict-decision}
+if (params$strict && any(!result_table$equal)) {
+  failed <- result_table[!result_table$equal, , drop = FALSE]
+  stop(
+    "Backward-compatibility test failed for ", nrow(failed),
+    " comparison(s): ",
+    paste(paste(failed$test, failed$object, sep = " / "), collapse = "; ")
+  )
+}
+```
+
+# Version 3.2 new-feature smoke tests
+
+These checks establish that the new functionality runs. They are not expected
+to match version 3.1 because the functionality was not available there.
+
+## One-column matrix Z agrees with vector Z
+
+```{r smoke-matrix-z}
+set.seed(1001)
+new_z_vector <- latest$env$msma.default(
+  X = X,
+  Z = Z,
+  comp = 1,
+  muX = 0.20,
+  intseed = 11
+)
+
+set.seed(1001)
+new_z_matrix <- latest$env$msma.default(
+  X = X,
+  Z = cbind(Z),
+  comp = 1,
+  muX = 0.20,
+  intseed = 11
+)
+
+z_check <- compare_objects(new_z_vector, new_z_matrix)
+cat("Vector Z versus one-column matrix Z:", z_check$detail, "\n")
+if (params$strict && !z_check$equal) stop("Vector/matrix Z equivalence test failed")
+```
+
+## Multiple-column Z
+
+```{r smoke-multiple-z}
+Z_multi <- cbind(
+  clinical = Z,
+  biomarker = as.numeric(scale(latent2 + rnorm(n, sd = 0.25)))
+)
+
+set.seed(1001)
+fit_multi_z <- latest$env$msma.default(
+  X = X,
+  Z = Z_multi,
+  con4spv = c(0.7, 0.3),
+  comp = 1,
+  muX = 0.20,
+  intseed = 11
+)
+
+stopifnot(inherits(fit_multi_z, "msma"))
+cat("Multiple-column Z test: OK\n")
+```
+
+## Sparse NMF
+
+```{r smoke-snmf}
+set.seed(1001)
+fit_snmf <- latest$env$msma.default(
+  X = X,
+  comp = c(2, 2),
+  sprmethod = "sNMF",
+  lambdaXsup = 0.05,
+  intseed = 11
+)
+
+stopifnot(all(unlist(fit_snmf$ssX) >= 0))
+stopifnot(all(unlist(fit_snmf$wsX) >= 0))
+cat("sNMF non-negativity test: OK\n")
+```
+
+# Session information
+
+```{r session-info}
+sessionInfo()
+```
+
+

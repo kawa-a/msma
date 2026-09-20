@@ -1,0 +1,31 @@
+---
+title: "Soft-Structured Analysis with msma"
+output: html_document
+---
+
+# Status
+
+This is a development draft. Executable examples will be added after the
+one-component estimator and public API are fixed.
+
+# Motivation
+
+# Definition of structural information
+
+# Objective function and tuning parameters
+
+# Single-block analysis
+
+# Sparse soft-structured analysis
+
+# Multiblock analysis
+
+# PLS extension
+
+# Diagnostics and convergence
+
+# Relationship to ordinary msma
+
+# Reproducibility
+
+

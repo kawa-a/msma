@@ -1,0 +1,167 @@
+---
+title: "NMF-Based Super-Level Analysis and ECMSMA"
+author: "Atsushi Kawaguchi"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{NMF-Based Super-Level Analysis and ECMSMA}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
+library(msma)
+```
+
+# Overview
+
+Version 3.2 adds NMF and sparse NMF (sNMF) as super-level decomposition
+methods. They support clustering-oriented analyses of multiblock data while
+the default `sprmethod = "PCA"` preserves the version 3.1 computational path.
+
+```{r data}
+dat <- simdata(n = 45, rho = 0.8, Xps = c(5, 5, 5), Yps = 3, seed = 3)
+X <- dat$X
+names(X) <- paste0("block", seq_along(X))
+```
+
+# Super-level methods
+
+The principal options are:
+
+- `sprmethod = "PCA"`: conventional super-level PCA;
+- `sprmethod = "NMF"`: non-negative matrix factorization;
+- `sprmethod = "sNMF"`: sparse non-negative matrix factorization.
+
+```{r compare-methods}
+fit_pca <- msma(X, comp = c(2, 2), sprmethod = "PCA", intseed = 1)
+fit_nmf <- msma(X, comp = c(2, 2), sprmethod = "NMF", intseed = 1)
+fit_snmf <- msma(
+  X, comp = c(2, 2),
+  sprmethod = "sNMF",
+  lambdaXsup = 0.05,
+  intseed = 1
+)
+```
+
+# Non-negative transformations
+
+NMF requires non-negative input. The `nneg` argument controls transformation
+of the block scores:
+
+- `"posneg"`: separates positive and negative parts;
+- `"absolute"`: uses absolute values;
+- `"min"`: shifts values to a non-negative range.
+
+For a score vector \(s\), positive-negative decomposition is
+
+\[
+s^+ = \max(s,0), \qquad s^- = \max(-s,0), \qquad s=s^+-s^-.
+\]
+
+```{r nneg-options, eval=FALSE}
+fit_posneg <- msma(X, comp = c(2, 2), sprmethod = "NMF", nneg = "posneg")
+fit_absolute <- msma(X, comp = c(2, 2), sprmethod = "NMF", nneg = "absolute")
+fit_min <- msma(X, comp = c(2, 2), sprmethod = "NMF", nneg = "min")
+```
+
+# Non-negativity and reproducibility
+
+```{r nonnegative}
+all(unlist(fit_snmf$ssX) >= 0)
+all(unlist(fit_snmf$wsX) >= 0)
+```
+
+```{r reproducibility}
+fit_snmf_2 <- msma(
+  X, comp = c(2, 2),
+  sprmethod = "sNMF",
+  lambdaXsup = 0.05,
+  intseed = 1
+)
+all.equal(fit_snmf$ssX, fit_snmf_2$ssX)
+all.equal(fit_snmf$wsX, fit_snmf_2$wsX)
+```
+
+# Clustering solutions
+
+A simple cluster assignment is obtained from the largest super-score value for
+each observation. Each root component supplies one clustering solution.
+
+```{r clustering}
+cluster_matrix <- vapply(
+  fit_snmf$ssX,
+  function(score) max.col(score, ties.method = "first"),
+  integer(nrow(fit_snmf$ssX[[1]]))
+)
+colnames(cluster_matrix) <- names(fit_snmf$ssX)
+head(cluster_matrix)
+apply(cluster_matrix, 2, table)
+```
+
+The resulting matrix may be supplied to a separate consensus or ensemble
+clustering procedure. The consensus step is not performed automatically by
+`msma()`.
+
+# Multiple supervision variables
+
+`Z` may be a numeric matrix. `con4spv` specifies weights used to combine its
+columns. This is a composite-supervision model rather than a multi-task model
+with a separate loading for every outcome.
+
+```{r multivariate-z}
+set.seed(3)
+z1 <- rnorm(nrow(X[[1]]))
+z2 <- 0.5 * z1 + rnorm(nrow(X[[1]]), sd = 0.5)
+Z <- cbind(clinical = z1, biomarker = z2)
+
+fit_multi_z <- msma(
+  X = X, Z = Z,
+  con4spv = c(0.7, 0.3),
+  comp = 2,
+  muX = 0.20,
+  intseed = 1
+)
+fit_multi_z$predictiv
+```
+
+Conceptually, the combined supervision score is
+
+\[
+z_c = Zc,
+\]
+
+where the supplied weights are normalized internally as required by the
+implementation.
+
+# One-column matrix compatibility
+
+A vector and a one-column matrix produce the same result.
+
+```{r one-column-z}
+fit_z_vector <- msma(X, Z = z1, comp = 1, muX = 0.20, intseed = 1)
+fit_z_matrix <- msma(X, Z = cbind(z1), comp = 1, muX = 0.20, intseed = 1)
+fit_z_vector$call <- NULL
+fit_z_matrix$call <- NULL
+isTRUE(all.equal(fit_z_vector, fit_z_matrix, tolerance = 1e-8))
+```
+
+# Practical recommendations
+
+- Fix `intseed` for reproducible NMF and sNMF results.
+- Inspect both `ssX` and `wsX` when interpreting clusters.
+- Compare several values of `lambdaXsup` for sNMF.
+- Treat clustering from different root components as distinct candidate
+  solutions before ensemble integration.
+
+# Session information
+
+```{r session-info}
+sessionInfo()
+```
+
+

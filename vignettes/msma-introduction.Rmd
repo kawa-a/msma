@@ -1,0 +1,140 @@
+---
+title: "Getting Started with msma"
+author: "Atsushi Kawaguchi"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Getting Started with msma}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 5)
+library(msma)
+```
+
+# Overview
+
+The **msma** package implements sparse and supervised matrix decomposition for
+single-block and multiblock multivariable data. The main function is `msma()`.
+The analysis is selected by the supplied inputs:
+
+- `X` only: principal component analysis (PCA);
+- `X` and `Y`: partial least squares (PLS);
+- `Z`: optional external supervision variable;
+- positive regularization parameters: sparse estimation.
+
+`X` and `Y` may be matrices or lists of matrices. All blocks must contain the
+same observations in the same row order.
+
+# Simulated data
+
+```{r data}
+dat <- simdata(n = 40, rho = 0.8, Xps = 5, Yps = 4, seed = 1)
+X <- dat$X[[1]]
+Y <- dat$Y[[1]]
+set.seed(1)
+Z <- rbinom(nrow(X), 1, 0.5)
+
+dim(X)
+dim(Y)
+```
+
+# PCA
+
+A matrix supplied as `X` produces a single-block PCA.
+
+```{r pca}
+fit_pca <- msma(X, comp = 2)
+fit_pca
+summary(fit_pca)
+```
+
+The main X-side results are:
+
+- `wbX`: block-level weights or loadings;
+- `sbX`: block-level scores;
+- `cpevX`: cumulative percentage of explained variance;
+- `avX`: adjusted variance attributable to each component.
+
+```{r pca-results}
+fit_pca$wbX
+head(fit_pca$sbX[[1]])
+fit_pca$cpevX
+```
+
+```{r pca-plot, fig.show='hold'}
+plot(fit_pca, axes = 1, plottype = "bar", las = 2)
+plot(fit_pca, v = "score", axes = 1:2, plottype = "scatter")
+```
+
+# Sparse PCA
+
+A positive `lambdaX` introduces sparsity into the X-side block weights.
+
+```{r sparse-pca}
+fit_spca <- msma(X, comp = 2, lambdaX = 0.10)
+fit_spca$nzwbX
+fit_spca$selectXnames
+```
+
+# Supervised sparse PCA
+
+`Z` supplies external supervision. The strength of supervision on X is
+controlled by `muX`.
+
+```{r supervised-pca}
+fit_sup_pca <- msma(
+  X = X, Z = Z, comp = 2,
+  lambdaX = 0.05, muX = 0.20,
+  intseed = 1
+)
+fit_sup_pca$predictiv
+```
+
+# PLS
+
+Supplying both `X` and `Y` produces PLS.
+
+```{r pls}
+fit_pls <- msma(X = X, Y = Y, comp = 2)
+fit_pls
+```
+
+```{r pls-plot, fig.show='hold'}
+plot(fit_pls, axes = 1, XY = "XY")
+plot(fit_pls, axes = 2, XY = "XY")
+```
+
+Sparse and supervised PLS are requested by adding `lambdaX`, `lambdaY`, and
+optionally `Z`, `muX`, and `muY`.
+
+```{r sparse-supervised-pls}
+fit_spls <- msma(
+  X = X, Y = Y, Z = Z, comp = 2,
+  lambdaX = 0.10, lambdaY = 0.10,
+  muX = 0.10, muY = 0.10,
+  intseed = 1
+)
+fit_spls$nzwbX
+fit_spls$nzwbY
+```
+
+# Prediction
+
+```{r prediction}
+pred <- predict(fit_pls, newX = X, newY = Y)
+names(pred)
+```
+
+# Session information
+
+```{r session-info}
+sessionInfo()
+```
+
+

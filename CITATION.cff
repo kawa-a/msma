@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the CRAN package and record the release tag or commit used."
+title: "msma: Multiblock Sparse Multivariable Analysis"
+type: software
+authors:
+  - family-names: Kawaguchi
+    given-names: Atsushi
+version: 4.0.0-rc1
+date-released: 2026-09-20
+license: GPL-2.0-or-later
+repository-code: "https://github.com/kawa-a/msma"

@@ -1,0 +1,15 @@
+Package: msma
+Type: Package
+Title: Multiblock Sparse Multivariable Analysis
+Version: 4.0
+Authors@R: person("Atsushi", "Kawaguchi", role = c("aut", "cre"), email = "kawa_a24@yahoo.co.jp")
+Depends: R (>= 3.5)
+Description: Several functions can be used to analyze multiblock multivariable data. If the input is a single matrix, then principal components analysis (PCA) is implemented. If the input is a list of matrices, then multiblock PCA is implemented. If the input is two matrices, for exploratory and objective variables, then partial least squares (PLS) analysis is implemented. If the input is two lists of matrices, for exploratory and objective variables, then multiblock PLS analysis is implemented. Additionally, if an extra outcome variable is specified, then a supervised version of the methods above is implemented. For each method, sparse modeling is also incorporated. Functions for selecting the number of components and regularized parameters are also provided. Version 4.0 adds opt-in supervised sparse soft-structured principal component analysis, reconstruction, and repeated split reconstruction-based parameter selection while preserving the default Version 3.2 computational paths.
+License: GPL (>= 2)
+Encoding: UTF-8
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
+VignetteBuilder: knitr
+NeedsCompilation: no
+Config/testthat/edition: 3
+
+
