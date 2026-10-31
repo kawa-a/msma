@@ -112,35 +112,87 @@ msma = function(X, ...) UseMethod("msma")
 # Resolve the Version 5 computational path without performing estimation.
 
 # Create Version 5 preprocessing metadata without transforming data.
-.new_msma_preprocess <- function(
-  engine,
-  scaling
-) {
-  structure(
-    list(
-      engine = engine,
-      scaling = scaling,
+# Create Version 5 preprocessing metadata without transforming data.
+.new_msma_preprocess <- function (engine, scaling) 
+{
+    structure(list(engine = engine, scaling = scaling, X = list(centered = NULL, scaled = NULL, center = NULL, scale = NULL, 
+        missing_method = NULL), Y = list(centered = NULL, scaled = NULL, center = NULL, scale = NULL, missing_method = NULL), 
+        Z = list(method = "none", centered = NULL, scaled = NULL, center = NULL, scale = NULL)), class = "msma_preprocess")
+}
 
-      X = list(
-        center = NULL,
-        scale = NULL,
-        missing_method = NULL
-      ),
+# Extract centering and scaling metadata created by base::scale().
+.extract_msma_scale_metadata <- function (scale_metadata) 
+{
+    if (is.null(scale_metadata)) {
+        return(list(center = NULL, scale = NULL, centered = FALSE, scaled = FALSE))
+    }
+    center <- scale_metadata[["scaled:center"]]
+    scale <- scale_metadata[["scaled:scale"]]
+    list(center = center, scale = scale, centered = !is.null(center), scaled = !is.null(scale))
+}
 
-      Y = list(
-        center = NULL,
-        scale = NULL,
-        missing_method = NULL
-      ),
-
-      Z = list(
-        method = "none",
-        center = NULL,
-        scale = NULL
-      )
-    ),
-    class = "msma_preprocess"
-  )
+# Build common preprocessing metadata from an existing fitted object.
+.build_msma_preprocess <- function (fit, engine, scaling) 
+{
+    preprocess <- .new_msma_preprocess(engine = engine, scaling = scaling)
+    if (engine %in% c("soft", "exclusive")) {
+        preprocess$X$center <- fit$Xcenter
+        preprocess$X$scale <- fit$Xscale
+        preprocess$X$centered <- isTRUE(scaling)
+        preprocess$X$scaled <- isTRUE(scaling)
+        preprocess$X$missing_method <- "none"
+        preprocess$Y$centered <- FALSE
+        preprocess$Y$scaled <- FALSE
+        preprocess$Y$missing_method <- "not_used"
+        preprocess$Z$method <- "unchanged"
+        preprocess$Z$centered <- FALSE
+        preprocess$Z$scaled <- FALSE
+        return(preprocess)
+    }
+    if (identical(engine, "legacy")) {
+        x_metadata <- lapply(fit$Xscale, .extract_msma_scale_metadata)
+        preprocess$X$center <- lapply(x_metadata, `[[`, "center")
+        preprocess$X$scale <- lapply(x_metadata, `[[`, "scale")
+        preprocess$X$centered <- vapply(x_metadata, `[[`, logical(1), "centered")
+        preprocess$X$scaled <- vapply(x_metadata, `[[`, logical(1), "scaled")
+        preprocess$X$missing_method <- "replace_with_zero_after_scaling"
+        if (!is.null(fit$Yscale)) {
+            y_metadata <- lapply(fit$Yscale, .extract_msma_scale_metadata)
+            preprocess$Y$center <- lapply(y_metadata, `[[`, "center")
+            preprocess$Y$scale <- lapply(y_metadata, `[[`, "scale")
+            preprocess$Y$centered <- vapply(y_metadata, `[[`, logical(1), "centered")
+            preprocess$Y$scaled <- vapply(y_metadata, `[[`, logical(1), "scaled")
+            preprocess$Y$missing_method <- "replace_with_zero_after_scaling"
+        }
+        else {
+            preprocess$Y$centered <- FALSE
+            preprocess$Y$scaled <- FALSE
+            preprocess$Y$missing_method <- "not_used"
+        }
+        preprocess$Z$method <- "legacy_scale_if_supplied"
+        return(preprocess)
+    }
+    if (identical(engine, "extended")) {
+        if (!is.null(fit$Xscale)) {
+            x_metadata <- lapply(fit$Xscale, .extract_msma_scale_metadata)
+            preprocess$X$center <- lapply(x_metadata, `[[`, "center")
+            preprocess$X$scale <- lapply(x_metadata, `[[`, "scale")
+            preprocess$X$centered <- vapply(x_metadata, `[[`, logical(1), "centered")
+            preprocess$X$scaled <- vapply(x_metadata, `[[`, logical(1), "scaled")
+        }
+        if (!is.null(fit$Yscale)) {
+            y_metadata <- lapply(fit$Yscale, .extract_msma_scale_metadata)
+            preprocess$Y$center <- lapply(y_metadata, `[[`, "center")
+            preprocess$Y$scale <- lapply(y_metadata, `[[`, "scale")
+            preprocess$Y$centered <- vapply(y_metadata, `[[`, logical(1), "centered")
+            preprocess$Y$scaled <- vapply(y_metadata, `[[`, logical(1), "scaled")
+        }
+        preprocess$X$missing_method <- "engine_specific"
+        preprocess$Y$missing_method <- "engine_specific"
+        preprocess$Z$method <- "engine_specific"
+        return(preprocess)
+    }
+    stop("Unknown preprocessing engine.", call. = FALSE)
 }
 
 .resolve_msma_engine <- function(

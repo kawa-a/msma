@@ -1,0 +1,189 @@
+
+========================================================================
+legacy_scaled
+
+Object classes:
+[1] "msma"
+
+Object names:
+ [1] "call"         "dmode"        "X"            "Z"            "Xscale"       "comp"         "muX"          "wbX"          "sbX"          "ssX"          "wsX"          "nzwbX"        "nzwsX"        "selectXnames" "cpevX"        "avX"          "bic"         
+[18] "bic2"         "reproduct"    "predictiv"   
+
+Preprocessing-related fields:
+
+$call
+ language .msma_default_legacy(X = X, Y = Y, Z = Z_legacy, comp = comp, lambdaX = lambdaX, lambdaY = lambdaY, lambdaXsup = | __truncated__
+
+$dmode
+ chr "PCA"
+
+$Xscale
+List of 1
+ $ :List of 4
+  ..$ dim          : int [1:2] 20 6
+  ..$ dimnames     :List of 2
+  .. ..$ : NULL
+  .. ..$ : chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ scaled:center: Named num [1:6] 0.142 0.253 0.305 0.354 0.177 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ scaled:scale : Named num [1:6] 0.782 0.667 1.409 1.014 0.773 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+
+========================================================================
+legacy_unscaled
+
+Object classes:
+[1] "msma"
+
+Object names:
+ [1] "call"         "dmode"        "X"            "Z"            "Xscale"       "comp"         "muX"          "wbX"          "sbX"          "ssX"          "wsX"          "nzwbX"        "nzwsX"        "selectXnames" "cpevX"        "avX"          "bic"         
+[18] "bic2"         "reproduct"    "predictiv"   
+
+Preprocessing-related fields:
+
+$call
+ language .msma_default_legacy(X = X, Y = Y, Z = Z_legacy, comp = comp, lambdaX = lambdaX, lambdaY = lambdaY, lambdaXsup = | __truncated__
+
+$dmode
+ chr "PCA"
+
+$Xscale
+List of 1
+ $ :List of 3
+  ..$ dim          : int [1:2] 20 6
+  ..$ dimnames     :List of 2
+  .. ..$ : NULL
+  .. ..$ : chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ scaled:center: Named num [1:6] 0.142 0.253 0.305 0.354 0.177 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+
+========================================================================
+pls
+
+Object classes:
+[1] "msma"
+
+Object names:
+ [1] "call"         "dmode"        "X"            "Y"            "Z"            "Xscale"       "Yscale"       "comp"         "muX"          "muY"          "wbX"          "sbX"          "wbY"          "sbY"          "ssX"          "wsX"          "ssY"         
+[18] "wsY"          "nzwbX"        "nzwbY"        "nzwsX"        "nzwsY"        "selectXnames" "selectYnames" "cpevX"        "cpevY"        "avX"          "avY"          "bic"          "bicX"         "bicY"         "bic2"         "bic2X"        "bic2Y"       
+[35] "reproduct"    "predictiv"   
+
+Preprocessing-related fields:
+
+$call
+ language .msma_default_legacy(X = X, Y = Y, Z = Z_legacy, comp = comp, lambdaX = lambdaX, lambdaY = lambdaY, lambdaXsup = | __truncated__
+
+$dmode
+ chr "PLS"
+
+$Xscale
+List of 1
+ $ :List of 4
+  ..$ dim          : int [1:2] 20 6
+  ..$ dimnames     :List of 2
+  .. ..$ : NULL
+  .. ..$ : chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ scaled:center: Named num [1:6] 0.142 0.253 0.305 0.354 0.177 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ scaled:scale : Named num [1:6] 0.782 0.667 1.409 1.014 0.773 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+
+$Yscale
+List of 1
+ $ :List of 4
+  ..$ dim          : int [1:2] 20 4
+  ..$ dimnames     :List of 2
+  .. ..$ : NULL
+  .. ..$ : chr [1:4] "y1" "y2" "y3" "y4"
+  ..$ scaled:center: Named num [1:4] 0.0767 0.0634 0.5006 0.0974
+  .. ..- attr(*, "names")= chr [1:4] "y1" "y2" "y3" "y4"
+  ..$ scaled:scale : Named num [1:4] 0.967 1.08 0.968 1.013
+  .. ..- attr(*, "names")= chr [1:4] "y1" "y2" "y3" "y4"
+
+========================================================================
+extended
+
+Object classes:
+[1] "msma"
+
+Object names:
+ [1] "call"         "dmode"        "X"            "Z"            "Xscale"       "comp"         "muX"          "wbX"          "sbX"          "ssX"          "wsX"          "nzwbX"        "nzwsX"        "selectXnames" "cpevX"        "avX"          "bic"         
+[18] "bic2"         "reproduct"    "predictiv"   
+
+Preprocessing-related fields:
+
+$call
+ language .msma_default_extended(X = X, Y = Y, Z = Z, comp = comp, lambdaX = lambdaX, lambdaY = lambdaY, lambdaXsup = lambd| __truncated__
+
+$dmode
+ chr "PCA"
+
+$Xscale
+List of 1
+ $ :List of 3
+  ..$ dim          : int [1:2] 20 6
+  ..$ dimnames     :List of 2
+  .. ..$ : NULL
+  .. ..$ : chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ scaled:center: Named num [1:6] 0.142 0.253 0.305 0.354 0.177 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+
+========================================================================
+soft
+
+Object classes:
+[1] "s4pca"
+
+Object names:
+ [1] "W"                       "S"                       "rss"                     "AIC"                     "BIC"                     "EBIC"                    "overlap"                 "overlap_all"             "overlap_selected"        "used_idx"               
+[11] "settings"                "diagnostics"             "call"                    "Xcenter"                 "Xscale"                  "reconstruction_loadings" "scaling"                 "structure.method"        "gammaX"                  "lambdaX"                
+[21] "muX"                     "dmode"                  
+
+Preprocessing-related fields:
+
+$call
+ language msma.default(X = X_audit, Z = Z_audit, comp = 2, lambdaX = 0.1, muX = 0.8, scaling = TRUE, intseed = 5, structure| __truncated__
+
+$Xcenter
+ Named num [1:6] 0.142 0.253 0.305 0.354 0.177 ...
+ - attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+
+$Xscale
+ Named num [1:6] 0.782 0.667 1.409 1.014 0.773 ...
+ - attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+
+$scaling
+ logi TRUE
+
+$dmode
+ chr "PCA"
+
+========================================================================
+exclusive
+
+Object classes:
+[1] "s4pca"
+
+Object names:
+ [1] "W"                       "S"                       "rss"                     "AIC"                     "BIC"                     "EBIC"                    "overlap"                 "overlap_all"             "overlap_selected"        "used_idx"               
+[11] "settings"                "diagnostics"             "call"                    "Xcenter"                 "Xscale"                  "reconstruction_loadings" "scaling"                 "structure.method"        "gammaX"                  "lambdaX"                
+[21] "muX"                     "dmode"                  
+
+Preprocessing-related fields:
+
+$call
+ language msma.default(X = X_audit, Z = Z_audit, comp = 2, lambdaX = 0.1, muX = 0.8, scaling = TRUE, intseed = 5, structure| __truncated__
+
+$Xcenter
+ Named num [1:6] 0.142 0.253 0.305 0.354 0.177 ...
+ - attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+
+$Xscale
+ Named num [1:6] 0.782 0.667 1.409 1.014 0.773 ...
+ - attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+
+$scaling
+ logi TRUE
+
+$dmode
+ chr "PCA"
