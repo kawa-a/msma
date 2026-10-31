@@ -1,0 +1,40 @@
+msma Version 5 M2-C preprocessing metadata attachment
+Date: 2026-10-31 12:30:07 +0900
+Branch: feature/v5-preprocessing-metadata
+Parent commit: 526b268f5c7844c81712504e7db9eaf29db0fa8a
+
+M2-C preprocessing unit tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 110
+
+Full regression test suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 693
+
+Attachment paths:
+* legacy
+* extended
+* soft
+* exclusive
+
+Compatibility results:
+* existing field names are preserved
+* existing field order is preserved
+* existing non-call fields are identical
+* call remains a valid call object
+* preprocess is appended as the final field
+* numerical estimation behavior is unchanged
+
+Confirmed preprocessing behavior:
+* legacy scaling TRUE: centered TRUE, scaled TRUE
+* legacy scaling FALSE: centered TRUE, scaled FALSE
+* extended NMF scaling FALSE: centered TRUE, scaled FALSE
+* structured scaling TRUE: centered TRUE, scaled TRUE
+* structured scaling FALSE: centered FALSE, scaled FALSE
+* soft and exclusive share structured preprocessing

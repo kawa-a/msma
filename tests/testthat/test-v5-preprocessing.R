@@ -420,3 +420,156 @@ testthat::test_that(
     )
   }
 )
+
+
+testthat::test_that(
+  "public fits receive preprocessing metadata for all engines",
+  {
+    set.seed(701)
+
+    X <- matrix(
+      stats::rnorm(120),
+      nrow = 20,
+      ncol = 6
+    )
+
+    Z <- as.numeric(
+      scale(X[, 1] + stats::rnorm(20))
+    )
+
+    legacy_fit <- msma(
+      X = X,
+      comp = 2,
+      scaling = FALSE,
+      intseed = 3
+    )
+
+    extended_fit <- msma(
+      X = X,
+      comp = 2,
+      sprmethod = "NMF",
+      scaling = FALSE,
+      intseed = 3
+    )
+
+    soft_fit <- msma(
+      X = X,
+      Z = Z,
+      comp = 2,
+      lambdaX = 0.1,
+      muX = 0.8,
+      structure.method = "soft",
+      gammaX = 0.1,
+      niterS4 = 5,
+      scaling = TRUE,
+      intseed = 4
+    )
+
+    exclusive_fit <- msma(
+      X = X,
+      Z = Z,
+      comp = 2,
+      lambdaX = 0.1,
+      muX = 0.8,
+      structure.method = "exclusive",
+      gammaX = 0,
+      niterS4 = 5,
+      scaling = TRUE,
+      intseed = 4
+    )
+
+    fits <- list(
+      legacy = legacy_fit,
+      extended = extended_fit,
+      soft = soft_fit,
+      exclusive = exclusive_fit
+    )
+
+    for (engine in names(fits)) {
+      testthat::expect_s3_class(
+        fits[[engine]]$preprocess,
+        "msma_preprocess"
+      )
+
+      testthat::expect_identical(
+        fits[[engine]]$preprocess$engine,
+        engine
+      )
+
+      testthat::expect_identical(
+        tail(names(fits[[engine]]), 1),
+        "preprocess"
+      )
+    }
+  }
+)
+
+
+testthat::test_that(
+  "preprocessing metadata is additive to legacy results",
+  {
+    set.seed(702)
+
+    X <- matrix(
+      stats::rnorm(100),
+      nrow = 20,
+      ncol = 5
+    )
+
+    direct_fit <- .msma_default_legacy(
+      X = X,
+      comp = 2,
+      scaling = FALSE,
+      intseed = 3
+    )
+
+    public_fit <- msma(
+      X = X,
+      comp = 2,
+      scaling = FALSE,
+      intseed = 3
+    )
+
+    old_names <- names(direct_fit)
+
+    testthat::expect_identical(
+      names(public_fit)[seq_along(old_names)],
+      old_names
+    )
+
+    comparable_fields <- setdiff(old_names, "call")
+
+    for (field in comparable_fields) {
+      testthat::expect_identical(
+        public_fit[[field]],
+        direct_fit[[field]],
+        info = field
+      )
+    }
+
+    testthat::expect_true(
+      is.call(direct_fit$call)
+    )
+
+    testthat::expect_true(
+      is.call(public_fit$call)
+    )
+
+    testthat::expect_false(
+      identical(
+        direct_fit$call,
+        public_fit$call
+      )
+    )
+
+    testthat::expect_identical(
+      tail(names(public_fit), 1),
+      "preprocess"
+    )
+
+    testthat::expect_s3_class(
+      public_fit$preprocess,
+      "msma_preprocess"
+    )
+  }
+)

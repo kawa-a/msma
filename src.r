@@ -195,6 +195,22 @@ msma = function(X, ...) UseMethod("msma")
     stop("Unknown preprocessing engine.", call. = FALSE)
 }
 
+
+# Attach preprocessing metadata without changing existing fit elements.
+.attach_msma_preprocess <- function(
+  fit,
+  engine,
+  scaling
+) {
+  fit$preprocess <- .build_msma_preprocess(
+    fit = fit,
+    engine = engine,
+    scaling = scaling
+  )
+
+  fit
+}
+
 .resolve_msma_engine <- function(
   structure.method = "none",
   gammaX = 0,
@@ -303,6 +319,13 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
     fit_s4$scaling=scaling; fit_s4$structure.method=structure.method
     fit_s4$gammaX=gammaX; fit_s4$lambdaX=lambda_s4; fit_s4$muX=muX; fit_s4$dmode="PCA"
     class(fit_s4)="s4pca"
+
+    fit_s4 <- .attach_msma_preprocess(
+      fit = fit_s4,
+      engine = engine,
+      scaling = scaling
+    )
+
     return(fit_s4)
   }
   if(identical(engine, "legacy")){
@@ -311,16 +334,24 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
     # A one-column matrix is a version 3.2 input convenience, but its
     # numerical behavior and returned object must agree with vector-valued Z.
     Z_legacy = if(z_is_matrix && z_ncol == 1L) drop(Z) else Z
-    return(.msma_default_legacy(
+    fit <- .msma_default_legacy(
       X=X, Y=Y, Z=Z_legacy, comp=comp, lambdaX=lambdaX, lambdaY=lambdaY,
       lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta=eta, type=type,
       inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX=muX, muY=muY,
       defmethod=defmethod, scaling=scaling, verbose=verbose,
       intseed=intseed, ceps=ceps, ...
-    ))
+    )
+
+    fit <- .attach_msma_preprocess(
+      fit = fit,
+      engine = engine,
+      scaling = scaling
+    )
+
+    return(fit)
   }
 
-  .msma_default_extended(
+  fit <- .msma_default_extended(
     X=X, Y=Y, Z=Z, comp=comp, lambdaX=lambdaX, lambdaY=lambdaY,
     lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta=eta, type=type,
     inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX=muX, muY=muY,
@@ -328,6 +359,14 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
     intseed=intseed, ceps=ceps, sprmethod=sprmethod, nneg=nneg,
     con4spv=con4spv, ...
   )
+
+  fit <- .attach_msma_preprocess(
+    fit = fit,
+    engine = engine,
+    scaling = scaling
+  )
+
+  fit
 }
 
 .msma_default_legacy = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, defmethod = "canonical", scaling = TRUE, verbose=FALSE, intseed=1, ceps=0.0001, ...)
