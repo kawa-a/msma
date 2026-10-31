@@ -229,6 +229,10 @@ testthat::test_that(
 
     testthat::expect_type(observed, "list")
     testthat::expect_length(observed, 2L)
+    testthat::expect_named(
+      observed,
+      names(X)
+    )
     testthat::expect_equal(
       observed,
       expected,

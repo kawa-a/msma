@@ -305,7 +305,59 @@ msma = function(X, ...) UseMethod("msma")
     result
   })
 
+
+  if (input_was_list) {
+    names(transformed) <- names(blocks)
+  }
+
   if (input_was_list) transformed else transformed[[1]]
+}
+
+
+# Invert fitted preprocessing metadata and return data to the original scale.
+.invert_msma_preprocessor <- function(
+  preprocess,
+  data,
+  side = c("X", "Y", "Z")
+) {
+  side <- match.arg(side)
+  .validate_msma_preprocessor(
+    preprocess = preprocess,
+    newdata = data,
+    side = side
+  )
+
+  if (identical(side, "Z")) return(data)
+
+  side_metadata <- preprocess[[side]]
+  input_was_list <- is.list(data)
+  blocks <- if (input_was_list) data else list(data)
+
+  centers <- side_metadata$center
+  scales <- side_metadata$scale
+  centers <- if (is.null(centers)) rep(list(NULL), length(blocks)) else if (is.list(centers)) centers else list(centers)
+  scales <- if (is.null(scales)) rep(list(NULL), length(blocks)) else if (is.list(scales)) scales else list(scales)
+
+  inverted <- lapply(seq_along(blocks), function(block_index) {
+    result <- blocks[[block_index]]
+    center <- centers[[block_index]]
+    scale <- scales[[block_index]]
+
+    if (!is.null(scale)) {
+      safe_scale <- scale
+      safe_scale[!is.finite(safe_scale) | safe_scale == 0] <- 1
+      result <- sweep(result, 2, safe_scale, "*")
+    }
+    if (!is.null(center)) result <- sweep(result, 2, center, "+")
+    result
+  })
+
+
+  if (input_was_list) {
+    names(inverted) <- names(blocks)
+  }
+
+  if (input_was_list) inverted else inverted[[1]]
 }
 
 .resolve_msma_engine <- function(
@@ -2775,8 +2827,18 @@ s4pca_reconstruct <- function(object, newdata = NULL, scaled = FALSE) {
     Xhat <- (X %*% object$W) %*% B
   }
   colnames(Xhat) <- rownames(object$W)
-  if (!scaled && isTRUE(object$scaling)) {
-    Xhat <- sweep(sweep(Xhat, 2, object$Xscale, "*"), 2, object$Xcenter, "+")
+  if (!scaled) {
+    if (!is.null(object$preprocess) &&
+        inherits(object$preprocess, "msma_preprocess")) {
+      Xhat <- .invert_msma_preprocessor(
+        preprocess = object$preprocess,
+        data = Xhat,
+        side = "X"
+      )
+    } else if (isTRUE(object$scaling)) {
+      Xhat <- sweep(sweep(Xhat, 2, object$Xscale, "*"),
+        2, object$Xcenter, "+")
+    }
   }
   Xhat
 }
