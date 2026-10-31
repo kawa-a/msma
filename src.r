@@ -197,6 +197,48 @@ msma = function(X, ...) UseMethod("msma")
 
 
 # Attach preprocessing metadata without changing existing fit elements.
+
+# Build training-derived coefficients for batch-independent reconstruction.
+.build_msma_prediction_reconstruction <- function(fit) {
+  build_side <- function(data, scores) {
+    if (is.null(data) || is.null(scores)) return(NULL)
+    data_blocks <- if (is.list(data)) data else list(data)
+    score_blocks <- if (is.list(scores)) scores else list(scores)
+    if (length(data_blocks) != length(score_blocks)) {
+      stop("Training data and score block counts differ.", call. = FALSE)
+    }
+    coefficients <- lapply(seq_along(data_blocks), function(i) {
+      coefficient <- project(data_blocks[[i]], score_blocks[[i]])
+      if (!is.matrix(coefficient) || any(!is.finite(coefficient))) {
+        stop("Fitted reconstruction coefficients must be finite matrices.", call. = FALSE)
+      }
+      coefficient
+    })
+    names(coefficients) <- names(data_blocks)
+    coefficients
+  }
+
+  x_coefficients <- build_side(fit$X, fit$sbX)
+  y_coefficients <- if (identical(fit$dmode, "PLS")) {
+    build_side(fit$Y, fit$sbY)
+  } else {
+    NULL
+  }
+
+  if (is.null(x_coefficients)) return(NULL)
+
+  structure(
+    list(
+      X = x_coefficients,
+      Y = y_coefficients,
+      scale = "analysis",
+      method = "training-score-projection",
+      version = 1L
+    ),
+    class = "msma_prediction_reconstruction"
+  )
+}
+
 .attach_msma_preprocess <- function(
   fit,
   engine,
@@ -207,6 +249,9 @@ msma = function(X, ...) UseMethod("msma")
     engine = engine,
     scaling = scaling
   )
+
+  fit$prediction_reconstruction <-
+    .build_msma_prediction_reconstruction(fit)
 
   fit
 }
@@ -1412,7 +1457,13 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
   })
 }
 
-.predict_msma_fitted <- function(object, newX, newY = NULL) {
+.predict_msma_fitted <- function(
+  object,
+  newX,
+  newY = NULL,
+  reconstruction = c("batch", "fitted")
+) {
+  reconstruction <- match.arg(reconstruction)
   if (missing(newX)) stop("newX should be specified", call. = FALSE)
   if (is.null(object$preprocess) ||
       !inherits(object$preprocess, "msma_preprocess")) {
@@ -1424,9 +1475,16 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
   if (identical(object$dmode, "PLS") && is.null(newY)) {
     stop("`newY` must be supplied for fitted PLS prediction.", call. = FALSE)
   }
+  if (identical(reconstruction, "fitted") &&
+      (is.null(object$prediction_reconstruction) ||
+       !inherits(object$prediction_reconstruction, "msma_prediction_reconstruction"))) {
+    stop(
+      "Fitted reconstruction requires Version 5 reconstruction metadata.",
+      call. = FALSE
+    )
+  }
 
-  input_x_was_list <- is.list(newX)
-  x_blocks <- if (input_x_was_list) newX else list(newX)
+  x_blocks <- if (is.list(newX)) newX else list(newX)
   x_blocks <- .apply_msma_preprocessor(
     preprocess = object$preprocess,
     newdata = x_blocks,
@@ -1437,7 +1495,11 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
     x_blocks[[i]] %*% object$wbX[[i]]
   })
   predX <- lapply(seq_along(x_blocks), function(i) {
-    cbind(sbX[[i]]) %*% project(x_blocks[[i]], sbX[[i]])
+    if (identical(reconstruction, "fitted")) {
+      sbX[[i]] %*% object$prediction_reconstruction$X[[i]]
+    } else {
+      cbind(sbX[[i]]) %*% project(x_blocks[[i]], sbX[[i]])
+    }
   })
   names(sbX) <- names(x_blocks)
   names(predX) <- names(x_blocks)
@@ -1445,8 +1507,7 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
   if (identical(object$dmode, "PCA")) {
     predY <- sbY <- NULL
   } else {
-    input_y_was_list <- is.list(newY)
-    y_blocks <- if (input_y_was_list) newY else list(newY)
+    y_blocks <- if (is.list(newY)) newY else list(newY)
     y_blocks <- .apply_msma_preprocessor(
       preprocess = object$preprocess,
       newdata = y_blocks,
@@ -1457,7 +1518,11 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
       y_blocks[[i]] %*% object$wbY[[i]]
     })
     predY <- lapply(seq_along(y_blocks), function(i) {
-      cbind(sbY[[i]]) %*% project(y_blocks[[i]], sbY[[i]])
+      if (identical(reconstruction, "fitted")) {
+        sbY[[i]] %*% object$prediction_reconstruction$Y[[i]]
+      } else {
+        cbind(sbY[[i]]) %*% project(y_blocks[[i]], sbY[[i]])
+      }
     })
     names(sbY) <- names(y_blocks)
     names(predY) <- names(y_blocks)
@@ -1473,10 +1538,26 @@ predict.msma <- function(object, newX, newY = NULL, ...) {
   } else {
     match.arg(dots$preprocessing, c("legacy", "fitted"))
   }
+  reconstruction <- if (is.null(dots$reconstruction)) {
+    "batch"
+  } else {
+    match.arg(dots$reconstruction, c("batch", "fitted"))
+  }
   if (identical(preprocessing, "legacy")) {
+    if (!identical(reconstruction, "batch")) {
+      stop(
+        "Fitted reconstruction requires `preprocessing = \"fitted\"`.",
+        call. = FALSE
+      )
+    }
     return(.predict_msma_legacy(object = object, newX = newX, newY = newY))
   }
-  .predict_msma_fitted(object = object, newX = newX, newY = newY)
+  .predict_msma_fitted(
+    object = object,
+    newX = newX,
+    newY = newY,
+    reconstruction = reconstruction
+  )
 }
 
 #' Cross-Validation

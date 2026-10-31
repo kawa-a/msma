@@ -1,0 +1,67 @@
+msma Version 5 M3-D fitted reconstruction
+Date: 2026-10-31 21:36:50 +0900
+Branch: feature/v5-preprocessing-serialization
+Parent commit: b18d0acb6fe45b1f949c5b13838c68f5be815896
+
+M3-B legacy tests after M3-D:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 30
+
+M3-C fitted preprocessing tests after M3-D:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 20
+
+M3-D fitted reconstruction tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 28
+
+Updated preprocessing contract tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 115
+
+Full regression test suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 832
+
+Metadata contract:
+* class: msma_prediction_reconstruction
+* X: block-specific component-by-variable matrices
+* Y: block-specific matrices for PLS and NULL for PCA
+* scale: analysis
+* method: training-score-projection
+* version: 1L
+
+Engine scope:
+* preprocess metadata are attached to every Version 5 fit
+* prediction_reconstruction is attached when training data and block scores are available
+* fits without the required reconstruction inputs retain preprocess as the final added field
+
+Prediction contract:
+* default preprocessing remains legacy
+* fitted preprocessing defaults to batch reconstruction
+* reconstruction = fitted uses saved training coefficients
+* fitted reconstruction is batch independent
+* legacy preprocessing cannot use fitted reconstruction
+
+Compatibility:
+* M3-B legacy fixtures are preserved
+* M3-C batch reconstruction remains the fitted-mode default
+* predict.msma formal arguments remain unchanged
+* reconstruction metadata survive saveRDS/readRDS
+
+M3-D status: COMPLETE

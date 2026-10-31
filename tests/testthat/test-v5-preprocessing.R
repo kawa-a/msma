@@ -496,10 +496,36 @@ testthat::test_that(
         engine
       )
 
-      testthat::expect_identical(
-        tail(names(fits[[engine]]), 1),
-        "preprocess"
-      )
+      fit <- fits[[engine]]
+
+      if (
+        is.null(
+          fit$prediction_reconstruction
+        )
+      ) {
+        testthat::expect_identical(
+          tail(names(fit), 1),
+          "preprocess"
+        )
+
+        testthat::expect_true(
+          is.null(fit$X) ||
+            is.null(fit$sbX)
+        )
+      } else {
+        testthat::expect_identical(
+          tail(names(fit), 2),
+          c(
+            "preprocess",
+            "prediction_reconstruction"
+          )
+        )
+
+        testthat::expect_s3_class(
+          fit$prediction_reconstruction,
+          "msma_prediction_reconstruction"
+        )
+      }
     }
   }
 )
@@ -563,8 +589,16 @@ testthat::test_that(
     )
 
     testthat::expect_identical(
-      tail(names(public_fit), 1),
-      "preprocess"
+      tail(names(public_fit), 2),
+      c(
+        "preprocess",
+        "prediction_reconstruction"
+      )
+    )
+
+    testthat::expect_s3_class(
+      public_fit$prediction_reconstruction,
+      "msma_prediction_reconstruction"
     )
 
     testthat::expect_s3_class(
