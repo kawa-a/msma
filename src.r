@@ -110,6 +110,39 @@ msma = function(X, ...) UseMethod("msma")
 # The exact version 3.1 engine is used unless a version 3.2 feature is requested.
 
 # Resolve the Version 5 computational path without performing estimation.
+
+# Create Version 5 preprocessing metadata without transforming data.
+.new_msma_preprocess <- function(
+  engine,
+  scaling
+) {
+  structure(
+    list(
+      engine = engine,
+      scaling = scaling,
+
+      X = list(
+        center = NULL,
+        scale = NULL,
+        missing_method = NULL
+      ),
+
+      Y = list(
+        center = NULL,
+        scale = NULL,
+        missing_method = NULL
+      ),
+
+      Z = list(
+        method = "none",
+        center = NULL,
+        scale = NULL
+      )
+    ),
+    class = "msma_preprocess"
+  )
+}
+
 .resolve_msma_engine <- function(
   structure.method = "none",
   gammaX = 0,
