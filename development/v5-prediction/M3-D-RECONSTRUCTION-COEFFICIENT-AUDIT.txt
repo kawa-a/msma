@@ -1,0 +1,11 @@
+msma Version 5 M3-D reconstruction coefficient audit
+Date: 2026-10-31 21:02:04 +0900
+Branch: feature/v5-preprocessing-serialization
+Commit: 92bcaddc1d749ac115683e067e9f051b4e863d8e
+
+        function_name exists
+         predict.msma   TRUE
+ .predict_msma_legacy   TRUE
+ .predict_msma_fitted   TRUE
+              project   TRUE
+    s4pca_reconstruct   TRUE

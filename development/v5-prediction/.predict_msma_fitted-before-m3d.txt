@@ -1,0 +1,44 @@
+   1 | {
+   2 |     if (missing(newX))
+   3 |         stop("newX should be specified", call. = FALSE)
+   4 |     if (is.null(object$preprocess) || !inherits(object$preprocess, "msma_preprocess")) {
+   5 |         stop("Fitted preprocessing requires a Version 5 fit with `preprocess` metadata.", call. = FALSE)
+   6 |     }
+   7 |     if (identical(object$dmode, "PLS") && is.null(newY)) {
+   8 |         stop("`newY` must be supplied for fitted PLS prediction.", call. = FALSE)
+   9 |     }
+  10 |     input_x_was_list <- is.list(newX)
+  11 |     x_blocks <- if (input_x_was_list)
+  12 |         newX
+  13 |     else list(newX)
+  14 |     x_blocks <- .apply_msma_preprocessor(preprocess = object$preprocess, newdata = x_blocks, side = "X")
+  15 |     x_blocks <- .predict_msma_replace_missing(x_blocks)
+  16 |     sbX <- lapply(seq_along(x_blocks), function(i) {
+  17 |         x_blocks[[i]] %*% object$wbX[[i]]
+  18 |     })
+  19 |     predX <- lapply(seq_along(x_blocks), function(i) {
+  20 |         cbind(sbX[[i]]) %*% project(x_blocks[[i]], sbX[[i]])
+  21 |     })
+  22 |     names(sbX) <- names(x_blocks)
+  23 |     names(predX) <- names(x_blocks)
+  24 |     if (identical(object$dmode, "PCA")) {
+  25 |         predY <- sbY <- NULL
+  26 |     }
+  27 |     else {
+  28 |         input_y_was_list <- is.list(newY)
+  29 |         y_blocks <- if (input_y_was_list)
+  30 |             newY
+  31 |         else list(newY)
+  32 |         y_blocks <- .apply_msma_preprocessor(preprocess = object$preprocess, newdata = y_blocks, side = "Y")
+  33 |         y_blocks <- .predict_msma_replace_missing(y_blocks)
+  34 |         sbY <- lapply(seq_along(y_blocks), function(i) {
+  35 |             y_blocks[[i]] %*% object$wbY[[i]]
+  36 |         })
+  37 |         predY <- lapply(seq_along(y_blocks), function(i) {
+  38 |             cbind(sbY[[i]]) %*% project(y_blocks[[i]], sbY[[i]])
+  39 |         })
+  40 |         names(sbY) <- names(y_blocks)
+  41 |         names(predY) <- names(y_blocks)
+  42 |     }
+  43 |     list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
+  44 | }

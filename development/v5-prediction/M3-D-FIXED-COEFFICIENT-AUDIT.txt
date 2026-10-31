@@ -1,0 +1,33 @@
+Training-derived fixed reconstruction coefficient audit
+
+List of 3
+ $ PCA_X:List of 1
+  ..$ :List of 7
+  .. ..$ coefficient          : num [1:2, 1:6] 0.633 0.154 -0.284 0.519 -0.208 ...
+  .. .. ..- attr(*, "dimnames")=List of 2
+  .. ..$ coefficient_dim      : int [1:2] 2 6
+  .. ..$ reconstruction_dim   : int [1:2] 40 6
+  .. ..$ finite               : logi TRUE
+  .. ..$ processed_sum_squares: num 234
+  .. ..$ residual_sum_squares : num 136
+  .. ..$ original_dim         : int [1:2] 40 6
+ $ PLS_X:List of 1
+  ..$ :List of 7
+  .. ..$ coefficient          : num [1:2, 1:6] 0.42586 0.62272 0.00859 -0.33768 0.24763 ...
+  .. .. ..- attr(*, "dimnames")=List of 2
+  .. ..$ coefficient_dim      : int [1:2] 2 6
+  .. ..$ reconstruction_dim   : int [1:2] 40 6
+  .. ..$ finite               : logi TRUE
+  .. ..$ processed_sum_squares: num 234
+  .. ..$ residual_sum_squares : num 139
+  .. ..$ original_dim         : int [1:2] 40 6
+ $ PLS_Y:List of 1
+  ..$ :List of 7
+  .. ..$ coefficient          : num [1:2, 1:4] -0.23 -0.226 0.27 -0.974 -0.952 ...
+  .. .. ..- attr(*, "dimnames")=List of 2
+  .. ..$ coefficient_dim      : int [1:2] 2 4
+  .. ..$ reconstruction_dim   : int [1:2] 40 4
+  .. ..$ finite               : logi TRUE
+  .. ..$ processed_sum_squares: num 156
+  .. ..$ residual_sum_squares : num 75.9
+  .. ..$ original_dim         : int [1:2] 40 4
