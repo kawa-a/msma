@@ -1,0 +1,36 @@
+   1 | {
+   2 |     if (missing(newX)) 
+   3 |         stop("newX should be specified")
+   4 |     if (is.null(newY) | (object$dmode == "PCA")) 
+   5 |         newY = newX
+   6 |     if (!inherits(newX, "list")) 
+   7 |         newX = list(newX)
+   8 |     if (!inherits(newY, "list")) 
+   9 |         newY = list(newY)
+  10 |     if (!inherits(newX, "list")) 
+  11 |         stop("newX should be a list")
+  12 |     if (!inherits(newY, "list")) 
+  13 |         stop("newY should be a list")
+  14 |     Ynb = length(newY)
+  15 |     Xnb = length(newX)
+  16 |     newX = lapply(1:length(newX), function(x) scale(newX[[x]], center = object$Xscale[[x]]$`scaled:center`))
+  17 |     newX = lapply(newX, function(x) apply(x, 2, function(x2) {
+  18 |         x2[is.na(x2)] = 0
+  19 |         x2
+  20 |     }))
+  21 |     sbX = lapply(1:Xnb, function(x) newX[[x]] %*% object$wbX[[x]])
+  22 |     predX = lapply(1:Xnb, function(x) cbind(sbX[[x]]) %*% project(newX[[x]], sbX[[x]]))
+  23 |     if (!(is.null(newY) | object$dmode == "PCA")) {
+  24 |         newY = lapply(1:length(newY), function(x) scale(newY[[x]], center = object$Yscale[[x]]$`scaled:center`))
+  25 |         newY = lapply(newY, function(y) apply(y, 2, function(y2) {
+  26 |             y2[is.na(y2)] = 0
+  27 |             y2
+  28 |         }))
+  29 |         sbY = lapply(1:Ynb, function(x) newY[[x]] %*% object$wbY[[x]])
+  30 |         predY = lapply(1:Ynb, function(x) cbind(sbY[[x]]) %*% project(newY[[x]], sbY[[x]]))
+  31 |     }
+  32 |     else {
+  33 |         predY = sbY = NULL
+  34 |     }
+  35 |     list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
+  36 | }
