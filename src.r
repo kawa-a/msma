@@ -108,6 +108,70 @@ msma = function(X, ...) UseMethod("msma")
 #' @export
 # Backward-compatible dispatcher for msma 3.2.
 # The exact version 3.1 engine is used unless a version 3.2 feature is requested.
+
+# Resolve the Version 5 computational path without performing estimation.
+.resolve_msma_engine <- function(
+  structure.method = "none",
+  gammaX = 0,
+  sprmethod = "PCA",
+  Z = NULL,
+  con4spv = NULL
+) {
+  structure.method <- match.arg(
+    structure.method,
+    choices = c(
+      "none",
+      "soft",
+      "exclusive"
+    )
+  )
+
+  gamma_activates_soft <- (
+    length(gammaX) == 1L &&
+      is.numeric(gammaX) &&
+      is.finite(gammaX) &&
+      gammaX > 0
+  )
+
+  if (identical(structure.method, "exclusive")) {
+    return("exclusive")
+  }
+
+  if (
+    identical(structure.method, "soft") ||
+      gamma_activates_soft
+  ) {
+    return("soft")
+  }
+
+  z_is_matrix <- (
+    !is.null(Z) &&
+      !is.null(dim(Z))
+  )
+
+  z_ncol <- if (z_is_matrix) {
+    ncol(as.matrix(Z))
+  } else if (is.null(Z)) {
+    0L
+  } else {
+    1L
+  }
+
+  z_is_multivariate <- z_ncol > 1L
+
+  use_extended <- (
+    !identical(sprmethod, "PCA") ||
+      z_is_multivariate ||
+      !is.null(con4spv)
+  )
+
+  if (use_extended) {
+    return("extended")
+  }
+
+  "legacy"
+}
+
 msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
   lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL,
   inXsup=NULL, inYsup=NULL, muX=0, muY=0, defmethod="canonical",
@@ -117,11 +181,18 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
   structure.method=c("none", "soft", "exclusive")[1], gammaX=0,
   history.method=c("sumabs", "any", "count")[1], niterS4=30, ...)
 {
-  structure.method = match.arg(structure.method, c("none", "soft", "exclusive"))
-  use_s4pca = !identical(structure.method, "none") ||
-    (length(gammaX)==1L && is.numeric(gammaX) && is.finite(gammaX) && gammaX > 0)
+  engine <- .resolve_msma_engine(
+    structure.method = structure.method,
+    gammaX = gammaX,
+    sprmethod = sprmethod,
+    Z = Z,
+    con4spv = con4spv
+  )
+
+  use_s4pca <- engine %in% c("soft", "exclusive")
+
   if(use_s4pca){
-    if(identical(structure.method, "none")) structure.method = "soft"
+    structure.method <- engine
     if(!is.matrix(X) || is.list(X)) stop("Structured PCA requires X to be a single numeric matrix", call.=FALSE)
     if(!is.null(Y)) stop("Structured PCA with Y is not supported in msma 4.0", call.=FALSE)
     if(length(comp)!=1L) stop("Structured PCA requires a single component count", call.=FALSE)
@@ -149,12 +220,9 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
     class(fit_s4)="s4pca"
     return(fit_s4)
   }
-  z_is_matrix = !is.null(Z) && !is.null(dim(Z))
-  z_ncol = if(z_is_matrix) ncol(as.matrix(Z)) else if(is.null(Z)) 0L else 1L
-  z_is_multivariate = z_ncol > 1L
-  use_extended = !identical(sprmethod, "PCA") || z_is_multivariate || !is.null(con4spv)
-
-  if(!use_extended){
+  if(identical(engine, "legacy")){
+    z_is_matrix = !is.null(Z) && !is.null(dim(Z))
+    z_ncol = if(z_is_matrix) ncol(as.matrix(Z)) else if(is.null(Z)) 0L else 1L
     # A one-column matrix is a version 3.2 input convenience, but its
     # numerical behavior and returned object must agree with vector-valued Z.
     Z_legacy = if(z_is_matrix && z_ncol == 1L) drop(Z) else Z
