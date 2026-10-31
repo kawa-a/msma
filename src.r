@@ -2761,8 +2761,16 @@ s4pca_reconstruct <- function(object, newdata = NULL, scaled = FALSE) {
     if (!is.numeric(X) || ncol(X) != nrow(object$W) || any(!is.finite(X))) {
       stop("newdata must be a finite numeric matrix with the fitted variables", call. = FALSE)
     }
-    if (isTRUE(object$scaling)) {
-      X <- sweep(sweep(X, 2, object$Xcenter, "-"), 2, object$Xscale, "/")
+    if (!is.null(object$preprocess) &&
+        inherits(object$preprocess, "msma_preprocess")) {
+      X <- .apply_msma_preprocessor(
+        preprocess = object$preprocess,
+        newdata = X,
+        side = "X"
+      )
+    } else if (isTRUE(object$scaling)) {
+      X <- sweep(sweep(X, 2, object$Xcenter, "-"),
+        2, object$Xscale, "/")
     }
     Xhat <- (X %*% object$W) %*% B
   }
