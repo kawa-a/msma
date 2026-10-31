@@ -1,3 +1,17 @@
+Changes in development version 5.0.0.9000
+
+* Started the Version 5 development cycle.
+
+* Version 4.0 numerical behavior is retained as the initial
+  regression reference.
+
+* Initial development focuses on estimation-engine dispatch,
+  preprocessing infrastructure, structured control objects, and
+  unified diagnostic outputs.
+
+* Additional visualization and model-selection functionality will
+  be added after the internal infrastructure is stabilized.
+
 CHANGES IN VERSION 4.0
 
 NEW FEATURES
