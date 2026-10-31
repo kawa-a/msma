@@ -1,0 +1,53 @@
+msma Version 5 M3-C fitted preprocessing prediction
+Date: 2026-10-31 19:34:24 +0900
+Branch: feature/v5-preprocessing-serialization
+Parent commit: dee07eb31448a9a922a42ff98567c75c41ae2fe6
+
+M3-B legacy tests after M3-C:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 30
+
+M3-C fitted-mode tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 20
+
+Full regression test suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 799
+
+Public contract:
+* preprocessing omitted: legacy mode
+* preprocessing = legacy: M3-B behavior
+* preprocessing = fitted: fitted Version 5 metadata
+
+Fitted-mode behavior:
+* training center and scale are reused
+* single-row prediction uses fitted scale
+* component scores are independent of batch composition
+* reconstructions remain batch-dependent through project()
+* column names and order are validated
+* multiblock names are preserved
+* PLS requires newY explicitly
+* Version 4-like fits without metadata are rejected clearly
+
+Compatibility:
+* predict.msma formal arguments remain unchanged
+* default numerical behavior remains equal to M3-B fixtures
+* all 30 M3-B legacy expectations remain successful
+* no existing regression test is weakened
+
+Scope boundary:
+* M3-C fixes prediction preprocessing and score projection
+* M3-C does not fix reconstruction coefficients
+* batch-independent reconstruction requires a separate milestone
+
+M3-C status: COMPLETE

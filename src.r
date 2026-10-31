@@ -1367,42 +1367,116 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
 #' ##### Predict #####
 #' test = predict(fit2, newX=X, newY=Y)
 #' 
-predict.msma = function(object, newX, newY=NULL,...){
-##### Requirement #####
-if(missing(newX)) stop("newX should be specified")
-#if(missing(newY)) stop("newY should be specified")
-
-if(is.null(newY) | (object$dmode == "PCA")) newY = newX
-
-if(!inherits(newX, "list")) newX = list(newX)
-if(!inherits(newY, "list")) newY = list(newY)
-
-if(!inherits(newX, "list")) stop("newX should be a list")
-if(!inherits(newY, "list")) stop("newY should be a list")
-
-Ynb = length(newY)
-Xnb = length(newX)
-
-########## Start ##########
-#newX = lapply(1:length(newX), function(x) scale(newX[[x]], center=object$Xscale[[x]]$`scaled:center`, scale=object$Xscale[[x]]$`scaled:scale`))
-newX = lapply(1:length(newX), function(x) scale(newX[[x]], center=object$Xscale[[x]]$`scaled:center`))
-newX = lapply(newX, function(x) apply(x, 2, function(x2){ x2[is.na(x2)] = 0; x2}))
-sbX = lapply(1:Xnb, function(x) newX[[x]] %*% object$wbX[[x]] )
-predX = lapply(1:Xnb, function(x) cbind(sbX[[x]]) %*% project(newX[[x]], sbX[[x]]))
-
-if(!(is.null(newY) | object$dmode == "PCA")) {
-#newY = lapply(1:length(newY), function(x) scale(newY[[x]], center=object$Yscale[[x]]$`scaled:center`, scale=object$Yscale[[x]]$`scaled:scale`))
-newY = lapply(1:length(newY), function(x) scale(newY[[x]], center=object$Yscale[[x]]$`scaled:center`))
-newY = lapply(newY, function(y) apply(y, 2, function(y2){ y2[is.na(y2)] = 0; y2}))
-sbY = lapply(1:Ynb, function(x) newY[[x]] %*% object$wbY[[x]] )
-predY = lapply(1:Ynb, function(x) cbind(sbY[[x]]) %*% project(newY[[x]], sbY[[x]]))
-}else
-{
-predY = sbY = NULL
+.predict_msma_legacy <- function(object, newX, newY = NULL) {
+  if (missing(newX)) stop("newX should be specified")
+  if (is.null(newY) | (object$dmode == "PCA")) newY <- newX
+  if (!inherits(newX, "list")) newX <- list(newX)
+  if (!inherits(newY, "list")) newY <- list(newY)
+  if (!inherits(newX, "list")) stop("newX should be a list")
+  if (!inherits(newY, "list")) stop("newY should be a list")
+  Ynb <- length(newY)
+  Xnb <- length(newX)
+  newX <- lapply(seq_along(newX), function(x) {
+    scale(newX[[x]], center = object$Xscale[[x]]$`scaled:center`)
+  })
+  newX <- lapply(newX, function(x) apply(x, 2, function(x2) {
+    x2[is.na(x2)] <- 0
+    x2
+  }))
+  sbX <- lapply(seq_len(Xnb), function(x) newX[[x]] %*% object$wbX[[x]])
+  predX <- lapply(seq_len(Xnb), function(x) {
+    cbind(sbX[[x]]) %*% project(newX[[x]], sbX[[x]])
+  })
+  if (!(is.null(newY) | object$dmode == "PCA")) {
+    newY <- lapply(seq_along(newY), function(x) {
+      scale(newY[[x]], center = object$Yscale[[x]]$`scaled:center`)
+    })
+    newY <- lapply(newY, function(y) apply(y, 2, function(y2) {
+      y2[is.na(y2)] <- 0
+      y2
+    }))
+    sbY <- lapply(seq_len(Ynb), function(x) newY[[x]] %*% object$wbY[[x]])
+    predY <- lapply(seq_len(Ynb), function(x) {
+      cbind(sbY[[x]]) %*% project(newY[[x]], sbY[[x]])
+    })
+  } else {
+    predY <- sbY <- NULL
+  }
+  list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
 }
 
-##### Output #####
-list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
+.predict_msma_replace_missing <- function(blocks) {
+  lapply(blocks, function(block) {
+    block[is.na(block)] <- 0
+    block
+  })
+}
+
+.predict_msma_fitted <- function(object, newX, newY = NULL) {
+  if (missing(newX)) stop("newX should be specified", call. = FALSE)
+  if (is.null(object$preprocess) ||
+      !inherits(object$preprocess, "msma_preprocess")) {
+    stop(
+      "Fitted preprocessing requires a Version 5 fit with `preprocess` metadata.",
+      call. = FALSE
+    )
+  }
+  if (identical(object$dmode, "PLS") && is.null(newY)) {
+    stop("`newY` must be supplied for fitted PLS prediction.", call. = FALSE)
+  }
+
+  input_x_was_list <- is.list(newX)
+  x_blocks <- if (input_x_was_list) newX else list(newX)
+  x_blocks <- .apply_msma_preprocessor(
+    preprocess = object$preprocess,
+    newdata = x_blocks,
+    side = "X"
+  )
+  x_blocks <- .predict_msma_replace_missing(x_blocks)
+  sbX <- lapply(seq_along(x_blocks), function(i) {
+    x_blocks[[i]] %*% object$wbX[[i]]
+  })
+  predX <- lapply(seq_along(x_blocks), function(i) {
+    cbind(sbX[[i]]) %*% project(x_blocks[[i]], sbX[[i]])
+  })
+  names(sbX) <- names(x_blocks)
+  names(predX) <- names(x_blocks)
+
+  if (identical(object$dmode, "PCA")) {
+    predY <- sbY <- NULL
+  } else {
+    input_y_was_list <- is.list(newY)
+    y_blocks <- if (input_y_was_list) newY else list(newY)
+    y_blocks <- .apply_msma_preprocessor(
+      preprocess = object$preprocess,
+      newdata = y_blocks,
+      side = "Y"
+    )
+    y_blocks <- .predict_msma_replace_missing(y_blocks)
+    sbY <- lapply(seq_along(y_blocks), function(i) {
+      y_blocks[[i]] %*% object$wbY[[i]]
+    })
+    predY <- lapply(seq_along(y_blocks), function(i) {
+      cbind(sbY[[i]]) %*% project(y_blocks[[i]], sbY[[i]])
+    })
+    names(sbY) <- names(y_blocks)
+    names(predY) <- names(y_blocks)
+  }
+
+  list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
+}
+
+predict.msma <- function(object, newX, newY = NULL, ...) {
+  dots <- list(...)
+  preprocessing <- if (is.null(dots$preprocessing)) {
+    "legacy"
+  } else {
+    match.arg(dots$preprocessing, c("legacy", "fitted"))
+  }
+  if (identical(preprocessing, "legacy")) {
+    return(.predict_msma_legacy(object = object, newX = newX, newY = newY))
+  }
+  .predict_msma_fitted(object = object, newX = newX, newY = newY)
 }
 
 #' Cross-Validation
