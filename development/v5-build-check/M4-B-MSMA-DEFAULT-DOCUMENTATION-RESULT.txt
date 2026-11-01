@@ -1,0 +1,56 @@
+msma Version 5 M4-B msma.default documentation repair
+Date: 2026-11-01 22:25:11 +0900
+Branch: feature/v5-preprocessing-serialization
+Parent commit: 3e15066f3de26431a147cb8fd38b606a101fc750
+
+Source contract:
+one_method_tag: TRUE
+one_default_function: TRUE
+rdname_immediately_before: TRUE
+export_immediately_after: TRUE
+function_immediately_after: TRUE
+
+Generated msma.Rd contract:
+no_preprocess_alias: TRUE
+default_alias_present: TRUE
+no_engine_scaling_usage: TRUE
+default_usage_present: TRUE
+X_documented: TRUE
+Y_documented: TRUE
+
+Generated NAMESPACE contract:
+generic_export: TRUE
+default_registration: TRUE
+no_internal_preprocess_export: TRUE
+
+Full regression suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 878
+
+R CMD build:
+status: 0
+
+R CMD check:
+errors: 0
+warnings: 0
+notes: 1
+
+Repair:
+* Removed the floating msma.default roxygen tags from before .new_msma_preprocess
+* Attached @rdname, @method, and @export directly to msma.default
+* Removed .new_msma_preprocess from msma.Rd aliases
+* Restored the full msma.default usage signature
+* Preserved S3method(msma,default)
+* Preserved export(msma)
+* Did not change computational code or public formals
+
+Remaining check diagnostic:
+* CRAN incoming feasibility NOTE for development version 5.0.0.9000
+* ERROR: 0
+* WARNING: 0
+* NOTE: 1
+
+M4-B status: COMPLETE

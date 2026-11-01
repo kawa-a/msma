@@ -1,0 +1,33 @@
+msma Version 5 M4-A package build/check baseline audit
+Date: 2026-11-01 22:19:56 +0900
+Branch: feature/v5-preprocessing-serialization
+Commit: 3e15066f3de26431a147cb8fd38b606a101fc750
+R: R version 4.5.2 (2025-10-31 ucrt)
+Platform: x86_64-w64-mingw32
+Pandoc: 3.10.1
+
+Source parse: TRUE
+DESCRIPTION: package=TRUE, version_present=TRUE, encoding_utf8=TRUE, vignette_builder=TRUE
+Tests: failed=0, error=0, skipped=0, warning=0, passed=878
+
+Roxygen error: NONE
+Roxygen warnings: 0
+Roxygen messages: 19
+S3 registrations: S3method(msma,default)=TRUE, S3method(plot,msma)=TRUE, S3method(predict,msma)=TRUE, S3method(print,msma)=TRUE, S3method(print,summary.msma)=TRUE, S3method(summary,msma)=TRUE
+Rd files parsed: 15/15
+predict.msma Rd: generated=TRUE, title=TRUE, preprocessing=TRUE, reconstruction=TRUE, output_scale=TRUE, interpretation=TRUE
+
+Vignettes: msma-ecmsma.Rmd=TRUE, msma-introduction.Rmd=TRUE, msma-model-selection.Rmd=TRUE, msma-multiblock.Rmd=TRUE, msma-soft-structured.Rmd=TRUE
+R CMD build status: 0
+Built tarball: C:\Users\kawaa\AppData\Local\Temp\RtmpoR0vwJ/msma-m4a-build-check/msma_5.0.0.9000.tar.gz
+R CMD check status: 0
+R CMD check summary: errors=0, warnings=0, notes=1
+
+Source-package content: has_description=TRUE, has_namespace=TRUE, has_predict_rd=TRUE, has_tests=TRUE, has_vignettes=TRUE, excludes_development=TRUE, excludes_git=TRUE
+
+Interpretation:
+* Roxygen messages are audited separately from build/check failures.
+* The existing msma.default export diagnostic is retained for M4-B review.
+* M4-A does not modify tracked implementation or documentation files.
+
+M4-A status: BASELINE COMPLETE

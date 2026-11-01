@@ -103,9 +103,6 @@
 #' 
 msma = function(X, ...) UseMethod("msma")
 
-#' @rdname msma
-#' @method msma default
-#' @export
 # Backward-compatible dispatcher for msma 3.2.
 # The exact version 3.1 engine is used unless a version 3.2 feature is requested.
 
@@ -467,6 +464,9 @@ msma = function(X, ...) UseMethod("msma")
   "legacy"
 }
 
+#' @rdname msma
+#' @method msma default
+#' @export
 msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
   lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL,
   inXsup=NULL, inYsup=NULL, muX=0, muY=0, defmethod="canonical",
