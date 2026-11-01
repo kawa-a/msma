@@ -1,5 +1,28 @@
 Changes in development version 5.0.0.9000
 
+PREDICTION WORKFLOW
+
+* Added fitted preprocessing to predict.msma() through
+  preprocessing = "fitted".
+
+* Added training-derived fixed reconstruction coefficients through
+  reconstruction = "fitted".
+
+* Added reconstruction output-scale control through
+  output_scale = "analysis" and output_scale = "original".
+
+* Preserved historical prediction behavior as the default for backward
+  numerical compatibility.
+
+* Added validation of block counts, dimensions, column names, and column
+  order for fitted preprocessing.
+
+* Added serialization of preprocessing and prediction-reconstruction
+  metadata.
+
+* Clarified that predict.msma() projects and reconstructs X and Y
+  independently and does not predict Y from X.
+
 * Started the Version 5 development cycle.
 
 * Version 4.0 numerical behavior is retained as the initial

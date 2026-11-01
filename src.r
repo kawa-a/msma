@@ -1377,41 +1377,6 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
 }
 }
 
-#' Prediction
-#'
-#' predict method for class "msma". 
-#'
-#' This function produces a prediction from new data based on \code{\link{msma}} fit. It is mainly used in cross-validation
-#'
-#' @name predict.msma
-#' @aliases predict.msma
-#' @rdname predict.msma
-#' @method predict msma
-#' @docType methods
-#' @export
-#'
-#' @param object an object of class "\code{msma}", usually, a result of a call to \code{\link{msma}}
-#' @param newX a matrix in which to look for variables with which to predict X.
-#' @param newY a matrix in which to look for variables with which to predict Y.
-#' @param ... further arguments passed to or from other methods.
-#'
-#' @return \item{X}{predicted X}
-#' @return \item{sbX}{block score for X}
-#' @return \item{Y}{predicted Y}
-#' @return \item{sbY}{block score for Y}
-#'
-#' @examples
-#' ##### data #####
-#' tmpdata = simdata(n = 50, rho = 0.8, Yps = c(10, 12, 15), Xps = 20, seed=1)
-#' X = tmpdata$X; Y = tmpdata$Y 
-#' 
-#' ##### Two Component #####
-#' fit2 = msma(X, Y, comp=2, lambdaX=2, lambdaY=1:3)
-#' summary(fit2)
-#' 
-#' ##### Predict #####
-#' test = predict(fit2, newX=X, newY=Y)
-#' 
 .predict_msma_legacy <- function(object, newX, newY = NULL) {
   if (missing(newX)) stop("newX should be specified")
   if (is.null(newY) | (object$dmode == "PCA")) newY <- newX
@@ -1548,6 +1513,70 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
   list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
 }
 
+#' Project and Reconstruct New Data with an msma Fit
+#'
+#' Projects supplied X-side and, for PLS, Y-side data into the fitted
+#' component spaces and returns component scores and low-rank
+#' reconstructions.
+#'
+#' This method does not predict Y from X. When \code{newY} is supplied,
+#' X and Y are projected and reconstructed independently in their
+#' corresponding fitted component spaces.
+#'
+#' Historical prediction behavior remains the default. Additional
+#' Version 5 prediction controls can be supplied through \code{...}.
+#'
+#' @param object an object of class \code{\"msma\"}.
+#' @param newX a numeric matrix or list of numeric matrices for the X side.
+#' @param newY an optional numeric matrix or list of numeric matrices for
+#'   the Y side. Fitted PLS prediction requires \code{newY}. The supplied
+#'   Y data are projected and reconstructed independently and are not
+#'   predicted from \code{newX}.
+#' @param ... additional prediction controls:
+#'   \describe{
+#'     \item{\code{preprocessing}}{Either \code{\"legacy\"} or
+#'       \code{\"fitted\"}. The default preserves historical numerical
+#'       behavior; fitted preprocessing reuses training center and scale.}
+#'     \item{\code{reconstruction}}{Either \code{\"batch\"} or
+#'       \code{\"fitted\"}. Fitted reconstruction uses training-derived
+#'       coefficients and is independent of prediction-batch composition.}
+#'     \item{\code{output_scale}}{Either \code{\"analysis\"} or
+#'       \code{\"original\"}. Original output applies inverse fitted
+#'       preprocessing to reconstructed X and Y blocks.}
+#'   }
+#'
+#' @return a list with four elements:
+#'   \describe{
+#'     \item{\code{X}}{X-side low-rank reconstructions.}
+#'     \item{\code{sbX}}{X-side component scores on the analysis scale.}
+#'     \item{\code{Y}}{Y-side low-rank reconstructions, or \code{NULL} for PCA.}
+#'     \item{\code{sbY}}{Y-side component scores, or \code{NULL} for PCA.}
+#'   }
+#'
+#' @details
+#' Fitted reconstruction and original-scale output require
+#' \code{preprocessing = \"fitted\"}. Scores remain on the analysis scale.
+#'
+#' @examples
+#' set.seed(1)
+#' X <- matrix(rnorm(180), nrow = 30, ncol = 6)
+#' colnames(X) <- paste0("x", seq_len(ncol(X)))
+#' fit <- msma(X = X, comp = 2, scaling = TRUE, intseed = 3)
+#' prediction <- predict(
+#'   fit,
+#'   newX = X[1:5, , drop = FALSE],
+#'   preprocessing = "fitted",
+#'   reconstruction = "fitted",
+#'   output_scale = "original"
+#' )
+#' names(prediction)
+#'
+#' @name predict.msma
+#' @aliases predict.msma
+#' @rdname predict.msma
+#' @docType methods
+#' @method predict msma
+#' @export
 predict.msma <- function(object, newX, newY = NULL, ...) {
   dots <- list(...)
   preprocessing <- if (is.null(dots$preprocessing)) {

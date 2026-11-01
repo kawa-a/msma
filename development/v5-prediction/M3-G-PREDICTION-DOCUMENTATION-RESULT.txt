@@ -1,0 +1,56 @@
+msma Version 5 M3-G prediction documentation
+Date: 2026-11-01 10:40:37 +0900
+Branch: feature/v5-preprocessing-serialization
+Parent commit: 07c6ab4951cc07176dfe1c0413b0d8a2c92c6b8e
+
+Documentation contract tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 24
+
+Full regression suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 878
+
+Vignette rendering:
+introduction: TRUE
+multiblock: TRUE
+
+Roxygen generation:
+title: TRUE
+preprocessing: TRUE
+reconstruction: TRUE
+output_scale: TRUE
+interpretation: TRUE
+* predict.msma.Rd generated: TRUE
+* S3method(predict,msma) count: 1
+
+Public documentation:
+* NEWS updated
+* README.md updated
+* msma-introduction.Rmd updated
+* msma-multiblock.Rmd updated
+* predict.msma roxygen contract consolidated
+* historical predict roxygen block removed
+
+Interpretation:
+* predict.msma does not predict Y from X
+* X and Y are projected and reconstructed independently
+* sbX and sbY remain on the analysis scale
+* output_scale controls reconstructed X and Y
+
+Compatibility:
+* historical prediction behavior remains the default
+* predict.msma public formals remain unchanged
+* all 878 regression expectations passed
+
+Known pre-existing roxygen diagnostic:
+* msma.default requires separate export-tag review
+* this diagnostic is outside the predict.msma documentation change
+
+M3-G status: COMPLETE

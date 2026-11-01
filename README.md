@@ -37,6 +37,36 @@ remain the default choice.
 The ordinary `msma()` interface remains unchanged unless structured PCA is
 explicitly requested.
 
+## Version 5 development: prediction workflow
+
+The Version 5 development branch extends `predict.msma()` while preserving
+the historical prediction behavior as the default.
+
+`predict.msma()` projects and reconstructs supplied X-side and Y-side
+data. It does not predict Y from X.
+
+```r
+set.seed(1)
+X <- matrix(stats::rnorm(180), nrow = 30, ncol = 6)
+colnames(X) <- paste0("x", seq_len(ncol(X)))
+
+fit <- msma(X = X, comp = 2, scaling = TRUE, intseed = 3)
+
+prediction <- predict(
+  fit,
+  newX = X[1:5, , drop = FALSE],
+  preprocessing = "fitted",
+  reconstruction = "fitted",
+  output_scale = "original"
+)
+
+names(prediction)
+```
+
+Prediction controls are `preprocessing`, `reconstruction`, and
+`output_scale`. Component scores `sbX` and `sbY` remain on the analysis
+scale. `output_scale` controls reconstructed `X` and `Y` values.
+
 ## Installation
 
 ### Tagged GitHub release candidate
