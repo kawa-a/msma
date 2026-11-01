@@ -1461,9 +1461,11 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
   object,
   newX,
   newY = NULL,
-  reconstruction = c("batch", "fitted")
+  reconstruction = c("batch", "fitted"),
+  output_scale = c("analysis", "original")
 ) {
   reconstruction <- match.arg(reconstruction)
+  output_scale <- match.arg(output_scale)
   if (missing(newX)) stop("newX should be specified", call. = FALSE)
   if (is.null(object$preprocess) ||
       !inherits(object$preprocess, "msma_preprocess")) {
@@ -1528,6 +1530,21 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
     names(predY) <- names(y_blocks)
   }
 
+  if (identical(output_scale, "original")) {
+    predX <- .invert_msma_preprocessor(
+      preprocess = object$preprocess,
+      data = predX,
+      side = "X"
+    )
+    if (!is.null(predY)) {
+      predY <- .invert_msma_preprocessor(
+        preprocess = object$preprocess,
+        data = predY,
+        side = "Y"
+      )
+    }
+  }
+
   list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
 }
 
@@ -1543,10 +1560,21 @@ predict.msma <- function(object, newX, newY = NULL, ...) {
   } else {
     match.arg(dots$reconstruction, c("batch", "fitted"))
   }
+  output_scale <- if (is.null(dots$output_scale)) {
+    "analysis"
+  } else {
+    match.arg(dots$output_scale, c("analysis", "original"))
+  }
   if (identical(preprocessing, "legacy")) {
     if (!identical(reconstruction, "batch")) {
       stop(
         "Fitted reconstruction requires `preprocessing = \"fitted\"`.",
+        call. = FALSE
+      )
+    }
+    if (!identical(output_scale, "analysis")) {
+      stop(
+        "Original-scale output requires `preprocessing = \"fitted\"`.",
         call. = FALSE
       )
     }
@@ -1556,7 +1584,8 @@ predict.msma <- function(object, newX, newY = NULL, ...) {
     object = object,
     newX = newX,
     newY = newY,
-    reconstruction = reconstruction
+    reconstruction = reconstruction,
+    output_scale = output_scale
   )
 }
 

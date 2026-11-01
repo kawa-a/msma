@@ -1,0 +1,56 @@
+msma Version 5 M3-E prediction output scale
+Date: 2026-11-01 09:51:21 +0900
+Branch: feature/v5-preprocessing-serialization
+Parent commit: b0948044813d46bcf05e29ed4539a64933505634
+
+M3-B legacy tests after M3-E:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 30
+
+M3-C fitted preprocessing tests after M3-E:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 20
+
+M3-D fitted reconstruction tests after M3-E:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 28
+
+M3-E output-scale tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 22
+
+Full regression test suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 854
+
+Output-scale contract:
+* output_scale = analysis is the default
+* output_scale = original applies fitted inverse preprocessing
+* X and Y reconstructions are inverted independently
+* component scores remain on the analysis scale
+* both batch and fitted reconstruction support original-scale output
+* legacy preprocessing cannot request original-scale output
+
+Compatibility:
+* M3-B legacy results remain unchanged
+* M3-C fitted batch reconstruction remains unchanged by default
+* M3-D fitted reconstruction remains unchanged by default
+* predict.msma formal arguments remain unchanged
+* original-scale output survives saveRDS/readRDS
+
+M3-E status: COMPLETE
