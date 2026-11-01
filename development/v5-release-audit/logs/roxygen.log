@@ -1,0 +1,19 @@
+First time using roxygen2. Upgrading automatically...
+ℹ Setting RoxygenNote to "7.3.3"
+ℹ Loading msma
+Writing 'NAMESPACE'
+Writing 'msma-package.Rd'
+Writing 'msma.Rd'
+Writing 'summary.msma.Rd'
+Writing 'plot.msma.Rd'
+Writing 'predict.msma.Rd'
+Writing 'cvmsma.Rd'
+Writing 'ncompsearch.Rd'
+Writing 'regparasearch.Rd'
+Writing 'optparasearch.Rd'
+Writing 'msma-internal.Rd'
+Writing 'simdata.Rd'
+Writing 'strsimdata.Rd'
+Writing 'hcmsma.Rd'
+Writing 's4pca_reconstruct.Rd'
+Writing 's4pca_conformal_select.Rd'

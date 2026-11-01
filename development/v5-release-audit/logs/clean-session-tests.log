@@ -1,0 +1,6 @@
+Command: C:/R/R040502/bin/x64/R.exe --vanilla --slave -f C:\Users\kawaa\AppData\Local\Temp\RtmpcjvrVg/msma-m4c-clean-tests.R
+Working directory: D:/ADNI2/Multimodal/program/package/Ver5
+Exit status: 0
+
+ failed   error skipped warning  passed 
+      0       0       0       0     878 

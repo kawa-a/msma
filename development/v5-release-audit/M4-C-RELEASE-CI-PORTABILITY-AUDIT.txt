@@ -1,0 +1,33 @@
+msma Version 5 M4-C release artifact, CI, and portability audit
+Date: 2026-11-01 23:03:35 +0900
+Branch: feature/v5-preprocessing-serialization
+Commit: aae24cd55b0b2380480ee83c5d12df9402bf910f
+R: R version 4.5.2 (2025-10-31 ucrt)
+Platform: x86_64-w64-mingw32
+Pandoc: 3.10.1
+
+CI contract: workflow_present=TRUE, windows_declared=TRUE, macos_declared=TRUE, linux_declared=TRUE, package_check_declared=TRUE
+Clean-session tests status: 0
+Roxygen error: NONE
+Roxygen warnings: 0
+Build status: 0
+Artifact: C:\Users\kawaa\AppData\Local\Temp\RtmpcjvrVg/msma-m4c-release/msma_5.0.0.9000.tar.gz
+Artifact MD5: 702c1551c4ccd77c342ce0d579e471fd
+Content contract: has_description=TRUE, has_namespace=TRUE, has_news=TRUE, has_predict_rd=TRUE, has_msma_rd=TRUE, has_tests=TRUE, has_vignettes=TRUE, excludes_development=TRUE, excludes_git=TRUE, excludes_backup=TRUE
+Install status: 0
+Installed audit status: 0
+Installed contract: exports_msma=TRUE, exports_predict_helpers=TRUE, prediction_names=TRUE, prediction_finite=TRUE, preprocess_metadata=TRUE, reconstruction_metadata=TRUE
+R CMD check mode: as-cran
+CRAN SSL failure: FALSE
+R CMD check as-cran status: 0
+R CMD check effective status: 0
+R CMD check summary: errors=0, warnings=0, notes=1
+R CMD check status line: Status: 1 NOTE
+
+Portability interpretation:
+* Local Windows build, install, clean-session tests, and R CMD check are executable.
+* Declared CI operating systems are inventoried from .github/workflows.
+* Cross-platform execution is confirmed only by the external CI runs, not by this local script.
+* Development-version CRAN incoming NOTE is recorded separately from errors and warnings.
+
+M4-C status: COMPLETE
