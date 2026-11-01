@@ -1,0 +1,37 @@
+msma Version 5 M3-F prediction integration audit
+Date: 2026-11-01 09:57:34 +0900
+Branch: feature/v5-preprocessing-serialization
+Commit: 9486b7f8accb5c76699092b620c2587c7af8dac0
+
+Focused test suites:
+* test-v5-prediction-baseline.R: failed=0, error=0, skipped=0, warning=0, passed=30
+* test-v5-prediction-fitted.R: failed=0, error=0, skipped=0, warning=0, passed=20
+* test-v5-prediction-reconstruction.R: failed=0, error=0, skipped=0, warning=0, passed=28
+* test-v5-prediction-output-scale.R: failed=0, error=0, skipped=0, warning=0, passed=22
+* test-v5-preprocessing.R: failed=0, error=0, skipped=0, warning=0, passed=115
+* test-v5-preprocessing-serialization.R: failed=0, error=0, skipped=0, warning=0, passed=14
+
+Full regression suite: failed=0, error=0, skipped=0, warning=0, passed=854
+
+Integrated prediction contract:
+* public_formals_unchanged: TRUE
+* preprocess_metadata: TRUE
+* reconstruction_metadata: TRUE
+* legacy_shape: TRUE
+* fitted_batch_scores_equal: TRUE
+* reconstruction_modes_differ: TRUE
+* original_equals_manual_inverse: TRUE
+* pls_original_finite: TRUE
+* fixed_score_batch_independent: TRUE
+* fixed_reconstruction_batch_independent: TRUE
+* serialization_identical: TRUE
+
+Compatibility hierarchy:
+* default predict.msma remains legacy behavior
+* fitted preprocessing defaults to batch reconstruction
+* fitted reconstruction uses training-derived coefficients
+* analysis output remains the default scale
+* original output applies fitted inverse preprocessing
+* component scores remain on the analysis scale
+
+M3-F status: COMPLETE
