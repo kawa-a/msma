@@ -41,8 +41,13 @@
 #' @param inY a vector or list of numeric vectors specifying the variables in Y, always included in the model
 #' @param inXsup a (list of) numeric vector to specify the blocks of X which are always in the model. 
 #' @param inYsup a (list of) numeric vector to specify the blocks of Y which are always in the model. 
-#' @param muX a numeric scalar for the weight of X for the supervised case. 0 <= muX <= 1.
-#' @param muY a numeric scalar for the weight of Y for the supervised case. 0 <= muY <= 1. 
+#' @param muX a finite numeric scalar for X-side supervision.
+#' When \code{muX = 0}, X-side supervision is inactive. If no other
+#' supervision weight is positive, \code{Z} and \code{con4spv} do not
+#' affect estimation, and the model is fitted through the canonical
+#' unsupervised path.
+#' @param muY a finite numeric scalar for Y-side supervision.
+#' When \code{muY = 0}, Y-side supervision is inactive.
 #' @param defmethod a character representing the deflation method. This version has only the choice "canonical." 
 #' @param scaling a logical, indicating whether or not data scaling is performed. The default is TRUE.
 #' @param verbose information
@@ -51,7 +56,12 @@
 #' @param ceps a numeric scalar for the convergence condition of the algorithm
 #' @param sprmethod a character, 
 #' @param nneg a character 
-#' @param con4spv a numeric vector
+#' @param con4spv the signed supervision-contrast vector.
+#' This argument is used only when at least one corresponding
+#' supervision weight is positive. Active contrast vectors are
+#' normalized by their L1 norm before estimation. For one-column
+#' \code{Z}, omission uses the canonical contrast 1. For multicolumn
+#' \code{Z}, an explicit contrast is required when supervision is active.
 #' @param structure.method one of \"none\", \"soft\", or \"exclusive\".
 #' @param gammaX non-negative history-dependent penalty strength.
 #' @param history.method one of \"sumabs\", \"any\", or \"count\".
@@ -402,6 +412,282 @@ msma = function(X, ...) UseMethod("msma")
   if (input_was_list) inverted else inverted[[1]]
 }
 
+.canonicalize_msma_supervision <- function(
+    Z = NULL,
+    muX = 0,
+    muY = 0,
+    con4spv = NULL,
+    dmode = c("PCA", "PLS"),
+    warn_ignored = TRUE
+) {
+  dmode <- match.arg(dmode)
+  
+  validate_mu <- function(mu, name) {
+    if (
+      !is.numeric(mu) ||
+      length(mu) != 1L ||
+      !is.finite(mu)
+    ) {
+      stop(
+        paste0(
+          "'",
+          name,
+          "' must be a finite numeric scalar."
+        ),
+        call. = FALSE
+      )
+    }
+    
+    if (mu < 0) {
+      stop(
+        paste0(
+          "'",
+          name,
+          "' must be non-negative."
+        ),
+        call. = FALSE
+      )
+    }
+    
+    mu
+  }
+  
+  muX_requested <- validate_mu(
+    muX,
+    "muX"
+  )
+  
+  muY_requested <- validate_mu(
+    muY,
+    "muY"
+  )
+  
+  if (muX_requested + muY_requested > 1) {
+    stop(
+      "'muX + muY' must not exceed 1.",
+      call. = FALSE
+    )
+  }
+  
+  active_X <- muX_requested > 0
+  
+  active_Y <- (
+    identical(dmode, "PLS") &&
+      muY_requested > 0
+  )
+  
+  active_any <- active_X || active_Y
+  contrast_requested <- con4spv
+  
+  if (!active_any) {
+    contrast_is_nonzero <- (
+      !is.null(contrast_requested) &&
+        is.numeric(contrast_requested) &&
+        any(
+          is.finite(contrast_requested) &
+            contrast_requested != 0
+        )
+    )
+    
+    if (
+      isTRUE(warn_ignored) &&
+      contrast_is_nonzero
+    ) {
+      warning(
+        paste0(
+          "'con4spv' is ignored because all corresponding ",
+          "supervision weights are zero; the supervision ",
+          "term is inactive."
+        ),
+        call. = FALSE
+      )
+    }
+    
+    reason <- if (
+      identical(dmode, "PCA") &&
+      identical(muX_requested, 0)
+    ) {
+      "muX_zero"
+    } else {
+      "supervision_weights_zero"
+    }
+    
+    metadata <- structure(
+      list(
+        mu_requested = list(
+          X = muX_requested,
+          Y = if (identical(dmode, "PLS")) {
+            muY_requested
+          } else {
+            NULL
+          }
+        ),
+        contrast_requested = contrast_requested,
+        mu_used = list(
+          X = 0,
+          Y = if (identical(dmode, "PLS")) {
+            0
+          } else {
+            NULL
+          }
+        ),
+        contrast_used = NULL,
+        active = list(
+          X = FALSE,
+          Y = FALSE
+        ),
+        canonicalized = TRUE,
+        reason = reason
+      ),
+      class = "msma_supervision"
+    )
+    
+    return(
+      list(
+        Z = NULL,
+        muX = 0,
+        muY = 0,
+        con4spv = NULL,
+        dispatcher_Z = NULL,
+        dispatcher_con4spv = NULL,
+        metadata = metadata
+      )
+    )
+  }
+  
+  if (is.null(Z)) {
+    stop(
+      "'Z' must be supplied when a supervision weight is positive.",
+      call. = FALSE
+    )
+  }
+  
+  Z_matrix <- as.matrix(Z)
+  
+  if (
+    !is.numeric(Z_matrix) ||
+    any(!is.finite(Z_matrix))
+  ) {
+    stop(
+      "'Z' must contain only finite numeric values.",
+      call. = FALSE
+    )
+  }
+  
+  if (is.null(contrast_requested)) {
+    if (ncol(Z_matrix) == 1L) {
+      contrast_used <- 1
+      contrast_reason <- "single_column_canonical_contrast"
+    } else {
+      stop(
+        paste0(
+          "'con4spv' must be supplied when a supervision ",
+          "weight is positive and 'Z' has multiple columns."
+        ),
+        call. = FALSE
+      )
+    }
+  } else {
+    if (
+      !is.numeric(contrast_requested) ||
+      length(contrast_requested) != ncol(Z_matrix)
+    ) {
+      stop(
+        "'con4spv' must have length equal to 'ncol(Z)'.",
+        call. = FALSE
+      )
+    }
+    
+    if (any(!is.finite(contrast_requested))) {
+      stop(
+        "'con4spv' must contain only finite values.",
+        call. = FALSE
+      )
+    }
+    
+    contrast_norm <- sum(
+      abs(contrast_requested)
+    )
+    
+    if (contrast_norm <= 0) {
+      stop(
+        paste0(
+          "'con4spv' must contain at least one nonzero ",
+          "coefficient when a supervision weight is positive."
+        ),
+        call. = FALSE
+      )
+    }
+    
+    contrast_used <- (
+      contrast_requested /
+        contrast_norm
+    )
+    
+    contrast_reason <- "active_l1_normalized"
+  }
+  
+  if (ncol(Z_matrix) == 1L) {
+    dispatcher_Z <- drop(Z_matrix)
+    dispatcher_con4spv <- NULL
+  } else {
+    dispatcher_Z <- Z_matrix
+    dispatcher_con4spv <- contrast_used
+  }
+  
+  metadata <- structure(
+    list(
+      mu_requested = list(
+        X = muX_requested,
+        Y = if (identical(dmode, "PLS")) {
+          muY_requested
+        } else {
+          NULL
+        }
+      ),
+      contrast_requested = contrast_requested,
+      mu_used = list(
+        X = muX_requested,
+        Y = if (identical(dmode, "PLS")) {
+          muY_requested
+        } else {
+          NULL
+        }
+      ),
+      contrast_used = contrast_used,
+      active = list(
+        X = active_X,
+        Y = active_Y
+      ),
+      canonicalized = !identical(
+        contrast_requested,
+        contrast_used
+      ),
+      reason = contrast_reason
+    ),
+    class = "msma_supervision"
+  )
+  
+  list(
+    Z = Z_matrix,
+    muX = muX_requested,
+    muY = muY_requested,
+    con4spv = contrast_used,
+    dispatcher_Z = dispatcher_Z,
+    dispatcher_con4spv = dispatcher_con4spv,
+    metadata = metadata
+  )
+}
+
+
+.attach_msma_supervision <- function(
+    fit,
+    supervision
+) {
+  fit$supervision <- supervision$metadata
+  fit
+}
+
 .resolve_msma_engine <- function(
   structure.method = "none",
   gammaX = 0,
@@ -476,12 +762,31 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
   structure.method=c("none", "soft", "exclusive")[1], gammaX=0,
   history.method=c("sumabs", "any", "count")[1], niterS4=30, ...)
 {
+  dmode_requested <- if (is.null(Y)) {
+    "PCA"
+  } else {
+    "PLS"
+  }
+
+  supervision <- .canonicalize_msma_supervision(
+    Z = Z,
+    muX = muX,
+    muY = muY,
+    con4spv = con4spv,
+    dmode = dmode_requested
+  )
+
+  Z <- supervision$Z
+  muX <- supervision$muX
+  muY <- supervision$muY
+  con4spv <- supervision$con4spv
+
   engine <- .resolve_msma_engine(
     structure.method = structure.method,
     gammaX = gammaX,
     sprmethod = sprmethod,
-    Z = Z,
-    con4spv = con4spv
+    Z = supervision$dispatcher_Z,
+    con4spv = supervision$dispatcher_con4spv
   )
 
   use_s4pca <- engine %in% c("soft", "exclusive")
@@ -494,7 +799,17 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
     if(!is.null(lambdaY) || !is.null(lambdaXsup) || !is.null(lambdaYsup)) stop("Y-side and super-level penalties are not supported for structured PCA", call.=FALSE)
     if(!identical(type,"lasso")) stop("Structured PCA supports type = \"lasso\" only", call.=FALSE)
     if(!is.null(inX) || !is.null(inY) || !is.null(inXsup) || !is.null(inYsup)) stop("Forced-in variables are not supported for structured PCA", call.=FALSE)
-    if(!identical(sprmethod,"PCA") || !is.null(con4spv)) stop("Structured PCA cannot be combined with NMF, sNMF, CMP, or con4spv", call.=FALSE)
+    if (
+      !identical(
+        sprmethod,
+        "PCA"
+      )
+    ) {
+      stop(
+        "Structured PCA cannot be combined with NMF, sNMF, or CMP.",
+        call. = FALSE
+      )
+    }
     if(!is.null(Z) && !is.null(dim(Z)) && ncol(as.matrix(Z))>1L) stop("Structured PCA accepts only vector or one-column Z", call.=FALSE)
     lambda_s4 = if(is.null(lambdaX)) 0 else lambdaX
     if(length(lambda_s4)!=1L) stop("Structured PCA requires scalar lambdaX", call.=FALSE)
@@ -504,7 +819,13 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
       X_scale[!is.finite(X_scale) | X_scale==0]=1
       X_input=sweep(sweep(X_input,2,X_center,"-"),2,X_scale,"/")
     } else if(!identical(scaling,FALSE)) stop("scaling must be TRUE or FALSE", call.=FALSE)
-    Z_input=if(!is.null(Z) && is.matrix(Z) && ncol(Z)==1L) drop(Z) else Z
+    Z_input <- if (is.null(Z)) {
+      NULL
+    } else {
+      drop(
+        Z %*% con4spv
+      )
+    }
     fit_s4=.s4pca_fit(X_input,Z_input,comp=comp,lambda=lambda_s4,gamma=gammaX,
       history_method=history.method,mu=muX,hard_exclusion=identical(structure.method,"exclusive"),
       niter=niterS4,seed=intseed,verbose=verbose)
@@ -513,6 +834,11 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
     fit_s4$scaling=scaling; fit_s4$structure.method=structure.method
     fit_s4$gammaX=gammaX; fit_s4$lambdaX=lambda_s4; fit_s4$muX=muX; fit_s4$dmode="PCA"
     class(fit_s4)="s4pca"
+
+    fit_s4 <- .attach_msma_supervision(
+      fit = fit_s4,
+      supervision = supervision
+    )
 
     fit_s4 <- .attach_msma_preprocess(
       fit = fit_s4,
@@ -527,13 +853,18 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
     z_ncol = if(z_is_matrix) ncol(as.matrix(Z)) else if(is.null(Z)) 0L else 1L
     # A one-column matrix is a version 3.2 input convenience, but its
     # numerical behavior and returned object must agree with vector-valued Z.
-    Z_legacy = if(z_is_matrix && z_ncol == 1L) drop(Z) else Z
+    Z_legacy <- supervision$dispatcher_Z
     fit <- .msma_default_legacy(
       X=X, Y=Y, Z=Z_legacy, comp=comp, lambdaX=lambdaX, lambdaY=lambdaY,
       lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta=eta, type=type,
       inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX=muX, muY=muY,
       defmethod=defmethod, scaling=scaling, verbose=verbose,
       intseed=intseed, ceps=ceps, ...
+    )
+
+    fit <- .attach_msma_supervision(
+      fit = fit,
+      supervision = supervision
     )
 
     fit <- .attach_msma_preprocess(
@@ -553,6 +884,11 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
     intseed=intseed, ceps=ceps, sprmethod=sprmethod, nneg=nneg,
     con4spv=con4spv, ...
   )
+
+    fit <- .attach_msma_supervision(
+      fit = fit,
+      supervision = supervision
+    )
 
   fit <- .attach_msma_preprocess(
     fit = fit,
@@ -2293,9 +2629,17 @@ if(any(is.null(lambdaY))){ lambdaY = rep(0, Ynb)}
 if(any(is.null(lambdaXsup))){ lambdaXsup = 0}
 if(any(is.null(lambdaYsup))){ lambdaYsup = 0}
 
-if(is.null(Z)) Z = matrix(0, nrow(X[[1]]), 1)
-if(is.null(con4spv)){ con4spv = rep(1, ncol(Z))}
-con4spv=con4spv/sum(abs(con4spv))
+if (is.null(Z)) {
+  Z <- matrix(
+    0,
+    nrow = nrow(X[[1]]),
+    ncol = 1
+  )
+}
+
+if (is.null(con4spv)) {
+  con4spv <- 1
+}
 
 muXY = 1 - muX - muY
 if(muXY < 0) stop("muX or muY should be smaller values to be 0 <= 1 - muX - muY <= 1.")

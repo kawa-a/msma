@@ -40,7 +40,37 @@ test_that("unsupported structured combinations fail clearly", {
   expect_error(msma(X,Y=Y,structure.method="soft"),"with Y")
   expect_error(msma(X,comp=c(2,2),structure.method="soft"),"single component")
   expect_error(msma(X,structure.method="soft",sprmethod="sNMF"),"cannot be combined")
-  expect_error(msma(X,structure.method="soft",Z=cbind(1:30,31:60)),"only vector")
+  expect_error(
+    msma(
+      X,
+      Z = cbind(1:30, 31:60),
+      muX = 0.5,
+      con4spv = c(1, -1),
+      structure.method = "soft"
+    ),
+    "only vector"
+  )
+
+  inactive_fit <- NULL
+
+  expect_warning(
+    inactive_fit <- msma(
+      X,
+      Z = cbind(1:30, 31:60),
+      muX = 0,
+      con4spv = c(1, -1),
+      structure.method = "soft",
+      niterS4 = 5,
+      scaling = FALSE,
+      intseed = 3
+    ),
+    "ignored because.*supervision term is inactive"
+  )
+
+  expect_s3_class(inactive_fit, "s4pca")
+  expect_identical(inactive_fit$structure.method, "soft")
+  expect_false(inactive_fit$supervision$active$X)
+  expect_null(inactive_fit$supervision$contrast_used)
 })
 
 test_that("public structured API is reproducible", {
