@@ -1,4 +1,4 @@
-Changes in development version 5.0.0.9000
+Changes in version 5.0
 
 * When all corresponding supervision weights are zero, supervision
   inputs are now ignored and the model is fitted through a canonical

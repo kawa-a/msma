@@ -1,37 +1,96 @@
+# CRAN submission comments
+
+## Submission
+
+This is an update of msma from CRAN version 4.0 to version 5.0.
+
+Package source:
+
+* https://github.com/kawa-a/msma
+
+Issue tracker:
+
+* https://github.com/kawa-a/msma/issues
+
 ## Test environments
 
-* Local Windows 11 x64, R 4.5.2, `R CMD check --as-cran`
-* Additional CRAN platforms will be recorded here before submission.
+* Windows 11 x64, R 4.5.2
+* Local R CMD check --as-cran
+* Local R CMD check --no-manual
+
+GitHub Actions is configured for:
+
+* Windows, R-release
+* macOS, R-release
+* Ubuntu, R-release
+* Ubuntu, R-devel
+
+The GitHub Actions results for the Version 5.0 release commit will be
+confirmed before submission.
 
 ## R CMD check results
 
-Local result for the Milestone 5 baseline:
+Local R CMD check --as-cran on the Version 5.0 release tarball:
 
-    Status: OK
+* 0 errors
+* 0 warnings
+* 0 notes
 
-This release candidate must be checked again after the independent Version 3.2
-compatibility and reverse-dependency audits. The final status and platforms
-should replace this provisional text before CRAN submission.
+A supplementary local R CMD check --no-manual completed with:
 
-## Changes in this version
+```
+Status: OK
+```
 
-Version 4.0 adds an explicitly requested supervised sparse soft-structured PCA
-engine, reconstruction, and repeated split reconstruction-based model
-selection. Existing calls that do not request structured PCA remain on the
-Version 3.2 computational paths.
+## Test suite
+
+* 1026 expectations passed
+* 0 failures
+* 0 errors
+* 0 skipped tests
+* 0 warnings
+
+The test suite covers legacy computation, structured PCA, dispatcher
+selection, preprocessing, serialization, prediction, reconstruction,
+and the Version 5 supervision contract.
+
+## Version 5.0 summary
+
+Version 5.0 adds fitted preprocessing and fixed reconstruction metadata
+for prediction, serialization-safe fitted objects, and a canonical
+contract for inactive supervision.
+
+When all corresponding supervision weights are zero, Z and con4spv are
+removed from the estimation path before dispatcher resolution.
+Consequently, contrast coefficients cannot affect estimation when the
+supervision term is inactive.
+
+Active multicolumn contrasts are validated for dimension, finite
+coefficients, and a positive L1 norm before normalization. One-column
+supervision retains backward compatibility through canonical contrast 1
+when con4spv is omitted.
+
+Requested and used supervision specifications are retained in fitted
+objects through the supervision component.
+
+This release does not introduce block-specific supervision weights or
+soft-structured multiblock estimation.
 
 ## Backward compatibility
 
-The release process includes:
+The Version 3.2 legacy paths and the Version 4.0 structured PCA paths are
+covered by regression tests.
 
-* a frozen regression test against the manuscript-generating S4PCA code;
-* Version 3.2 versus Version 4.0 compatibility validation;
-* package-level testthat tests; and
-* a reverse-dependency check for `mand`.
+Existing calls using a nonzero con4spv with zero corresponding
+supervision weights remain successful. The contrast is ignored with a
+warning rather than producing an error.
+
+For active one-column supervision, omission of con4spv continues to be
+supported through canonical contrast 1.
 
 ## Reverse dependencies
 
-CRAN currently reports one reverse dependency, `mand`. Its final check result
-will be recorded here before submission.
-
+mand is listed as a reverse Suggests package.
+Compatibility will be checked against the Version 5.0 release candidate
+before submission.
 
