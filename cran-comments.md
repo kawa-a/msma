@@ -18,15 +18,14 @@ Issue tracker:
 * Local R CMD check --as-cran
 * Local R CMD check --no-manual
 
-GitHub Actions is configured for:
+GitHub Actions completed successfully on:
 
 * Windows, R-release
 * macOS, R-release
 * Ubuntu, R-release
 * Ubuntu, R-devel
 
-The GitHub Actions results for the Version 5.0 release commit will be
-confirmed before submission.
+GitHub Actions run: 42324927210
 
 ## R CMD check results
 
@@ -93,4 +92,5 @@ supported through canonical contrast 1.
 mand is listed as a reverse Suggests package.
 Compatibility will be checked against the Version 5.0 release candidate
 before submission.
+
 
