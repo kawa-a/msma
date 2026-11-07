@@ -5,7 +5,7 @@
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 
 package_name <- "msma"
-package_version <- "4.0"
+package_version <- unname(read.dcf("DESCRIPTION", fields = "Version")[1L, 1L])
 source_archive <- sprintf("%s_%s.tar.gz", package_name, package_version)
 windows_archive <- sprintf("%s_%s.zip", package_name, package_version)
 
@@ -106,7 +106,7 @@ if (pandoc_available && dir.exists("vignettes")) {
   writeLines(d, package_desc, useBytes = TRUE)
 }
 
-# Build the source package. R CMD build creates msma_4.0.tar.gz.
+# Build the source package using the version declared in DESCRIPTION.
 build_args <- c("CMD", "build", package_name, "--force")
 if (!pandoc_available) {
   build_args <- c(build_args, "--no-build-vignettes")
