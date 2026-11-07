@@ -92,5 +92,3 @@ supported through canonical contrast 1.
 mand is listed as a reverse Suggests package.
 Compatibility will be checked against the Version 5.0 release candidate
 before submission.
-
-

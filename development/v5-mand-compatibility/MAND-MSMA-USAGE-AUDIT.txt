@@ -1,0 +1,449 @@
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\DESCRIPTION
+LineNumber : 13
+Line       : Suggests: testthat, knitr, rmarkdown, caret, mnormt, msma
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 449
+Line       : #' \code{multicompplot} requires the output result of \code{msma} function.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 467
+Line       : #' if (requireNamespace("msma", quietly = TRUE)) {
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 475
+Line       : #' fit111 = msma::msma(SB1, comp=2)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 503
+Line       : #' This is a function that returns the weight vector of multiple components obtained by the \code{msma} function applied after dimension reduction by the radial basis function to the same dimension as the original image.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 505
+Line       : #' \code{multirec} requires the output result of \code{msma} function.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 513
+Line       : #' @param object an object of class \code{msma}. Usually, a result of a call to \code{msma}
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 519
+Line       : #' @param XY a character, indicating "X" or "Y". "XY" for the scatter plots using X and Y scores from \code{msma}.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 524
+Line       : #' if (requireNamespace("msma", quietly = TRUE)) {
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 531
+Line       : #' fit111 = msma::msma(SB1, comp=2)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 550
+Line       : #' \code{ptest} requires the output result of \code{msma} function.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 558
+Line       : #' @param object a matrix indicating the explanatory variable(s), or an object of class \code{msma}, which is a result of a call to \code{msma} .
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 569
+Line       : #' @return \item{object}{{an object of class "\code{msma}", usually, a result of a call to \code{msma}}}
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 570
+Line       : #' @return \item{trainout}{a predictive model output from the train function in the caret package with scores computed by the msma function as predictors}
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 572
+Line       : #' @return \item{evalmeasure}{evaluation measures and information criterion for the msma model}
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 579
+Line       : #' if (requireNamespace("msma", quietly = TRUE)) {
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 587
+Line       : #' fit111 = msma::msma(SB1, comp=2)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 602
+Line       :     if (inherits(object, "msma")) {
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 603
+Line       :         Ss = object$ssX
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 634
+Line       :     if (inherits(object, "msma")) {
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 641
+Line       :         if (inherits(object, "msma")) {
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\R\public-api-legacy.R
+LineNumber : 643
+Line       :             pred1 = pred0$sbX[[1]]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\tests\testthat\test-hotmetal-compatibility.R
+LineNumber : 2
+Line       :   heat_palette <- getFromNamespace(".mand_hotmetal", "mand")
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\tests\testthat\test-hotmetal-compatibility.R
+LineNumber : 13
+Line       :   heat_palette <- getFromNamespace(".mand_hotmetal", "mand")
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 36
+Line       : library(msma)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 206
+Line       : If the input is a matrix, a principal component analysis is implemented by the `msma` function of the `msma` package.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 209
+Line       : (fit111 = msma(img1$S, comp=2))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 222
+Line       : Q = fit111$wbX[[midx]][,vidx]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 264
+Line       : (fit211 = msma(SB1, comp=2))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 269
+Line       : Q = fit211$wbX[[1]][,1]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 282
+Line       : (fit112 = msma(SB1, comp=2, lambdaX=0.06))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 287
+Line       : Q = fit112$wbX[[midx]][,vidx]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 306
+Line       : If the outcome Z is specified in the `msma` function, a supervised sparse principal component analysis is implemented.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 308
+Line       : (fit113 = msma(SB1, Z=Z, comp=2, lambdaX=0.06, muX=0.5))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 313
+Line       : Q = fit113$wbX[[1]][,1]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 319
+Line       : The region near the hippocampus, which differs from the sparse PCA (without supervision).
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 326
+Line       : Q = fit113$wbX[[1]][,2]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\a_overview.Rmd
+LineNumber : 336
+Line       : This is similar to the result from the sparse PCA (without supervision).
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\d_Common_Statistical_Approach.Rmd
+LineNumber : 211
+Line       : TFCE is also affected by smoothing range; when the FWHM is large, a large area is likely to be detected, and conversely, when the FWHM is small, there is more variability, making it difficult to obtain useful findings. Therefore, it is necessary to set an appropriate value of FWHM in preprocessing in the case of TFCE as well.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 100
+Line       : If the input is a matrix, a principal component analysis is implemented by the `msma` function of the `msma` package.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 103
+Line       : (fit111 = msma(img1$S, comp=2))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 116
+Line       : Q = fit111$wbX[[midx]][,vidx]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 159
+Line       : (fit211 = msma(SB1, comp=2))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 164
+Line       : Q = fit211$wbX[[1]][,1]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 178
+Line       : (fit112 = msma(SB1, comp=2, lambdaX=0.075))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 183
+Line       : Q = fit112$wbX[[midx]][,vidx]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 202
+Line       : If the outcome Z is specified in the `msma` function, a supervised sparse principal component analysis is implemented.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 204
+Line       : (fit113 = msma(SB1, Z=Z, comp=2, lambdaX=0.075, muX=0.5))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 209
+Line       : Q = fit113$wbX[[1]][,1]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 215
+Line       : The region near the hippocampus, which differs from the sparse PCA (without supervision).
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 222
+Line       : Q = fit113$wbX[[1]][,2]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 232
+Line       : This is similar to the result from the sparse PCA (without supervision).
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 248
+Line       : The `msma` function is applied.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 255
+Line       : fit=msma(SB1, Z=Z, comp=2, lambdaX=0.075, muX=0.5)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 263
+Line       : Q = fit115s[[i]]$fit$wbX[[midx]][,vidx]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 279
+Line       : msma(SB1, Z=Z, comp=2, lambdaX=lam, muX=0.5, type="lasso") )
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 287
+Line       : Q = fit114s[[i]]$wbX[[1]][,1]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 296
+Line       : nzwbXs = unlist(lapply(fit114s, function(x) x$nzwbX[2]))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 299
+Line       : (optnzw = nzwbXs[which.min(BICs)])
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 307
+Line       : plot(nzwbXs, BICs, xlab="Number of non-zeros", ylab="BIC", log="x")
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 315
+Line       : For the `msma` function, four types of penalty functions are currently available.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 336
+Line       : Next, we apply each penalty function in the `msma` function to the brain image data.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 342
+Line       : fit = msma(SB1, Z=Z, comp=2, lambdaX=0.025, muX=0.5,
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 344
+Line       : Q = fit$wbX[[midx]][,vidx]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 358
+Line       : fit114 = msma(SB1, Z=Z, comp=30, muX=0.5)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 370
+Line       : (ncomp1 = ncompsearch(SB1, Z=Z, muX=0.5, 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 376
+Line       : (ncomp2 = ncompsearch(SB1, Z=Z, muX=0.5,
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 390
+Line       : opt=regparasearch(SB1, Z=Z, comp=c1, muX=0.5)$optlambdaX
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 391
+Line       : fit = msma(SB1, Z=Z, comp=c1, lambdaX=opt, muX=0.5)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 393
+Line       : nz[1:c1] = fit$nzwbX
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 407
+Line       : (ncomp3 = ncompsearch(SB1, Z=Z, muX=0.5, lambdaX=0.075, comps = 30, criterion="BIC"))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 412
+Line       : The `msma` package has an `optparasearch` function and the `search.method` argument allows you to select one of four methods.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 416
+Line       : (opt11 = optparasearch(SB1, Z=Z, muX=0.5, comp=5, search.method = "regparaonly", criterion="BIC"))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 419
+Line       : The optimized parameters are used in the `msma` function as follows.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 421
+Line       : (fit311 = msma(SB1, Z=Z, muX=0.5, comp=opt11$optncomp, lambdaX=opt11$optlambdaX))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 426
+Line       : (opt12 = optparasearch(SB1, Z=Z, muX=0.5, search.method = "regpara1st", criterion="BIC"))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 427
+Line       : fit312 = msma(SB1, Z=Z, muX=0.5, comp=opt12$optncomp, lambdaX=opt12$optlambdaX)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 432
+Line       : (opt13 = optparasearch(SB1, Z=Z, muX=0.5, search.method = "ncomp1st", criterion="BIC"))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 433
+Line       : fit313 = msma(SB1, Z=Z, muX=0.5, comp=opt13$optncomp, lambdaX=opt13$optlambdaX)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 440
+Line       : (opt14 = optparasearch(SB1, Z=Z, muX=0.5, search.method = "simultaneous", criterion="BIC"))
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 441
+Line       : fit314 = msma(SB1, Z=Z, muX=0.5, comp=opt14$optncomp, lambdaX=opt14$optlambdaX)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 459
+Line       : Using the `coef` function, we can extract the weights and plot them on the brain image using the `coat` function in the same way as when applying the `msma` function.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 495
+Line       : By inputting fit111, which is the result of PCA being applied to the `hcmsma` function by the `msma` function, hierarchical clustering with the score as input is executed. 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 497
+Line       : hcmsma111 = hcmsma(fit111)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 502
+Line       : dend = as.dendrogram(hcmsma111$hcout)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 522
+Line       : hcmsma112 = hcmsma(fit112)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 523
+Line       : dend = as.dendrogram(hcmsma112$hcout)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 536
+Line       : hcmsma113 = hcmsma(fit113)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
+LineNumber : 537
+Line       : dend = as.dendrogram(hcmsma113$hcout)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 52
+Line       : fit113 = msma(SB1, Z=Z, comp=2, lambdaX=0.075, muX=0.5)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 53
+Line       : Ss = fit113$ssX 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 175
+Line       : (fit311 = msma(SB1, Z=Z, 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 177
+Line       : Ss = fit311$ssX 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 315
+Line       : Q = fit311$wbX[[1]][,6]
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 407
+Line       : The `ptest` function is based on the caret package and uses the output of the `msma` function to fit the classification model described in the previous section. 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 429
+Line       : In comparison, the output of `msma` function with $\mu=0$ is applied to the `ptest` function.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 438
+Line       : The input of the `ptest` function can be specified the data matrix instead of the `msma` fit.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 454
+Line       : The supervision amount is controlled by the parameter $0\leq\mu\leq 1$.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 455
+Line       : The larger value indicates stronger supervision (strongly correlated with outcome Z). 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
+LineNumber : 463
+Line       : tmpfit = msma(SB1, Z=Z, comp=c1, lambdaX=0.075, muX=mu1)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 78
+Line       : Perform supervised multi-block PCA by setting not only X2 but also Z and supervised parameter `muX`.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 81
+Line       : (opt212 = optparasearch(X2, Z=Z, muX=0.5, 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 85
+Line       : Perform supervised multi-block PCA using msma function using the selected number of components and regularized parameters.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 87
+Line       : (fit212 = msma(X2, Z=Z, muX=0.5, comp=opt212$optncomp, 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 108
+Line       : t1=t.test(fit212$ssX[,i]~Z)
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 109
+Line       : boxplot(fit212$ssX[,i]~Z, 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 159
+Line       : Here, further set Z and execute Supervised sparse PLS. The supervised parameters `muX` and `muY` are both set to 0.3 here.
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 161
+Line       : (opt222 = optparasearch(X2, Y2, Z, muX=0.3, muY=0.3, 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 164
+Line       : (fit222 = msma(X2, Y2, Z, 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 165
+Line       : muX=0.3, muY=0.3, comp=opt222$optncomp,
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 201
+Line       : The relationship between the super score and the binary outcome Z is examined to compare the presence of supervision. 
+
+Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
+LineNumber : 202
+Line       : The result with supervision is as follows.
+
