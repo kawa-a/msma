@@ -261,7 +261,7 @@ Line       : fit114 = msma(SB1, Z=Z, comp=30, muX=0.5)
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
 LineNumber : 370
-Line       : (ncomp1 = ncompsearch(SB1, Z=Z, muX=0.5, 
+Line       : (ncomp1 = ncompsearch(SB1, Z=Z, muX=0.5,
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
 LineNumber : 376
@@ -329,7 +329,7 @@ Line       : Using the `coef` function, we can extract the weights and plot them
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
 LineNumber : 495
-Line       : By inputting fit111, which is the result of PCA being applied to the `hcmsma` function by the `msma` function, hierarchical clustering with the score as input is executed. 
+Line       : By inputting fit111, which is the result of PCA being applied to the `hcmsma` function by the `msma` function, hierarchical clustering with the score as input is executed.
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\e_Multivariate_Approach_Matrix_Decomposition.Rmd
 LineNumber : 497
@@ -361,15 +361,15 @@ Line       : fit113 = msma(SB1, Z=Z, comp=2, lambdaX=0.075, muX=0.5)
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
 LineNumber : 53
-Line       : Ss = fit113$ssX 
+Line       : Ss = fit113$ssX
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
 LineNumber : 175
-Line       : (fit311 = msma(SB1, Z=Z, 
+Line       : (fit311 = msma(SB1, Z=Z,
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
 LineNumber : 177
-Line       : Ss = fit311$ssX 
+Line       : Ss = fit311$ssX
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
 LineNumber : 315
@@ -377,7 +377,7 @@ Line       : Q = fit311$wbX[[1]][,6]
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
 LineNumber : 407
-Line       : The `ptest` function is based on the caret package and uses the output of the `msma` function to fit the classification model described in the previous section. 
+Line       : The `ptest` function is based on the caret package and uses the output of the `msma` function to fit the classification model described in the previous section.
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
 LineNumber : 429
@@ -393,7 +393,7 @@ Line       : The supervision amount is controlled by the parameter $0\leq\mu\leq
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
 LineNumber : 455
-Line       : The larger value indicates stronger supervision (strongly correlated with outcome Z). 
+Line       : The larger value indicates stronger supervision (strongly correlated with outcome Z).
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\f_Multivariate_Approach_Prediction_Model.Rmd
 LineNumber : 463
@@ -405,7 +405,7 @@ Line       : Perform supervised multi-block PCA by setting not only X2 but also 
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 81
-Line       : (opt212 = optparasearch(X2, Z=Z, muX=0.5, 
+Line       : (opt212 = optparasearch(X2, Z=Z, muX=0.5,
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 85
@@ -413,7 +413,7 @@ Line       : Perform supervised multi-block PCA using msma function using the se
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 87
-Line       : (fit212 = msma(X2, Z=Z, muX=0.5, comp=opt212$optncomp, 
+Line       : (fit212 = msma(X2, Z=Z, muX=0.5, comp=opt212$optncomp,
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 108
@@ -421,7 +421,7 @@ Line       : t1=t.test(fit212$ssX[,i]~Z)
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 109
-Line       : boxplot(fit212$ssX[,i]~Z, 
+Line       : boxplot(fit212$ssX[,i]~Z,
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 159
@@ -429,11 +429,11 @@ Line       : Here, further set Z and execute Supervised sparse PLS. The supervis
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 161
-Line       : (opt222 = optparasearch(X2, Y2, Z, muX=0.3, muY=0.3, 
+Line       : (opt222 = optparasearch(X2, Y2, Z, muX=0.3, muY=0.3,
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 164
-Line       : (fit222 = msma(X2, Y2, Z, 
+Line       : (fit222 = msma(X2, Y2, Z,
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 165
@@ -441,9 +441,8 @@ Line       : muX=0.3, muY=0.3, comp=opt222$optncomp,
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 201
-Line       : The relationship between the super score and the binary outcome Z is examined to compare the presence of supervision. 
+Line       : The relationship between the super score and the binary outcome Z is examined to compare the presence of supervision.
 
 Path       : D:\ADNI2\R4BrainImage\program\package\Ver3\vignettes\g_Multi-block_Approach.Rmd
 LineNumber : 202
 Line       : The result with supervision is as follows.
-

@@ -89,6 +89,9 @@ supported through canonical contrast 1.
 
 ## Reverse dependencies
 
-mand is listed as a reverse Suggests package.
-Compatibility will be checked against the Version 5.0 release candidate
-before submission.
+mand 3.0 is listed as a reverse Suggests package.
+
+Compatibility was checked against the msma Version 5.0 release candidate
+in an isolated library. mand 3.0 built successfully, completed R CMD check
+with Status: OK, rebuilt its Vignettes, and loaded successfully with
+msma 5.0.
