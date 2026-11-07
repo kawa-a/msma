@@ -1,8 +1,8 @@
-Command: C:/R/R040502/bin/x64/R.exe CMD build C:\Users\kawaa\AppData\Local\Temp\RtmpCScBL8/msma-m4a-build-check/msma --no-manual
-Working directory: C:/Users/kawaa/AppData/Local/Temp/RtmpCScBL8/msma-m4a-build-check
+Command: C:/R/R040502/bin/x64/R.exe CMD build C:\Users\kawaa\AppData\Local\Temp\RtmpEDpqrh/msma-m4a-build-check/msma --no-manual
+Working directory: C:/Users/kawaa/AppData/Local/Temp/RtmpEDpqrh/msma-m4a-build-check
 Exit status: 0
 
-* checking for file 'C:\Users\kawaa\AppData\Local\Temp\RtmpCScBL8/msma-m4a-build-check/msma/DESCRIPTION' ... OK
+* checking for file 'C:\Users\kawaa\AppData\Local\Temp\RtmpEDpqrh/msma-m4a-build-check/msma/DESCRIPTION' ... OK
 * preparing 'msma':
 * checking DESCRIPTION meta-information ... OK
 * installing the package to build vignettes
