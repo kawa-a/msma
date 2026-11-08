@@ -1,0 +1,32 @@
+msma Version 5 M2-C preprocessing metadata builder
+Date: 2026-10-31 12:03:21 +0900
+Branch: feature/v5-preprocessing-metadata
+Parent commit: 3d640390e85c240fa8f31738b3b267d5a4ed6fbf
+
+M2-C unit tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 73
+
+Full regression tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 656
+
+Confirmed preprocessing behavior:
+
+* legacy scaling TRUE: centered TRUE, scaled TRUE
+* legacy scaling FALSE: centered TRUE, scaled FALSE
+* extended NMF scaling FALSE: centered TRUE, scaled FALSE
+* structured scaling TRUE: centered TRUE, scaled TRUE
+* structured scaling FALSE: centered FALSE, scaled FALSE
+* soft and exclusive use the same structured preprocessing
+
+Numerical metadata comparisons use tolerance 1e-15.
+
+No numerical preprocessing transformation was changed.
+Fit objects do not yet receive preprocess metadata automatically.

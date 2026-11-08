@@ -1,0 +1,39 @@
+msma Version 5 M2-D fitted preprocessing application
+Date: 2026-10-31 13:22:29 +0900
+Branch: feature/v5-preprocessing-apply
+Parent commit: 80fcbe5e2b016b534b131ae3247103a797222a84
+
+M2-D unit tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 17
+
+Full regression test suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 710
+
+Implemented internal functions:
+* .validate_msma_preprocessor()
+* .apply_msma_preprocessor()
+
+Confirmed behavior:
+* legacy centering-only transformation
+* legacy centering and scaling
+* PLS Y-side transformation
+* structured centering and scaling
+* structured no-transformation path
+* unchanged Z in the initial implementation
+* multiblock input preservation
+* safe handling of zero and non-finite scale values
+* block-count validation
+* column-count validation
+* column-name and order validation
+* input data are not modified
+
+M2-D functions are not yet connected to public prediction or
+reconstruction interfaces.

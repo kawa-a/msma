@@ -1,0 +1,74 @@
+{
+    engine <- .resolve_msma_engine(structure.method = structure.method, gammaX = gammaX, sprmethod = sprmethod, Z = Z, con4spv = con4spv)
+    use_s4pca <- engine %in% c("soft", "exclusive")
+    if (use_s4pca) {
+        structure.method <- engine
+        if (!is.matrix(X) || is.list(X)) 
+            stop("Structured PCA requires X to be a single numeric matrix", call. = FALSE)
+        if (!is.null(Y)) 
+            stop("Structured PCA with Y is not supported in msma 4.0", call. = FALSE)
+        if (length(comp) != 1L) 
+            stop("Structured PCA requires a single component count", call. = FALSE)
+        if (!is.null(lambdaY) || !is.null(lambdaXsup) || !is.null(lambdaYsup)) 
+            stop("Y-side and super-level penalties are not supported for structured PCA", call. = FALSE)
+        if (!identical(type, "lasso")) 
+            stop("Structured PCA supports type = \"lasso\" only", call. = FALSE)
+        if (!is.null(inX) || !is.null(inY) || !is.null(inXsup) || !is.null(inYsup)) 
+            stop("Forced-in variables are not supported for structured PCA", call. = FALSE)
+        if (!identical(sprmethod, "PCA") || !is.null(con4spv)) 
+            stop("Structured PCA cannot be combined with NMF, sNMF, CMP, or con4spv", call. = FALSE)
+        if (!is.null(Z) && !is.null(dim(Z)) && ncol(as.matrix(Z)) > 1L) 
+            stop("Structured PCA accepts only vector or one-column Z", call. = FALSE)
+        lambda_s4 = if (is.null(lambdaX)) 
+            0
+        else lambdaX
+        if (length(lambda_s4) != 1L) 
+            stop("Structured PCA requires scalar lambdaX", call. = FALSE)
+        X_input = X
+        X_center = rep(0, ncol(X))
+        X_scale = rep(1, ncol(X))
+        if (isTRUE(scaling)) {
+            X_center = colMeans(X_input)
+            X_scale = apply(sweep(X_input, 2, X_center, "-"), 2, stats::sd)
+            X_scale[!is.finite(X_scale) | X_scale == 0] = 1
+            X_input = sweep(sweep(X_input, 2, X_center, "-"), 2, X_scale, "/")
+        }
+        else if (!identical(scaling, FALSE)) 
+            stop("scaling must be TRUE or FALSE", call. = FALSE)
+        Z_input = if (!is.null(Z) && is.matrix(Z) && ncol(Z) == 1L) 
+            drop(Z)
+        else Z
+        fit_s4 = .s4pca_fit(X_input, Z_input, comp = comp, lambda = lambda_s4, gamma = gammaX, history_method = history.method, 
+            mu = muX, hard_exclusion = identical(structure.method, "exclusive"), niter = niterS4, seed = intseed, verbose = verbose)
+        fit_s4$call = match.call()
+        fit_s4$Xcenter = X_center
+        fit_s4$Xscale = X_scale
+        fit_s4$reconstruction_loadings = .s4pca_project_reference(X_input, fit_s4$S)
+        fit_s4$scaling = scaling
+        fit_s4$structure.method = structure.method
+        fit_s4$gammaX = gammaX
+        fit_s4$lambdaX = lambda_s4
+        fit_s4$muX = muX
+        fit_s4$dmode = "PCA"
+        class(fit_s4) = "s4pca"
+        return(fit_s4)
+    }
+    if (identical(engine, "legacy")) {
+        z_is_matrix = !is.null(Z) && !is.null(dim(Z))
+        z_ncol = if (z_is_matrix) 
+            ncol(as.matrix(Z))
+        else if (is.null(Z)) 
+            0L
+        else 1L
+        Z_legacy = if (z_is_matrix && z_ncol == 1L) 
+            drop(Z)
+        else Z
+        return(.msma_default_legacy(X = X, Y = Y, Z = Z_legacy, comp = comp, lambdaX = lambdaX, lambdaY = lambdaY, lambdaXsup = lambdaXsup, 
+            lambdaYsup = lambdaYsup, eta = eta, type = type, inX = inX, inY = inY, inXsup = inXsup, inYsup = inYsup, muX = muX, 
+            muY = muY, defmethod = defmethod, scaling = scaling, verbose = verbose, intseed = intseed, ceps = ceps, ...))
+    }
+    .msma_default_extended(X = X, Y = Y, Z = Z, comp = comp, lambdaX = lambdaX, lambdaY = lambdaY, lambdaXsup = lambdaXsup, 
+        lambdaYsup = lambdaYsup, eta = eta, type = type, inX = inX, inY = inY, inXsup = inXsup, inYsup = inYsup, muX = muX, 
+        muY = muY, defmethod = defmethod, scaling = scaling, verbose = verbose, intseed = intseed, ceps = ceps, sprmethod = sprmethod, 
+        nneg = nneg, con4spv = con4spv, ...)
+}

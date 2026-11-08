@@ -1,0 +1,13 @@
+msma Version 5 initial baseline
+Date: 2026-10-31 09:47:15 +0900
+Working directory: D:/ADNI2/Multimodal/program/package/Ver5
+R version: R version 4.5.2 (2025-10-31 ucrt)
+Package source version: 4.0
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 569
+Baseline branch: develop/5.0
+Baseline commit: 43729524e0d361c08dddabbc23677b99a369059d
+Baseline status: passed

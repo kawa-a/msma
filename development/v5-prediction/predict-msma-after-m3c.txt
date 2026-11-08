@@ -1,0 +1,13 @@
+{
+    dots <- list(...)
+    preprocessing <- if (is.null(dots$preprocessing)) {
+        "legacy"
+    }
+    else {
+        match.arg(dots$preprocessing, c("legacy", "fitted"))
+    }
+    if (identical(preprocessing, "legacy")) {
+        return(.predict_msma_legacy(object = object, newX = newX, newY = newY))
+    }
+    .predict_msma_fitted(object = object, newX = newX, newY = newY)
+}

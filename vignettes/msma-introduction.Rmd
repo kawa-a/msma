@@ -124,12 +124,61 @@ fit_spls$nzwbX
 fit_spls$nzwbY
 ```
 
-# Prediction
+# Prediction and low-rank reconstruction
 
-```{r prediction}
-pred <- predict(fit_pls, newX = X, newY = Y)
-names(pred)
+`predict.msma()` projects supplied data into fitted component spaces and
+returns component scores and low-rank reconstructions. It does not predict
+`Y` from `X`. For PLS, `newX` and `newY` are reconstructed independently.
+
+The returned elements are reconstructed `X`, X-side scores `sbX`,
+reconstructed `Y`, and Y-side scores `sbY`. For PCA, `Y` and `sbY` are `NULL`.
+
+## Historical prediction behavior
+
+Calling `predict()` without Version 5 controls preserves historical behavior.
+
+```{r prediction-legacy}
+legacy_prediction <- predict(fit_pca, newX = X[1:5, , drop = FALSE])
+names(legacy_prediction)
 ```
+
+## Fitted preprocessing and reconstruction
+
+Fitted preprocessing reuses training center and scale. Fitted reconstruction
+uses training-derived reconstruction coefficients.
+
+```{r prediction-fitted}
+fitted_prediction <- predict(
+  fit_pca,
+  newX = X[1:5, , drop = FALSE],
+  preprocessing = "fitted",
+  reconstruction = "fitted",
+  output_scale = "original"
+)
+lapply(fitted_prediction$X, dim)
+lapply(fitted_prediction$sbX, dim)
+```
+
+`output_scale = "analysis"` returns centered or standardized reconstructions.
+`output_scale = "original"` returns reconstructions on original variable scales.
+Component scores remain on the analysis scale.
+
+## PLS prediction
+
+```{r prediction-pls}
+prediction_pls <- predict(
+  fit_pls,
+  newX = X[1:5, , drop = FALSE],
+  newY = Y[1:5, , drop = FALSE],
+  preprocessing = "fitted",
+  reconstruction = "fitted",
+  output_scale = "original"
+)
+names(prediction_pls)
+```
+
+`newY` is not an outcome predicted from `newX`. The supplied `newY` is
+projected and reconstructed independently.
 
 # Session information
 

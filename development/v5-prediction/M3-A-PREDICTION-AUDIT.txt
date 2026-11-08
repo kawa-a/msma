@@ -1,0 +1,198 @@
+msma Version 5 M3-A prediction path audit
+Date: 2026-10-31 18:48:43 +0900 
+Branch: feature/v5-preprocessing-serialization 
+Commit: 5fa227ac7508ba8262a796b1ae8976634b722f37 
+
+Function status
+             function_name exists
+              predict.msma   TRUE
+             predict.s4pca  FALSE
+         s4pca_reconstruct   TRUE
+  .s4pca_project_reference   TRUE
+  .apply_msma_preprocessor   TRUE
+ .invert_msma_preprocessor   TRUE
+
+Prediction-related definitions in src.r
+ line               function_name                                                              definition
+  116        .new_msma_preprocess                     .new_msma_preprocess <- function (engine, scaling) 
+  135      .build_msma_preprocess              .build_msma_preprocess <- function (fit, engine, scaling) 
+  200     .attach_msma_preprocess                                    .attach_msma_preprocess <- function(
+  216 .validate_msma_preprocessor                                .validate_msma_preprocessor <- function(
+  275    .apply_msma_preprocessor                                   .apply_msma_preprocessor <- function(
+  318   .invert_msma_preprocessor                                  .invert_msma_preprocessor <- function(
+ 1370                predict.msma                   predict.msma = function(object, newX, newY=NULL,...){
+ 2191                     project                                               project = function(x, y){
+ 2615    .s4pca_project_reference                            .s4pca_project_reference <- function(x, y) {
+ 2802           s4pca_reconstruct s4pca_reconstruct <- function(object, newdata = NULL, scaled = FALSE) {
+
+Prediction-related source hits: 185 
+Prediction-related test hits: 156 
+
+Public fit fields containing prediction terms
+
+legacy_pca
+class: msma 
+matching fields: predictiv, preprocess 
+
+$predictiv
+ num [1:2] 1 1
+
+$preprocess
+List of 5
+ $ engine : chr "legacy"
+ $ scaling: logi TRUE
+ $ X      :List of 5
+  ..$ centered      : logi TRUE
+  ..$ scaled        : logi TRUE
+  ..$ center        :List of 1
+  ..$ scale         :List of 1
+  ..$ missing_method: chr "replace_with_zero_after_scaling"
+ $ Y      :List of 5
+  ..$ centered      : logi FALSE
+  ..$ scaled        : logi FALSE
+  ..$ center        : NULL
+  ..$ scale         : NULL
+  ..$ missing_method: chr "not_used"
+ $ Z      :List of 5
+  ..$ method  : chr "legacy_scale_if_supplied"
+  ..$ centered: NULL
+  ..$ scaled  : NULL
+  ..$ center  : NULL
+  ..$ scale   : NULL
+ - attr(*, "class")= chr "msma_preprocess"
+
+legacy_pls
+class: msma 
+matching fields: predictiv, preprocess 
+
+$predictiv
+ num [1:2] 1 1
+
+$preprocess
+List of 5
+ $ engine : chr "legacy"
+ $ scaling: logi TRUE
+ $ X      :List of 5
+  ..$ centered      : logi TRUE
+  ..$ scaled        : logi TRUE
+  ..$ center        :List of 1
+  ..$ scale         :List of 1
+  ..$ missing_method: chr "replace_with_zero_after_scaling"
+ $ Y      :List of 5
+  ..$ centered      : logi TRUE
+  ..$ scaled        : logi TRUE
+  ..$ center        :List of 1
+  ..$ scale         :List of 1
+  ..$ missing_method: chr "replace_with_zero_after_scaling"
+ $ Z      :List of 5
+  ..$ method  : chr "legacy_scale_if_supplied"
+  ..$ centered: NULL
+  ..$ scaled  : NULL
+  ..$ center  : NULL
+  ..$ scale   : NULL
+ - attr(*, "class")= chr "msma_preprocess"
+
+extended
+class: msma 
+matching fields: predictiv, preprocess 
+
+$predictiv
+List of 2
+ $ : num [1, 1] 1
+ $ : num [1, 1] 1
+
+$preprocess
+List of 5
+ $ engine : chr "extended"
+ $ scaling: logi FALSE
+ $ X      :List of 5
+  ..$ centered      : logi TRUE
+  ..$ scaled        : logi FALSE
+  ..$ center        :List of 1
+  ..$ scale         :List of 1
+  ..$ missing_method: chr "engine_specific"
+ $ Y      :List of 5
+  ..$ centered      : NULL
+  ..$ scaled        : NULL
+  ..$ center        : NULL
+  ..$ scale         : NULL
+  ..$ missing_method: chr "engine_specific"
+ $ Z      :List of 5
+  ..$ method  : chr "engine_specific"
+  ..$ centered: NULL
+  ..$ scaled  : NULL
+  ..$ center  : NULL
+  ..$ scale   : NULL
+ - attr(*, "class")= chr "msma_preprocess"
+
+soft
+class: s4pca 
+matching fields: reconstruction_loadings, preprocess 
+
+$reconstruction_loadings
+ num [1:2, 1:6] 0.514 0.375 0.24 -0.609 -0.243 ...
+ - attr(*, "dimnames")=List of 2
+  ..$ : chr [1:2] "comp1" "comp2"
+  ..$ : chr [1:6] "x1" "x2" "x3" "x4" ...
+
+$preprocess
+List of 5
+ $ engine : chr "soft"
+ $ scaling: logi TRUE
+ $ X      :List of 5
+  ..$ centered      : logi TRUE
+  ..$ scaled        : logi TRUE
+  ..$ center        : Named num [1:6] -0.0106 -0.114 0.1518 -0.2982 0.3225 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ scale         : Named num [1:6] 0.889 1.006 0.903 0.918 0.92 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ missing_method: chr "none"
+ $ Y      :List of 5
+  ..$ centered      : logi FALSE
+  ..$ scaled        : logi FALSE
+  ..$ center        : NULL
+  ..$ scale         : NULL
+  ..$ missing_method: chr "not_used"
+ $ Z      :List of 5
+  ..$ method  : chr "unchanged"
+  ..$ centered: logi FALSE
+  ..$ scaled  : logi FALSE
+  ..$ center  : NULL
+  ..$ scale   : NULL
+ - attr(*, "class")= chr "msma_preprocess"
+
+exclusive
+class: s4pca 
+matching fields: reconstruction_loadings, preprocess 
+
+$reconstruction_loadings
+ num [1:2, 1:6] 0.5136 0.0208 0.2402 -0.4289 -0.2433 ...
+ - attr(*, "dimnames")=List of 2
+  ..$ : chr [1:2] "comp1" "comp2"
+  ..$ : chr [1:6] "x1" "x2" "x3" "x4" ...
+
+$preprocess
+List of 5
+ $ engine : chr "exclusive"
+ $ scaling: logi TRUE
+ $ X      :List of 5
+  ..$ centered      : logi TRUE
+  ..$ scaled        : logi TRUE
+  ..$ center        : Named num [1:6] -0.0106 -0.114 0.1518 -0.2982 0.3225 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ scale         : Named num [1:6] 0.889 1.006 0.903 0.918 0.92 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ missing_method: chr "none"
+ $ Y      :List of 5
+  ..$ centered      : logi FALSE
+  ..$ scaled        : logi FALSE
+  ..$ center        : NULL
+  ..$ scale         : NULL
+  ..$ missing_method: chr "not_used"
+ $ Z      :List of 5
+  ..$ method  : chr "unchanged"
+  ..$ centered: logi FALSE
+  ..$ scaled  : logi FALSE
+  ..$ center  : NULL
+  ..$ scale   : NULL
+ - attr(*, "class")= chr "msma_preprocess"

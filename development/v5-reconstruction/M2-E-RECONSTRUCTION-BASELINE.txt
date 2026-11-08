@@ -1,0 +1,29 @@
+msma Version 5 M2-E reconstruction baseline
+Date: 2026-10-31 17:30:55 +0900 
+Branch: feature/v5-reconstruction-preprocessing 
+Commit: e12d388cb5c31ede7e7f71a83082c86cf2e75976 
+
+s4pca_reconstruct scale convention:
+scaled = TRUE: analysis scale
+scaled = FALSE: original scale
+
+training_analysis 
+dimension: 30 x 6 
+sum: 1.8336027141074851e-15 
+sum of squares: 74.565107763655689 
+
+training_original 
+dimension: 30 x 6 
+sum: 6.2312991025071049 
+sum of squares: 69.994660833968709 
+
+new_analysis 
+dimension: 10 x 6 
+sum: 1.9452112087248605 
+sum of squares: 23.780288845946114 
+
+new_original 
+dimension: 10 x 6 
+sum: 3.978139317803258 
+sum of squares: 22.728069856610087 
+

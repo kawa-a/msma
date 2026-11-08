@@ -1,0 +1,1088 @@
+
+  src.r:402:  if (input_was_list) inverted else inverted[[1]]
+  src.r:403:}
+  src.r:404:
+  src.r:405:.resolve_msma_engine <- function(
+> src.r:406:  structure.method = "none",
+  src.r:407:  gammaX = 0,
+  src.r:408:  sprmethod = "PCA",
+  src.r:409:  Z = NULL,
+  src.r:410:  con4spv = NULL
+  src.r:411:) {
+  src.r:412:  structure.method <- match.arg(
+  src.r:413:    structure.method,
+  src.r:468:#' @method msma default
+  src.r:469:#' @export
+  src.r:470:msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
+  src.r:471:  lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL,
+> src.r:472:  inXsup=NULL, inYsup=NULL, muX=0, muY=0, defmethod="canonical",
+  src.r:473:  scaling=TRUE, verbose=FALSE, intseed=1, ceps=0.0001,
+  src.r:474:  sprmethod=c("PCA", "NMF", "sNMF", "CMP")[1],
+  src.r:475:  nneg=c("posneg", "absolute", "min")[1], con4spv=NULL,
+> src.r:476:  structure.method=c("none", "soft", "exclusive")[1], gammaX=0,
+  src.r:477:  history.method=c("sumabs", "any", "count")[1], niterS4=30, ...)
+  src.r:478:{
+  src.r:479:  engine <- .resolve_msma_engine(
+> src.r:480:    structure.method = structure.method,
+  src.r:481:    gammaX = gammaX,
+  src.r:482:    sprmethod = sprmethod,
+  src.r:483:    Z = Z,
+  src.r:484:    con4spv = con4spv
+  src.r:485:  )
+  src.r:486:
+  src.r:487:  use_s4pca <- engine %in% c("soft", "exclusive")
+  src.r:504:      X_scale[!is.finite(X_scale) | X_scale==0]=1
+  src.r:505:      X_input=sweep(sweep(X_input,2,X_center,"-"),2,X_scale,"/")
+  src.r:506:    } else if(!identical(scaling,FALSE)) stop("scaling must be TRUE or FALSE", call.=FALSE)
+  src.r:507:    Z_input=if(!is.null(Z) && is.matrix(Z) && ncol(Z)==1L) drop(Z) else Z
+> src.r:508:    fit_s4=.s4pca_fit(X_input,Z_input,comp=comp,lambda=lambda_s4,gamma=gammaX,
+  src.r:509:      history_method=history.method,mu=muX,hard_exclusion=identical(structure.method,"exclusive"),
+  src.r:510:      niter=niterS4,seed=intseed,verbose=verbose)
+  src.r:511:    fit_s4$call=match.call(); fit_s4$Xcenter=X_center; fit_s4$Xscale=X_scale
+  src.r:512:    fit_s4$reconstruction_loadings=.s4pca_project_reference(X_input, fit_s4$S)
+> src.r:513:    fit_s4$scaling=scaling; fit_s4$structure.method=structure.method
+> src.r:514:    fit_s4$gammaX=gammaX; fit_s4$lambdaX=lambda_s4; fit_s4$muX=muX; fit_s4$dmode="PCA"
+  src.r:515:    class(fit_s4)="s4pca"
+  src.r:516:
+  src.r:517:    fit_s4 <- .attach_msma_preprocess(
+  src.r:518:      fit = fit_s4,
+  src.r:519:      engine = engine,
+  src.r:520:      scaling = scaling
+  src.r:521:    )
+  src.r:530:    Z_legacy = if(z_is_matrix && z_ncol == 1L) drop(Z) else Z
+  src.r:531:    fit <- .msma_default_legacy(
+  src.r:532:      X=X, Y=Y, Z=Z_legacy, comp=comp, lambdaX=lambdaX, lambdaY=lambdaY,
+  src.r:533:      lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta=eta, type=type,
+> src.r:534:      inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX=muX, muY=muY,
+  src.r:535:      defmethod=defmethod, scaling=scaling, verbose=verbose,
+  src.r:536:      intseed=intseed, ceps=ceps, ...
+  src.r:537:    )
+  src.r:538:
+  src.r:539:    fit <- .attach_msma_preprocess(
+  src.r:540:      fit = fit,
+  src.r:541:      engine = engine,
+  src.r:547:
+  src.r:548:  fit <- .msma_default_extended(
+  src.r:549:    X=X, Y=Y, Z=Z, comp=comp, lambdaX=lambdaX, lambdaY=lambdaY,
+  src.r:550:    lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta=eta, type=type,
+> src.r:551:    inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX=muX, muY=muY,
+  src.r:552:    defmethod=defmethod, scaling=scaling, verbose=verbose,
+  src.r:553:    intseed=intseed, ceps=ceps, sprmethod=sprmethod, nneg=nneg,
+  src.r:554:    con4spv=con4spv, ...
+  src.r:555:  )
+  src.r:556:
+  src.r:557:  fit <- .attach_msma_preprocess(
+  src.r:558:    fit = fit,
+  src.r:562:
+  src.r:563:  fit
+  src.r:564:}
+  src.r:565:
+> src.r:566:.msma_default_legacy = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, defmethod = "canonical", scaling = TRUE, verbose=FALSE, intseed=1, ceps=0.0001, ...)
+  src.r:567:{
+  src.r:568:# number of nested componets
+  src.r:569:comp2 = ifelse(length(comp)<2, 1, comp[2])
+  src.r:570:comp = comp[1]
+  src.r:571:
+  src.r:572:##### Requirement #####
+  src.r:573:if(missing(X)) stop("X should be specified")
+  src.r:821:if(dmode == "PCA"){ 
+  src.r:822:out = list(call = match.call(), 
+  src.r:823:dmode=dmode,
+  src.r:824:X=X, Z=Z, Xscale=Xscale, comp = c(comp, comp2),
+> src.r:825:muX=muX, 
+  src.r:826:wbX=wbX, sbX=sbX, ssX=ssX, wsX=wsX,
+  src.r:827:nzwbX = nzwbX, nzwsX=nzwsX,
+  src.r:828:selectXnames = selectXnames,
+  src.r:829:cpevX = cpevX,
+  src.r:830:avX = avX,
+  src.r:831:bic = bic, bic2=bic2,
+  src.r:832:reproduct = reproduct, predictiv=predictiv
+  src.r:836:out = list(call = match.call(), 
+  src.r:837:dmode=dmode,
+  src.r:838:X=X, Y=Y, Z=Z,
+  src.r:839:Xscale=Xscale, Yscale=Yscale, comp = c(comp, comp2),
+> src.r:840:muX=muX, muY=muY,
+  src.r:841:wbX=wbX, sbX=sbX, wbY=wbY, sbY=sbY, ssX=ssX, wsX=wsX, ssY=ssY, wsY=wsY, 
+  src.r:842:nzwbX = nzwbX, nzwbY = nzwbY, nzwsX=nzwsX, nzwsY=nzwsY,
+  src.r:843:selectXnames = selectXnames, selectYnames = selectYnames,
+  src.r:844:cpevX = cpevX, cpevY = cpevY,
+  src.r:845:avX = avX, avY = avY,
+  src.r:846:bic = bicY, bicX = bicX, bicY = bicY,
+  src.r:847:bic2 = bic2Y, bic2X = bic2X, bic2Y = bic2Y,
+  src.r:851:class(out) = "msma"
+  src.r:852:out
+  src.r:853:}
+  src.r:854:
+> src.r:855:.msma_default_extended = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, defmethod = "canonical", scaling = TRUE, verbose=FALSE, intseed=1, ceps=0.0001, sprmethod=c("PCA", "NMF", "sNMF", "CMP")[1], nneg = c("posneg", "absolute", "min")[1], con4spv=NULL,...)
+  src.r:856:{
+  src.r:857:# number of nested componets
+  src.r:858:comp2 = ifelse(length(comp)<2, 1, comp[2])
+  src.r:859:comp = comp[1]
+  src.r:860:
+  src.r:861:##### Requirement #####
+  src.r:862:if(missing(X)) stop("X should be specified")
+  src.r:1158:if(dmode == "PCA"){ 
+  src.r:1159:out = list(call = match.call(), 
+  src.r:1160:dmode=dmode,
+  src.r:1161:X=X, Z=Z, Xscale=Xscale, comp = c(comp, comp2),
+> src.r:1162:muX=muX, 
+  src.r:1163:wbX=wbX, sbX=sbX, ssX=ssX, wsX=wsX,
+  src.r:1164:nzwbX = nzwbX, nzwsX=nzwsX,
+  src.r:1165:selectXnames = selectXnames,
+  src.r:1166:cpevX = cpevX,
+  src.r:1167:avX = avX,
+  src.r:1168:bic = bic, bic2=bic2,
+  src.r:1169:reproduct = reproduct, predictiv=predictiv
+  src.r:1173:out = list(call = match.call(), 
+  src.r:1174:dmode=dmode,
+  src.r:1175:X=X, Y=Y, Z=Z,
+  src.r:1176:Xscale=Xscale, Yscale=Yscale, comp = c(comp, comp2),
+> src.r:1177:muX=muX, muY=muY,
+  src.r:1178:wbX=wbX, sbX=sbX, wbY=wbY, sbY=sbY, ssX=ssX, wsX=wsX, ssY=ssY, wsY=wsY, 
+  src.r:1179:nzwbX = nzwbX, nzwbY = nzwbY, nzwsX=nzwsX, nzwsY=nzwsY,
+  src.r:1180:selectXnames = selectXnames, selectYnames = selectYnames,
+  src.r:1181:cpevX = cpevX, cpevY = cpevY,
+  src.r:1182:avX = avX, avY = avY,
+  src.r:1183:bic = bicY, bicX = bicX, bicY = bicY,
+  src.r:1184:bic2 = bic2Y, bic2X = bic2X, bic2Y = bic2Y,
+  src.r:1667:#'##### Two Component CV #####
+  src.r:1668:#'cv2 = cvmsma(X, Y, comp = 2, lambdaX=2, lambdaY=1:3, nfold=5, seed=1)
+  src.r:1669:#'cv2
+  src.r:1670:#'
+> src.r:1671:cvmsma = function(X, Y=NULL, Z=NULL, comp=1, lambdaX, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, nfold=5, seed=1, intseed=1, sprmethod=c("PCA", "NMF", "sNMF", "CMP")[1], nneg = c("posneg", "absolute", "min")[1], con4spv=NULL){
+  src.r:1672:##### Requirement #####
+  src.r:1673:if(missing(X)) stop("X should be specified")
+  src.r:1674:if(is.null(Y)){ 
+  src.r:1675:dmode = "PCA"
+  src.r:1676:Y = X
+  src.r:1677:if(!is.null(lambdaY)) stop("lambdaY can not be specified")
+  src.r:1678:}else{
+  src.r:1736:tmpZ = Z[!(fold == i),,drop=FALSE]
+  src.r:1737:testZ = Z[(fold == i),,drop=FALSE]
+  src.r:1738:}
+  src.r:1739:
+> src.r:1740:fit = msma(tmpX, tmpY, tmpZ, comp, lambdaX=lambdaX, lambdaY=lambdaY, lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta, type, inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX = muX, muY = muY, intseed=intseed, sprmethod=sprmethod, nneg=nneg, con4spv=con4spv)
+  src.r:1741:test = predict(fit, newX=testX, newY=testY)
+  src.r:1742:
+  src.r:1743:#testX = lapply(1:length(testX), function(x) scale(testX[[x]], center=fit$Xscale[[x]]$`scaled:center`, scale=fit$Xscale[[x]]$`scaled:scale`))
+  src.r:1744:testX = lapply(1:length(testX), function(x) scale(testX[[x]], center=fit$Xscale[[x]]$`scaled:center`))
+  src.r:1745:Xerr = matserr(testX, test$X)
+  src.r:1746:out = Xerr
+  src.r:1747:
+  src.r:1823:#' ##### number of components search #####
+  src.r:1824:#' ncomp1 = ncompsearch(X, Y, comps = c(1, 5, 10*(1:2)), nfold=5)
+  src.r:1825:#' #plot(ncomp1)
+  src.r:1826:#'
+> src.r:1827:ncompsearch = function(X, Y=NULL, Z=NULL, comps=1:3, lambdaX=NULL, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, nfold=5, regpara=FALSE, maxrep=3, minpct=0, maxpct=1, criterion=c("CV", "BIC")[1], whichselect=NULL, intseed=1, sprmethod=c("PCA", "NMF", "sNMF", "CMP")[1], nneg = c("posneg", "absolute", "min")[1]){
+  src.r:1828:
+  src.r:1829:if(!inherits(comps, "list")){ comps = list(comps)}
+  src.r:1830:if(length(comps)<2) comps[[2]] = 1
+  src.r:1831:if(criterion=="CV") comps[[2]] = 1
+  src.r:1832:comps2 = expand.grid(comps)
+  src.r:1833:
+  src.r:1834:if(criterion=="BIC" & !regpara){
+  src.r:1835:ncomps = unlist(lapply(comps, max))
+> src.r:1836:msmaout = msma(X, Y, Z, comp = ncomps, lambdaX=lambdaX, lambdaY=lambdaY, lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta=eta, type=type, inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX = muX, muY = muY, intseed=intseed, sprmethod=sprmethod, nneg=nneg)
+  src.r:1837:cves = msmaout[c("bic","bic2")]
+  src.r:1838:comps = lapply(ncomps, function(nc) 1:nc)
+  src.r:1839:}else{
+  src.r:1840:cv2 = apply(comps2, 1, function(x) {
+  src.r:1841:if(regpara){
+> src.r:1842:regpout = regparasearch(X, Y, Z, eta=eta, type=type, inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX = muX, muY = muY, comp=x, nfold=nfold, maxrep=maxrep, minpct=minpct, maxpct=maxpct, criterion=criterion, whichselect=whichselect, intseed=intseed, sprmethod=sprmethod, nneg=nneg)
+  src.r:1843:cve = regpout$mincriterion; lambdaX = regpout$optlambdaX; lambdaY = regpout$optlambdaY; lambdaXsup = regpout$optlambdaXsup; lambdaYsup = regpout$optlambdaYsup
+  src.r:1844:}else
+  src.r:1845:{
+  src.r:1846:if(criterion=="CV"){
+> src.r:1847:cve = cvmsma(X, Y, Z, comp=x, lambdaX=lambdaX, lambdaY=lambdaY, lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta=eta, type=type, inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX = muX, muY = muY, nfold=nfold, intseed=intseed, sprmethod=sprmethod, nneg=nneg)$err[1]
+  src.r:1848:}else if(criterion=="BIC"){
+> src.r:1849:msmaout = msma(X, Y, Z, comp=x, lambdaX=lambdaX, lambdaY=lambdaY, lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta=eta, type=type, inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX = muX, muY = muY, intseed=intseed, sprmethod=sprmethod, nneg=nneg)
+  src.r:1850:cve = unlist(lapply(msmaout[c("bic","bic2")], function(bic) bic[length(bic)]))
+  src.r:1851:}
+  src.r:1852:}
+  src.r:1853:list(cve = cve, lambdaX=lambdaX, lambdaY=lambdaY, lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup)
+  src.r:1854:})
+  src.r:1855:if(criterion=="CV"){
+  src.r:1856:cves = list(unlist(lapply(cv2, function(x) x$cve)), rep(1,length(cv2)))
+  src.r:1962:#' lambdaXsup=opt1$optlambdaXsup, lambdaYsup=opt1$optlambdaYsup)
+  src.r:1963:#' fit4
+  src.r:1964:#' summary(fit4)
+  src.r:1965:#'
+> src.r:1966:regparasearch = function(X, Y=NULL, Z=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, comp=1, nfold=5, maxrep=3, minpct=0, maxpct=1, criterion=c("CV", "BIC")[1], whichselect=NULL, homo=NULL, intseed=1, sprmethod=c("PCA", "NMF", "sNMF", "CMP")[1], nneg = c("posneg", "absolute", "min")[1]){
+  src.r:1967:##### Requirement #####
+  src.r:1968:if(missing(X)) stop("X should be specified")
+  src.r:1969:if(minpct>=1 | minpct<0) stop("minpct should be 0 <= minpct < 1")
+  src.r:1970:if(maxpct>1 | maxpct<=0) stop("maxpct should be 0 < maxpct <= 1")
+  src.r:1971:
+  src.r:1972:abnames = c("X", "Y", "Xsup", "Ysup")
+  src.r:1973:if(length(comp)<2) comp[2] = 1
+  src.r:1974:
+  src.r:1975:##### Candidates for Regularized Parameters #####
+> src.r:1976:intfit = msma(X, Y, Z, comp=1, lambdaX=rep(NULL, length(X)), lambdaY=rep(NULL, length(Y)), lambdaXsup=NULL, lambdaYsup=NULL, eta, type, inX, inY, inXsup=NULL, inYsup=NULL, muX = muX, muY = muY, intseed=intseed, sprmethod=sprmethod, nneg=nneg)
+  src.r:1977:
+  src.r:1978:intweight = list(X=intfit$wbX, Y=intfit$wbY, Xsup=intfit$wsX, Ysup=intfit$wsY)
+  src.r:1979:if(!is.null(homo)){ 
+  src.r:1980:for(h1 in homo){
+  src.r:1981:intweight[[h1]] = list(unlist(intweight[[h1]]))
+  src.r:1982:}}
+  src.r:1983:
+  src.r:2017:cv3 = apply(cands, 2, function(x){
+  src.r:2018:lambdas = lapply(abnames, function(y){z=colidx[[y]]; if(is.null(z)){NULL}else{x[z]}})
+  src.r:2019:names(lambdas) = abnames
+  src.r:2020:if(criterion=="CV"){
+> src.r:2021:cvmsma(X, Y, Z, comp = comp, lambdaX=lambdas$X, lambdaY=lambdas$Y, lambdaXsup=lambdas$Xsup, lambdaYsup=lambdas$Ysup, eta, type, inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX = muX, muY = muY, nfold=nfold, intseed=intseed, sprmethod=sprmethod, nneg=nneg)$err[1]
+  src.r:2022:}else if(criterion=="BIC"){
+> src.r:2023:msma(X, Y, Z, comp = comp, lambdaX=lambdas$X, lambdaY=lambdas$Y, lambdaXsup=lambdas$Xsup, lambdaYsup=lambdas$Ysup, eta, type, inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX = muX, muY = muY, intseed=intseed, sprmethod=sprmethod, nneg=nneg)$bic[comp[1]]
+  src.r:2024:}
+  src.r:2025:})
+  src.r:2026:
+  src.r:2027:##### #####
+  src.r:2028:optidx = which.min(cv3)
+  src.r:2029:
+  src.r:2030:criterions[[repidx]] = rbind(cands, criterion=cv3)
+  src.r:2125:#' ##### Restrict search range #####
+  src.r:2126:#' opt2 = optparasearch(X, Y, comp=3, nfold=5, maxrep=2, minpct=0.5)
+  src.r:2127:#' opt2
+  src.r:2128:#'
+> src.r:2129:optparasearch = function(X, Y=NULL, Z=NULL, search.method = c("ncomp1st", "regpara1st", "regparaonly", "simultaneous")[1], eta=1, type="lasso", inX=NULL, inY=NULL, muX = 0, muY = 0, comp=10, nfold=5, maxrep=3, minpct=0, maxpct=1, maxpct4ncomp=NULL, criterion=c("BIC","CV")[1], criterion4ncomp=NULL, whichselect=NULL, homo=NULL, intseed=1){
+  src.r:2130:
+  src.r:2131:if(length(comp)<2) comp[2] = 1
+  src.r:2132:comps1 = lapply(comp, function(c1) 1:c1)
+  src.r:2133:
+  src.r:2134:if(is.null(criterion4ncomp)) criterion4ncomp=criterion
+  src.r:2135:
+  src.r:2136:##### both (regpara first) #####
+  src.r:2137:if(search.method == "regpara1st"){
+> src.r:2138:regpara1 = regparasearch(X=X, Y=Y, Z=Z, comp=comp, muX = muX, muY = muY, nfold=nfold, minpct=minpct, maxpct=maxpct, maxrep=maxrep, criterion=criterion, whichselect=whichselect, homo=homo, intseed=intseed)
+> src.r:2139:params = ncompsearch(X=X, Y=Y, Z=Z, comps = comps1, lambdaX=regpara1$optlambdaX, lambdaY=regpara1$optlambdaY, lambdaXsup=regpara1$optlambdaXsup, lambdaYsup=regpara1$optlambdaYsup, muX = muX, muY = muY, nfold=nfold, regpara=FALSE, criterion=criterion4ncomp, whichselect=NULL)
+  src.r:2140:##### both (ncomp first) #####
+  src.r:2141:}else if(search.method == "ncomp1st"){
+> src.r:2142:#params = ncompsearch(X=X, Y=Y, Z=Z, comps = min(c(min(unlist(lapply(X,dim))), min(unlist(lapply(Y,dim))))), muX = muX, muY = muY, nfold=nfold1, regpara=FALSE, criterion=criterion)
+  src.r:2143:if(is.null(maxpct4ncomp)){
+> src.r:2144:params = ncompsearch(X=X, Y=Y, Z=Z, comps = comps1, muX = muX, muY = muY, nfold=nfold, regpara=FALSE, criterion=criterion4ncomp, whichselect=NULL)
+  src.r:2145:}else{
+> src.r:2146:params = ncompsearch(X=X, Y=Y, Z=Z, comps = comps1, muX = muX, muY = muY, nfold=nfold, maxpct=maxpct4ncomp, regpara=TRUE, criterion=criterion4ncomp, whichselect=NULL)
+  src.r:2147:}
+> src.r:2148:regpara1 = regparasearch(X=X, Y=Y, Z=Z, comp=params$optncomp, muX = muX, muY = muY, nfold=nfold, minpct=minpct, maxpct=maxpct, maxrep=maxrep, criterion=criterion, whichselect=whichselect, homo=homo, intseed=intseed)
+  src.r:2149:params$optlambdaX = regpara1$optlambdaX
+  src.r:2150:params$optlambdaY = regpara1$optlambdaY
+  src.r:2151:params$optlambdaXsup = regpara1$optlambdaXsup
+  src.r:2152:params$optlambdaYsup = regpara1$optlambdaYsup
+  src.r:2153:##### both (simultaneous, pct=1/ncomp) #####
+  src.r:2154:}else if(search.method == "simultaneous"){
+> src.r:2155:params = ncompsearch(X=X, Y=Y, Z=Z, comps = comps1, muX = muX, muY = muY, nfold=nfold, regpara=TRUE, maxrep=maxrep, minpct=minpct, maxpct=maxpct, criterion=criterion4ncomp, whichselect=NULL)
+  src.r:2156:##### regpara only (ncomp prespecified) #####
+  src.r:2157:}else if(search.method == "regparaonly"){
+  src.r:2158:params = list(optncomp = comp)
+> src.r:2159:regpara1 = regparasearch(X=X, Y=Y, Z=Z, comp=params$optncomp, muX = muX, muY = muY, nfold=nfold, minpct=minpct, maxpct=maxpct, maxrep=maxrep, criterion=criterion, whichselect=whichselect, homo=homo, intseed=intseed)
+  src.r:2160:params$optlambdaX = regpara1$optlambdaX
+  src.r:2161:params$optlambdaY = regpara1$optlambdaY
+  src.r:2162:params$optlambdaXsup = regpara1$optlambdaXsup
+  src.r:2163:params$optlambdaYsup = regpara1$optlambdaYsup
+  src.r:2164:params$cverrs = regpara1$cverrs
+  src.r:2165:params$mincverr = regpara1$mincverr
+  src.r:2166:}
+  src.r:2216:#' These are not intended for use by users.
+  src.r:2217:#'
+  src.r:2218:#' @rdname msma-internal
+  src.r:2219:#' @keywords internal
+> src.r:2220:.msma_onecomp_legacy = function(X, Y, Z=NULL, lambdaX=NULL, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, dmode = "PLS", verbose=FALSE, intseed=1, ceps=0.0001){
+  src.r:2221:
+  src.r:2222:Ynb = length(Y); Xnb = length(X)
+  src.r:2223:
+  src.r:2224:if(any(is.null(lambdaX))){ lambdaX = rep(0, Xnb)}
+  src.r:2225:if(any(is.null(lambdaY))){ lambdaY = rep(0, Ynb)}
+  src.r:2226:if(any(is.null(lambdaXsup))){ lambdaXsup = 0}
+  src.r:2227:if(any(is.null(lambdaYsup))){ lambdaYsup = 0}
+  src.r:2283:### Output ###
+  src.r:2284:list(wbX=wbX, sbX=sbX, wbY=wbY, sbY=sbY, ssX=ssX, wsX=wsX, ssY=ssY, wsY=wsY)
+  src.r:2285:}
+  src.r:2286:
+> src.r:2287:.msma_onecomp_extended = function(X, Y, Z=NULL, lambdaX=NULL, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, dmode = "PLS", verbose=FALSE, intseed=1, ceps=0.0001, con4spv=NULL){
+  src.r:2288:
+  src.r:2289:Ynb = length(Y); Xnb = length(X)
+  src.r:2290:
+  src.r:2291:if(any(is.null(lambdaX))){ lambdaX = rep(0, Xnb)}
+  src.r:2292:if(any(is.null(lambdaY))){ lambdaY = rep(0, Ynb)}
+  src.r:2293:if(any(is.null(lambdaXsup))){ lambdaXsup = 0}
+  src.r:2294:if(any(is.null(lambdaYsup))){ lambdaYsup = 0}
+  src.r:2840:    invcrossy %*% t(y) %*% x
+  src.r:2841:  }
+  src.r:2842:}
+  src.r:2843:
+> src.r:2844:.s4pca_fit_reference <- function(X, Z = NULL, comp = 6, lambda = 0.02,
+  src.r:2845:                                 gamma = 0, history_method = "sumabs", mu = 1.0,
+  src.r:2846:                                 hard_exclusion = FALSE, niter = 30, seed = NULL,
+  src.r:2847:                                 verbose = FALSE) {
+  src.r:2848:  if (!is.null(seed)) set.seed(seed)
+  src.r:2849:  history_method <- match.arg(history_method, c("sumabs", "any", "count"))
+  src.r:2850:  Xs <- X
+  src.r:2851:  Zs <- Z
+  src.r:2965:       history_method = history_method, mu = as.numeric(mu),
+  src.r:2966:       hard_exclusion = hard_exclusion, niter = niter, seed = seed)
+  src.r:2967:}
+  src.r:2968:
+> src.r:2969:.s4pca_fit <- function(X, Z = NULL, comp = 6, lambda = 0.02, gamma = 0,
+  src.r:2970:                       history_method = "sumabs", mu = 1,
+  src.r:2971:                       hard_exclusion = FALSE, niter = 30, seed = NULL,
+  src.r:2972:                       verbose = FALSE) {
+  src.r:2973:  input <- .s4pca_validate_inputs(
+  src.r:2974:    X = X, Z = Z, comp = comp, lambda = lambda, gamma = gamma,
+  src.r:2975:    history_method = history_method, mu = mu,
+  src.r:2976:    hard_exclusion = hard_exclusion, niter = niter, seed = seed
+  src.r:2977:  )
+> src.r:2978:  fit <- .s4pca_fit_reference(
+  src.r:2979:    X = input$X, Z = input$Z, comp = input$comp,
+  src.r:2980:    lambda = input$lambda, gamma = input$gamma,
+  src.r:2981:    history_method = input$history_method, mu = input$mu,
+  src.r:2982:    hard_exclusion = input$hard_exclusion, niter = input$niter,
+  src.r:2983:    seed = input$seed, verbose = verbose
+  src.r:2984:  )
+  src.r:2985:  fit$diagnostics <- list(
+  src.r:3083:  for (g in seq_len(nrow(grid))) {
+  src.r:3084:    fit <- msma(
+  src.r:3085:      X = X[train_idx, , drop = FALSE],
+  src.r:3086:      Z = if (is.null(Z)) NULL else Z[train_idx],
+> src.r:3087:      comp = grid$comp[g], lambdaX = grid$lambdaX[g], muX = muX,
+> src.r:3088:      structure.method = "soft", gammaX = grid$gammaX[g],
+  src.r:3089:      history.method = history.method, niterS4 = niterS4,
+  src.r:3090:      scaling = scaling, intseed = seed + g
+  src.r:3091:    )
+  src.r:3092:    pred <- s4pca_reconstruct(fit, X[cal_idx, , drop = FALSE], scaled = FALSE)
+  src.r:3093:    conformity <- rowMeans((X[cal_idx, , drop = FALSE] - pred)^2)
+  src.r:3094:    q <- as.numeric(stats::quantile(conformity, probs = 1 - alpha, type = 8, names = FALSE))
+  src.r:3095:    out[[g]] <- data.frame(
+  src.r:3125:#' @param intseed random seed.
+  src.r:3126:#' @param refit logical; refit the selected model on all observations.
+  src.r:3127:#' @return an object of class \code{s4pca_selection}.
+  src.r:3128:#' @export
+> src.r:3129:s4pca_conformal_select <- function(
+  src.r:3130:    X, Z = NULL, lambdaX = c(0.05, 0.1, 0.2), gammaX = c(0, 0.05, 0.1),
+  src.r:3131:    comp = 2:4, alpha = 0.1, repeats = 5, calibration_fraction = 0.25,
+> src.r:3132:    max_overlap = 1, muX = 1, history.method = "sumabs", niterS4 = 30,
+  src.r:3133:    scaling = TRUE, intseed = 1, refit = TRUE) {
+  src.r:3134:  input <- .s4pca_validate_inputs(X = X, Z = Z, comp = 1, lambda = 0,
+  src.r:3135:    gamma = 0, history_method = history.method, mu = muX,
+  src.r:3136:    hard_exclusion = FALSE, niter = niterS4, seed = intseed)
+  src.r:3137:  X <- input$X; Z <- input$Z
+  src.r:3138:  if (nrow(X) < 4L) stop("X must contain at least four rows for split selection", call. = FALSE)
+  src.r:3139:  if (length(alpha) != 1L || !is.numeric(alpha) || !is.finite(alpha) || alpha <= 0 || alpha >= 1) {
+  src.r:3182:  selected <- summary[eligible[ord[1]], , drop = FALSE]
+  src.r:3183:  final_fit <- NULL
+  src.r:3184:  if (refit) {
+  src.r:3185:    final_fit <- msma(X = X, Z = Z, comp = selected$comp,
+> src.r:3186:      lambdaX = selected$lambdaX, muX = muX, structure.method = "soft",
+  src.r:3187:      gammaX = selected$gammaX, history.method = input$history_method,
+  src.r:3188:      niterS4 = input$niter, scaling = scaling, intseed = intseed)
+  src.r:3189:  }
+  src.r:3190:  result <- list(selected = selected, summary = summary, details = details,
+  src.r:3191:    fit = final_fit, settings = list(alpha = alpha, repeats = as.integer(repeats),
+  src.r:3192:      calibration_fraction = calibration_fraction, max_overlap = max_overlap,
+> src.r:3193:      muX = muX, history.method = input$history_method,
+  src.r:3194:      niterS4 = input$niter, scaling = scaling, intseed = intseed))
+  src.r:3195:  class(result) <- "s4pca_selection"
+  src.r:3196:  result
+  src.r:3197:}
+  src.r:3198:
+  src.r:3199:
+  tests\testthat\test-release-api.R:1:test_that("Version 4.0 public S4PCA helpers are exported", {
+  tests\testthat\test-release-api.R:2:  exports <- getNamespaceExports("msma")
+  tests\testthat\test-release-api.R:3:  expect_true("s4pca_reconstruct" %in% exports)
+> tests\testthat\test-release-api.R:4:  expect_true("s4pca_conformal_select" %in% exports)
+  tests\testthat\test-release-api.R:5:})
+  tests\testthat\test-release-api.R:6:
+  tests\testthat\test-release-api.R:7:test_that("default structured arguments preserve the ordinary engine", {
+  tests\testthat\test-release-api.R:8:  X <- matrix(rnorm(120), 30, 4)
+  tests\testthat\test-release-api.R:9:  a <- msma(X, comp = 2, scaling = FALSE, intseed = 3)
+  tests\testthat\test-release-api.R:10:  b <- msma(X, comp = 2, scaling = FALSE, intseed = 3,
+> tests\testthat\test-release-api.R:11:            structure.method = "none", gammaX = 0)
+  tests\testthat\test-release-api.R:12:  expect_equal(a, b, tolerance = 1e-12)
+  tests\testthat\test-release-api.R:13:})
+  tests\testthat\test-release-api.R:14:
+  tests\testthat\test-release-api.R:15:
+  tests\testthat\test-s4pca-model-selection.R:1:source(testthat::test_path("test-s4pca-reference-regression.R"), local = TRUE)
+  tests\testthat\test-s4pca-model-selection.R:2:
+  tests\testthat\test-s4pca-model-selection.R:3:test_that("training and new-data reconstruction have valid dimensions", {
+  tests\testthat\test-s4pca-model-selection.R:4:  d <- make_s4pca_fixture(n = 36, p = 20)
+> tests\testthat\test-s4pca-model-selection.R:5:  fit <- msma(d$X, Z = d$Z, comp = 3, lambdaX = .1, muX = .8,
+> tests\testthat\test-s4pca-model-selection.R:6:              structure.method = "soft", gammaX = .1,
+  tests\testthat\test-s4pca-model-selection.R:7:              scaling = FALSE, intseed = 3)
+  tests\testthat\test-s4pca-model-selection.R:8:  expect_identical(dim(s4pca_reconstruct(fit)), dim(d$X))
+  tests\testthat\test-s4pca-model-selection.R:9:  expect_identical(dim(s4pca_reconstruct(fit, d$X[1:7, , drop=FALSE])), c(7L,20L))
+  tests\testthat\test-s4pca-model-selection.R:10:})
+  tests\testthat\test-s4pca-model-selection.R:11:
+  tests\testthat\test-s4pca-model-selection.R:12:test_that("reconstruction respects original scale", {
+  tests\testthat\test-s4pca-model-selection.R:13:  d <- make_s4pca_fixture(n = 36, p = 20)
+  tests\testthat\test-s4pca-model-selection.R:14:  X <- sweep(sweep(d$X, 2, seq_len(20), "*"), 2, seq_len(20), "+")
+> tests\testthat\test-s4pca-model-selection.R:15:  fit <- msma(X, Z=d$Z, comp=2, lambdaX=.1, muX=.8,
+> tests\testthat\test-s4pca-model-selection.R:16:              structure.method="soft", gammaX=.1, scaling=TRUE, intseed=4)
+  tests\testthat\test-s4pca-model-selection.R:17:  a <- s4pca_reconstruct(fit, scaled=FALSE)
+  tests\testthat\test-s4pca-model-selection.R:18:  b <- s4pca_reconstruct(fit, scaled=TRUE)
+  tests\testthat\test-s4pca-model-selection.R:19:  expect_identical(dim(a), dim(X)); expect_identical(dim(b), dim(X))
+  tests\testthat\test-s4pca-model-selection.R:20:  expect_false(isTRUE(all.equal(a,b)))
+  tests\testthat\test-s4pca-model-selection.R:21:})
+  tests\testthat\test-s4pca-model-selection.R:22:
+  tests\testthat\test-s4pca-model-selection.R:23:test_that("repeated split selection is reproducible", {
+  tests\testthat\test-s4pca-model-selection.R:24:  d <- make_s4pca_fixture(n=32,p=16)
+  tests\testthat\test-s4pca-model-selection.R:25:  args <- list(X=d$X,Z=d$Z,lambdaX=c(.05,.1),gammaX=c(0,.1),comp=2:3,
+> tests\testthat\test-s4pca-model-selection.R:26:               repeats=2,calibration_fraction=.25,muX=.8,niterS4=10,
+  tests\testthat\test-s4pca-model-selection.R:27:               scaling=FALSE,intseed=9)
+> tests\testthat\test-s4pca-model-selection.R:28:  a <- do.call(s4pca_conformal_select,args)
+> tests\testthat\test-s4pca-model-selection.R:29:  b <- do.call(s4pca_conformal_select,args)
+  tests\testthat\test-s4pca-model-selection.R:30:  expect_identical(a$selected,b$selected)
+  tests\testthat\test-s4pca-model-selection.R:31:  expect_equal(a$summary,b$summary,tolerance=1e-12)
+  tests\testthat\test-s4pca-model-selection.R:32:  expect_s3_class(a$fit,"s4pca")
+  tests\testthat\test-s4pca-model-selection.R:33:})
+  tests\testthat\test-s4pca-model-selection.R:34:
+  tests\testthat\test-s4pca-model-selection.R:35:test_that("selected candidate belongs to the requested grid", {
+  tests\testthat\test-s4pca-model-selection.R:36:  d <- make_s4pca_fixture(n=30,p=16)
+> tests\testthat\test-s4pca-model-selection.R:37:  z <- s4pca_conformal_select(d$X,d$Z,lambdaX=c(.05,.2),gammaX=c(0,.1),
+  tests\testthat\test-s4pca-model-selection.R:38:       comp=c(2,3),repeats=1,niterS4=8,scaling=FALSE,intseed=5)
+  tests\testthat\test-s4pca-model-selection.R:39:  expect_true(z$selected$lambdaX %in% c(.05,.2))
+  tests\testthat\test-s4pca-model-selection.R:40:  expect_true(z$selected$gammaX %in% c(0,.1))
+  tests\testthat\test-s4pca-model-selection.R:41:  expect_true(z$selected$comp %in% c(2,3))
+  tests\testthat\test-s4pca-model-selection.R:42:  expect_equal(nrow(z$summary),8)
+  tests\testthat\test-s4pca-model-selection.R:43:})
+  tests\testthat\test-s4pca-model-selection.R:44:
+  tests\testthat\test-s4pca-model-selection.R:45:test_that("model-selection inputs are validated", {
+  tests\testthat\test-s4pca-model-selection.R:46:  X <- matrix(rnorm(80),20,4)
+> tests\testthat\test-s4pca-model-selection.R:47:  expect_error(s4pca_conformal_select(X,alpha=0),"alpha")
+> tests\testthat\test-s4pca-model-selection.R:48:  expect_error(s4pca_conformal_select(X,repeats=0),"repeats")
+> tests\testthat\test-s4pca-model-selection.R:49:  expect_error(s4pca_conformal_select(X,calibration_fraction=1),"calibration")
+> tests\testthat\test-s4pca-model-selection.R:50:  expect_error(s4pca_conformal_select(X,max_overlap=2),"max_overlap")
+> tests\testthat\test-s4pca-model-selection.R:51:  expect_error(s4pca_conformal_select(X,lambdaX=-1),"lambdaX")
+  tests\testthat\test-s4pca-model-selection.R:52:})
+  tests\testthat\test-s4pca-model-selection.R:53:
+  tests\testthat\test-s4pca-model-selection.R:54:test_that("split details retain the repeat identifier", {
+  tests\testthat\test-s4pca-model-selection.R:55:  d <- make_s4pca_fixture(n = 24, p = 12)
+> tests\testthat\test-s4pca-model-selection.R:56:  z <- s4pca_conformal_select(
+  tests\testthat\test-s4pca-model-selection.R:57:    d$X, d$Z,
+  tests\testthat\test-s4pca-model-selection.R:58:    lambdaX = 0.1,
+  tests\testthat\test-s4pca-model-selection.R:59:    gammaX = 0.1,
+  tests\testthat\test-s4pca-model-selection.R:60:    comp = 2,
+  tests\testthat\test-s4pca-model-selection.R:61:    repeats = 2,
+  tests\testthat\test-s4pca-model-selection.R:62:    niterS4 = 5,
+  tests\testthat\test-s4pca-model-selection.R:63:    scaling = FALSE,
+  tests\testthat\test-s4pca-reference-regression.R:41:
+  tests\testthat\test-s4pca-reference-regression.R:42:run_candidate <- function(X, Z = NULL, comp = 6L, lambda = 0.20,
+  tests\testthat\test-s4pca-reference-regression.R:43:                          gamma = 0.10, mu = 1.0, str = FALSE,
+  tests\testthat\test-s4pca-reference-regression.R:44:                          niter = 40L, seed = 3L) {
+> tests\testthat\test-s4pca-reference-regression.R:45:  candidate <- getFromNamespace(".s4pca_fit_reference", "msma")
+  tests\testthat\test-s4pca-reference-regression.R:46:  set.seed(seed)
+  tests\testthat\test-s4pca-reference-regression.R:47:  candidate(
+  tests\testthat\test-s4pca-reference-regression.R:48:    X = X, Z = Z, comp = comp, lambda = lambda, gamma = gamma,
+  tests\testthat\test-s4pca-reference-regression.R:49:    history_method = "sumabs", mu = mu, hard_exclusion = str,
+  tests\testthat\test-s4pca-reference-regression.R:50:    niter = niter, seed = seed, verbose = FALSE
+  tests\testthat\test-s4pca-reference-regression.R:51:  )
+  tests\testthat\test-s4pca-reference-regression.R:52:}
+  tests\testthat\test-s4pca-reference-regression.R:72:}
+  tests\testthat\test-s4pca-reference-regression.R:73:
+  tests\testthat\test-s4pca-reference-regression.R:74:testthat::test_that("candidate S4PCA reproduces the manuscript algorithm", {
+  tests\testthat\test-s4pca-reference-regression.R:75:  testthat::skip_if_not(
+> tests\testthat\test-s4pca-reference-regression.R:76:    exists(".s4pca_fit_reference", envir = asNamespace("msma"), inherits = FALSE),
+  tests\testthat\test-s4pca-reference-regression.R:77:    "The Version 4.0 candidate engine has not been implemented yet"
+  tests\testthat\test-s4pca-reference-regression.R:78:  )
+  tests\testthat\test-s4pca-reference-regression.R:79:  dat <- make_s4pca_fixture()
+  tests\testthat\test-s4pca-reference-regression.R:80:  ref <- run_reference(dat$X, dat$Z)
+  tests\testthat\test-s4pca-reference-regression.R:81:  new <- run_candidate(dat$X, dat$Z)
+  tests\testthat\test-s4pca-reference-regression.R:82:  expect_reference_match(ref, new)
+  tests\testthat\test-s4pca-reference-regression.R:83:})
+  tests\testthat\test-s4pca-reference-regression.R:96:    nm <- scenario_name
+  tests\testthat\test-s4pca-reference-regression.R:97:    pars <- scenarios[[scenario_name]]
+  tests\testthat\test-s4pca-reference-regression.R:98:    testthat::test_that(paste("reference agreement:", nm), {
+  tests\testthat\test-s4pca-reference-regression.R:99:      testthat::skip_if_not(
+> tests\testthat\test-s4pca-reference-regression.R:100:        exists(".s4pca_fit_reference", envir = asNamespace("msma"), inherits = FALSE),
+  tests\testthat\test-s4pca-reference-regression.R:101:        "The Version 4.0 candidate engine has not been implemented yet"
+  tests\testthat\test-s4pca-reference-regression.R:102:      )
+  tests\testthat\test-s4pca-reference-regression.R:103:      dat <- make_s4pca_fixture()
+  tests\testthat\test-s4pca-reference-regression.R:104:      ref <- do.call(run_reference, c(list(X = dat$X, Z = dat$Z), pars))
+  tests\testthat\test-s4pca-reference-regression.R:105:      new <- do.call(run_candidate, c(list(X = dat$X, Z = dat$Z), pars))
+  tests\testthat\test-s4pca-reference-regression.R:106:      expect_reference_match(ref, new)
+  tests\testthat\test-s4pca-reference-regression.R:107:    })
+  tests\testthat\test-s4pca-reference-regression.R:109:}
+  tests\testthat\test-s4pca-reference-regression.R:110:
+  tests\testthat\test-s4pca-reference-regression.R:111:testthat::test_that("reference agreement holds without supervision", {
+  tests\testthat\test-s4pca-reference-regression.R:112:  testthat::skip_if_not(
+> tests\testthat\test-s4pca-reference-regression.R:113:    exists(".s4pca_fit_reference", envir = asNamespace("msma"), inherits = FALSE),
+  tests\testthat\test-s4pca-reference-regression.R:114:    "The Version 4.0 candidate engine has not been implemented yet"
+  tests\testthat\test-s4pca-reference-regression.R:115:  )
+  tests\testthat\test-s4pca-reference-regression.R:116:  dat <- make_s4pca_fixture()
+  tests\testthat\test-s4pca-reference-regression.R:117:  ref <- run_reference(dat$X, Z = NULL, mu = 0, lambda = 0.15, gamma = 0.10)
+  tests\testthat\test-s4pca-reference-regression.R:118:  new <- run_candidate(dat$X, Z = NULL, mu = 0, lambda = 0.15, gamma = 0.10)
+  tests\testthat\test-s4pca-reference-regression.R:119:  expect_reference_match(ref, new)
+  tests\testthat\test-s4pca-reference-regression.R:120:})
+  tests\testthat\test-s4pca-reference-regression.R:121:
+  tests\testthat\test-s4pca-reference-regression.R:122:testthat::test_that("reference agreement holds across component counts", {
+  tests\testthat\test-s4pca-reference-regression.R:123:  testthat::skip_if_not(
+> tests\testthat\test-s4pca-reference-regression.R:124:    exists(".s4pca_fit_reference", envir = asNamespace("msma"), inherits = FALSE),
+  tests\testthat\test-s4pca-reference-regression.R:125:    "The Version 4.0 candidate engine has not been implemented yet"
+  tests\testthat\test-s4pca-reference-regression.R:126:  )
+  tests\testthat\test-s4pca-reference-regression.R:127:  dat <- make_s4pca_fixture()
+  tests\testthat\test-s4pca-reference-regression.R:128:  for (k in c(1L, 2L, 4L, 6L)) {
+  tests\testthat\test-s4pca-reference-regression.R:129:    ref <- run_reference(dat$X, dat$Z, comp = k)
+  tests\testthat\test-s4pca-reference-regression.R:130:    new <- run_candidate(dat$X, dat$Z, comp = k)
+  tests\testthat\test-s4pca-reference-regression.R:131:    expect_reference_match(ref, new)
+  tests\testthat\test-s4pca-reference-regression.R:133:})
+  tests\testthat\test-s4pca-reference-regression.R:134:
+  tests\testthat\test-s4pca-reference-regression.R:135:testthat::test_that("candidate is reproducible for a fixed seed", {
+  tests\testthat\test-s4pca-reference-regression.R:136:  testthat::skip_if_not(
+> tests\testthat\test-s4pca-reference-regression.R:137:    exists(".s4pca_fit_reference", envir = asNamespace("msma"), inherits = FALSE),
+  tests\testthat\test-s4pca-reference-regression.R:138:    "The Version 4.0 candidate engine has not been implemented yet"
+  tests\testthat\test-s4pca-reference-regression.R:139:  )
+  tests\testthat\test-s4pca-reference-regression.R:140:  dat <- make_s4pca_fixture()
+  tests\testthat\test-s4pca-reference-regression.R:141:  fit1 <- run_candidate(dat$X, dat$Z, seed = 19L)
+  tests\testthat\test-s4pca-reference-regression.R:142:  fit2 <- run_candidate(dat$X, dat$Z, seed = 19L)
+  tests\testthat\test-s4pca-reference-regression.R:143:  testthat::expect_identical(fit1, fit2)
+  tests\testthat\test-s4pca-reference-regression.R:144:})
+  tests\testthat\test-s4pca-reference-regression.R:145:
+  tests\testthat\test-s4pca-reference-regression.R:146:testthat::test_that("both overlap definitions are internally consistent", {
+  tests\testthat\test-s4pca-reference-regression.R:147:  testthat::skip_if_not(
+> tests\testthat\test-s4pca-reference-regression.R:148:    exists(".s4pca_fit_reference", envir = asNamespace("msma"), inherits = FALSE),
+  tests\testthat\test-s4pca-reference-regression.R:149:    "The Version 4.0 candidate engine has not been implemented yet"
+  tests\testthat\test-s4pca-reference-regression.R:150:  )
+  tests\testthat\test-s4pca-reference-regression.R:151:  dat <- make_s4pca_fixture()
+  tests\testthat\test-s4pca-reference-regression.R:152:  fit <- run_candidate(dat$X, dat$Z)
+  tests\testthat\test-s4pca-reference-regression.R:153:  count <- rowSums(abs(fit$W) > 1e-8)
+  tests\testthat\test-s4pca-reference-regression.R:154:  expected_all <- mean(count >= 2L)
+  tests\testthat\test-s4pca-reference-regression.R:155:  expected_selected <- if (any(count >= 1L)) {
+  tests\testthat\test-s4pca-validation-diagnostics.R:2:
+  tests\testthat\test-s4pca-validation-diagnostics.R:3:test_that("validated candidate preserves reference numerical outputs", {
+  tests\testthat\test-s4pca-validation-diagnostics.R:4:  dat <- make_s4pca_fixture()
+  tests\testthat\test-s4pca-validation-diagnostics.R:5:  ref <- run_reference(dat$X, dat$Z)
+> tests\testthat\test-s4pca-validation-diagnostics.R:6:  candidate <- getFromNamespace(".s4pca_fit", "msma")
+  tests\testthat\test-s4pca-validation-diagnostics.R:7:  fit <- candidate(dat$X, dat$Z, comp = 6, lambda = 0.20, gamma = 0.10,
+  tests\testthat\test-s4pca-validation-diagnostics.R:8:                   mu = 1, niter = 40, seed = 3)
+  tests\testthat\test-s4pca-validation-diagnostics.R:9:  expect_equal(fit$W, ref$W, tolerance = 1e-12)
+  tests\testthat\test-s4pca-validation-diagnostics.R:10:  expect_equal(fit$S, ref$S, tolerance = 1e-12)
+  tests\testthat\test-s4pca-validation-diagnostics.R:11:  expect_equal(fit$rss, ref$rss, tolerance = 1e-12)
+  tests\testthat\test-s4pca-validation-diagnostics.R:12:  expect_equal(fit$AIC, ref$AIC, tolerance = 1e-12)
+  tests\testthat\test-s4pca-validation-diagnostics.R:13:  expect_equal(fit$BIC, ref$BIC, tolerance = 1e-12)
+  tests\testthat\test-s4pca-validation-diagnostics.R:17:})
+  tests\testthat\test-s4pca-validation-diagnostics.R:18:
+  tests\testthat\test-s4pca-validation-diagnostics.R:19:test_that("one-column matrix Z is normalized to a vector", {
+  tests\testthat\test-s4pca-validation-diagnostics.R:20:  dat <- make_s4pca_fixture(n = 30, p = 20)
+> tests\testthat\test-s4pca-validation-diagnostics.R:21:  candidate <- getFromNamespace(".s4pca_fit", "msma")
+  tests\testthat\test-s4pca-validation-diagnostics.R:22:  a <- candidate(dat$X, dat$Z, comp = 2, seed = 7)
+  tests\testthat\test-s4pca-validation-diagnostics.R:23:  b <- candidate(dat$X, cbind(dat$Z), comp = 2, seed = 7)
+  tests\testthat\test-s4pca-validation-diagnostics.R:24:  expect_equal(a$W, b$W, tolerance = 1e-12)
+  tests\testthat\test-s4pca-validation-diagnostics.R:25:  expect_equal(a$S, b$S, tolerance = 1e-12)
+  tests\testthat\test-s4pca-validation-diagnostics.R:26:})
+  tests\testthat\test-s4pca-validation-diagnostics.R:27:
+  tests\testthat\test-s4pca-validation-diagnostics.R:28:test_that("invalid X and Z inputs are rejected", {
+> tests\testthat\test-s4pca-validation-diagnostics.R:29:  candidate <- getFromNamespace(".s4pca_fit", "msma")
+  tests\testthat\test-s4pca-validation-diagnostics.R:30:  expect_error(candidate(matrix(c(1, NA, 2, 3), 2), seed = 1), "X must not contain")
+  tests\testthat\test-s4pca-validation-diagnostics.R:31:  expect_error(candidate(matrix(1:6, 3, 2), Z = 1:2, seed = 1), "length\\(Z\\)")
+  tests\testthat\test-s4pca-validation-diagnostics.R:32:  expect_error(candidate(matrix(1:6, 3, 2), Z = cbind(1:3, 4:6), seed = 1), "Z must be")
+  tests\testthat\test-s4pca-validation-diagnostics.R:33:})
+  tests\testthat\test-s4pca-validation-diagnostics.R:34:
+  tests\testthat\test-s4pca-validation-diagnostics.R:35:test_that("invalid tuning and control values are rejected", {
+> tests\testthat\test-s4pca-validation-diagnostics.R:36:  candidate <- getFromNamespace(".s4pca_fit", "msma")
+  tests\testthat\test-s4pca-validation-diagnostics.R:37:  X <- matrix(rnorm(30), 10, 3)
+  tests\testthat\test-s4pca-validation-diagnostics.R:38:  expect_error(candidate(X, comp = 0), "comp")
+  tests\testthat\test-s4pca-validation-diagnostics.R:39:  expect_error(candidate(X, comp = 1.5), "comp")
+  tests\testthat\test-s4pca-validation-diagnostics.R:40:  expect_error(candidate(X, lambda = -0.1), "lambda")
+  tests\testthat\test-s4pca-validation-diagnostics.R:41:  expect_error(candidate(X, gamma = Inf), "gamma")
+  tests\testthat\test-s4pca-validation-diagnostics.R:42:  expect_error(candidate(X, mu = 1.1), "mu")
+  tests\testthat\test-s4pca-validation-diagnostics.R:43:  expect_error(candidate(X, niter = 0), "niter")
+  tests\testthat\test-s4pca-validation-diagnostics.R:45:})
+  tests\testthat\test-s4pca-validation-diagnostics.R:46:
+  tests\testthat\test-s4pca-validation-diagnostics.R:47:test_that("diagnostics are internally consistent", {
+  tests\testthat\test-s4pca-validation-diagnostics.R:48:  dat <- make_s4pca_fixture(n = 30, p = 20)
+> tests\testthat\test-s4pca-validation-diagnostics.R:49:  candidate <- getFromNamespace(".s4pca_fit", "msma")
+  tests\testthat\test-s4pca-validation-diagnostics.R:50:  fit <- candidate(dat$X, dat$Z, comp = 3, lambda = 0.15,
+  tests\testthat\test-s4pca-validation-diagnostics.R:51:                   gamma = 0.10, mu = 0.8, niter = 20, seed = 9)
+  tests\testthat\test-s4pca-validation-diagnostics.R:52:  d <- fit$diagnostics
+  tests\testthat\test-s4pca-validation-diagnostics.R:53:  expect_identical(d$engine, "reference-compatible")
+  tests\testthat\test-s4pca-validation-diagnostics.R:54:  expect_true(d$reference_compatible)
+  tests\testthat\test-s4pca-validation-diagnostics.R:55:  expect_identical(d$extracted_components, ncol(fit$W))
+  tests\testthat\test-s4pca-validation-diagnostics.R:56:  expect_identical(d$requested_components, 3L)
+  tests\testthat\test-soft-structure-contract.R:3:test_that("structured PCA is opt-in and defaults remain legacy", {
+  tests\testthat\test-soft-structure-contract.R:4:  X <- matrix(rnorm(120), 30, 4)
+  tests\testthat\test-soft-structure-contract.R:5:  ordinary <- msma(X, comp=2, scaling=FALSE, intseed=3)
+  tests\testthat\test-soft-structure-contract.R:6:  expect_s3_class(ordinary, "msma")
+> tests\testthat\test-soft-structure-contract.R:7:  fit <- msma(X, comp=2, lambdaX=.1, structure.method="soft", gammaX=.1,
+  tests\testthat\test-soft-structure-contract.R:8:              niterS4=20, scaling=FALSE, intseed=3)
+  tests\testthat\test-soft-structure-contract.R:9:  expect_s3_class(fit, "s4pca")
+  tests\testthat\test-soft-structure-contract.R:10:})
+  tests\testthat\test-soft-structure-contract.R:11:
+  tests\testthat\test-soft-structure-contract.R:12:test_that("public soft API matches validated engine", {
+  tests\testthat\test-soft-structure-contract.R:13:  d <- make_s4pca_fixture(n=40,p=20)
+> tests\testthat\test-soft-structure-contract.R:14:  a <- msma(d$X,Z=d$Z,comp=3,lambdaX=.2,muX=.8,structure.method="soft",
+  tests\testthat\test-soft-structure-contract.R:15:            gammaX=.1,niterS4=30,scaling=FALSE,intseed=7)
+> tests\testthat\test-soft-structure-contract.R:16:  b <- getFromNamespace(".s4pca_fit","msma")(d$X,d$Z,comp=3,lambda=.2,
+  tests\testthat\test-soft-structure-contract.R:17:       gamma=.1,mu=.8,niter=30,seed=7)
+  tests\testthat\test-soft-structure-contract.R:18:  expect_equal(a$W,b$W,tolerance=1e-12); expect_equal(a$S,b$S,tolerance=1e-12)
+  tests\testthat\test-soft-structure-contract.R:19:})
+  tests\testthat\test-soft-structure-contract.R:20:
+  tests\testthat\test-soft-structure-contract.R:21:test_that("gammaX explicitly opts into soft structure", {
+  tests\testthat\test-soft-structure-contract.R:22:  d <- make_s4pca_fixture(n=30,p=20)
+> tests\testthat\test-soft-structure-contract.R:23:  fit <- msma(d$X,Z=d$Z,comp=2,lambdaX=.1,muX=.8,gammaX=.1,
+  tests\testthat\test-soft-structure-contract.R:24:              scaling=FALSE,intseed=5)
+  tests\testthat\test-soft-structure-contract.R:25:  expect_s3_class(fit,"s4pca"); expect_identical(fit$structure.method,"soft")
+  tests\testthat\test-soft-structure-contract.R:26:})
+  tests\testthat\test-soft-structure-contract.R:27:
+  tests\testthat\test-soft-structure-contract.R:28:test_that("exclusive API matches hard exclusion", {
+  tests\testthat\test-soft-structure-contract.R:29:  d <- make_s4pca_fixture(n=40,p=20)
+> tests\testthat\test-soft-structure-contract.R:30:  a <- msma(d$X,Z=d$Z,comp=3,lambdaX=.05,muX=1,structure.method="exclusive",
+  tests\testthat\test-soft-structure-contract.R:31:            niterS4=30,scaling=FALSE,intseed=11)
+> tests\testthat\test-soft-structure-contract.R:32:  b <- getFromNamespace(".s4pca_fit","msma")(d$X,d$Z,comp=3,lambda=.05,
+  tests\testthat\test-soft-structure-contract.R:33:       gamma=0,mu=1,hard_exclusion=TRUE,niter=30,seed=11)
+  tests\testthat\test-soft-structure-contract.R:34:  expect_equal(a$W,b$W,tolerance=1e-12); expect_equal(a$S,b$S,tolerance=1e-12)
+  tests\testthat\test-soft-structure-contract.R:35:})
+  tests\testthat\test-soft-structure-contract.R:36:
+  tests\testthat\test-soft-structure-contract.R:37:test_that("unsupported structured combinations fail clearly", {
+  tests\testthat\test-soft-structure-contract.R:38:  X <- matrix(rnorm(120),30,4); Y <- matrix(rnorm(90),30,3)
+> tests\testthat\test-soft-structure-contract.R:39:  expect_error(msma(list(X,X),structure.method="soft"),"single numeric matrix")
+> tests\testthat\test-soft-structure-contract.R:40:  expect_error(msma(X,Y=Y,structure.method="soft"),"with Y")
+> tests\testthat\test-soft-structure-contract.R:41:  expect_error(msma(X,comp=c(2,2),structure.method="soft"),"single component")
+> tests\testthat\test-soft-structure-contract.R:42:  expect_error(msma(X,structure.method="soft",sprmethod="sNMF"),"cannot be combined")
+> tests\testthat\test-soft-structure-contract.R:43:  expect_error(msma(X,structure.method="soft",Z=cbind(1:30,31:60)),"only vector")
+  tests\testthat\test-soft-structure-contract.R:44:})
+  tests\testthat\test-soft-structure-contract.R:45:
+  tests\testthat\test-soft-structure-contract.R:46:test_that("public structured API is reproducible", {
+  tests\testthat\test-soft-structure-contract.R:47:  d <- make_s4pca_fixture(n=30,p=20)
+> tests\testthat\test-soft-structure-contract.R:48:  a <- msma(d$X,Z=d$Z,comp=2,lambdaX=.1,muX=.8,structure.method="soft",
+  tests\testthat\test-soft-structure-contract.R:49:            gammaX=.1,scaling=FALSE,intseed=13)
+> tests\testthat\test-soft-structure-contract.R:50:  b <- msma(d$X,Z=d$Z,comp=2,lambdaX=.1,muX=.8,structure.method="soft",
+  tests\testthat\test-soft-structure-contract.R:51:            gammaX=.1,scaling=FALSE,intseed=13)
+  tests\testthat\test-soft-structure-contract.R:52:  expect_identical(a$W,b$W); expect_identical(a$S,b$S)
+  tests\testthat\test-soft-structure-contract.R:53:})
+  tests\testthat\test-soft-structure-contract.R:54:
+  tests\testthat\test-soft-structure-contract.R:55:
+  tests\testthat\test-v5-dispatcher.R:4:    testthat::expect_identical(.resolve_msma_engine(), "legacy")
+  tests\testthat\test-v5-dispatcher.R:5:
+  tests\testthat\test-v5-dispatcher.R:6:    testthat::expect_identical(
+  tests\testthat\test-v5-dispatcher.R:7:      .resolve_msma_engine(
+> tests\testthat\test-v5-dispatcher.R:8:        structure.method = "none",
+  tests\testthat\test-v5-dispatcher.R:9:        gammaX = 0
+  tests\testthat\test-v5-dispatcher.R:10:      ),
+  tests\testthat\test-v5-dispatcher.R:11:      "legacy"
+  tests\testthat\test-v5-dispatcher.R:12:    )
+  tests\testthat\test-v5-dispatcher.R:13:
+  tests\testthat\test-v5-dispatcher.R:14:    testthat::expect_identical(
+  tests\testthat\test-v5-dispatcher.R:15:      .resolve_msma_engine(
+> tests\testthat\test-v5-dispatcher.R:16:        structure.method = "soft",
+  tests\testthat\test-v5-dispatcher.R:17:        gammaX = 0
+  tests\testthat\test-v5-dispatcher.R:18:      ),
+  tests\testthat\test-v5-dispatcher.R:19:      "soft"
+  tests\testthat\test-v5-dispatcher.R:20:    )
+  tests\testthat\test-v5-dispatcher.R:21:
+  tests\testthat\test-v5-dispatcher.R:22:    testthat::expect_identical(
+  tests\testthat\test-v5-dispatcher.R:23:      .resolve_msma_engine(
+> tests\testthat\test-v5-dispatcher.R:24:        structure.method = "none",
+  tests\testthat\test-v5-dispatcher.R:25:        gammaX = 0.1
+  tests\testthat\test-v5-dispatcher.R:26:      ),
+  tests\testthat\test-v5-dispatcher.R:27:      "soft"
+  tests\testthat\test-v5-dispatcher.R:28:    )
+  tests\testthat\test-v5-dispatcher.R:29:
+  tests\testthat\test-v5-dispatcher.R:30:    testthat::expect_identical(
+  tests\testthat\test-v5-dispatcher.R:31:      .resolve_msma_engine(
+> tests\testthat\test-v5-dispatcher.R:32:        structure.method = "exclusive",
+  tests\testthat\test-v5-dispatcher.R:33:        gammaX = 0
+  tests\testthat\test-v5-dispatcher.R:34:      ),
+  tests\testthat\test-v5-dispatcher.R:35:      "exclusive"
+  tests\testthat\test-v5-dispatcher.R:36:    )
+  tests\testthat\test-v5-dispatcher.R:37:  }
+  tests\testthat\test-v5-dispatcher.R:38:)
+  tests\testthat\test-v5-dispatcher.R:39:
+  tests\testthat\test-v5-dispatcher.R:65:    Z_multi <- matrix(1:20, nrow = 10, ncol = 2)
+  tests\testthat\test-v5-dispatcher.R:66:
+  tests\testthat\test-v5-dispatcher.R:67:    testthat::expect_identical(
+  tests\testthat\test-v5-dispatcher.R:68:      .resolve_msma_engine(
+> tests\testthat\test-v5-dispatcher.R:69:        structure.method = "soft",
+  tests\testthat\test-v5-dispatcher.R:70:        Z = Z_multi
+  tests\testthat\test-v5-dispatcher.R:71:      ),
+  tests\testthat\test-v5-dispatcher.R:72:      "soft"
+  tests\testthat\test-v5-dispatcher.R:73:    )
+  tests\testthat\test-v5-dispatcher.R:74:
+  tests\testthat\test-v5-dispatcher.R:75:    testthat::expect_identical(
+  tests\testthat\test-v5-dispatcher.R:76:      .resolve_msma_engine(
+> tests\testthat\test-v5-dispatcher.R:77:        structure.method = "exclusive",
+  tests\testthat\test-v5-dispatcher.R:78:        sprmethod = "NMF"
+  tests\testthat\test-v5-dispatcher.R:79:      ),
+  tests\testthat\test-v5-dispatcher.R:80:      "exclusive"
+  tests\testthat\test-v5-dispatcher.R:81:    )
+  tests\testthat\test-v5-dispatcher.R:82:  }
+  tests\testthat\test-v5-dispatcher.R:83:)
+  tests\testthat\test-v5-dispatcher.R:84:
+  tests\testthat\test-v5-dispatcher.R:86:  "Version 5 resolver rejects unknown structure methods",
+  tests\testthat\test-v5-dispatcher.R:87:  {
+  tests\testthat\test-v5-dispatcher.R:88:    testthat::expect_error(
+  tests\testthat\test-v5-dispatcher.R:89:      .resolve_msma_engine(
+> tests\testthat\test-v5-dispatcher.R:90:        structure.method = "unknown"
+  tests\testthat\test-v5-dispatcher.R:91:      ),
+  tests\testthat\test-v5-dispatcher.R:92:      "arg"
+  tests\testthat\test-v5-dispatcher.R:93:    )
+  tests\testthat\test-v5-dispatcher.R:94:  }
+  tests\testthat\test-v5-dispatcher.R:95:)
+  tests\testthat\test-v5-dispatcher.R:96:
+  tests\testthat\test-v5-dispatcher.R:97:testthat::test_that(
+  tests\testthat\test-v5-preprocessing-apply.R:108:      X = X,
+  tests\testthat\test-v5-preprocessing-apply.R:109:      Z = Z,
+  tests\testthat\test-v5-preprocessing-apply.R:110:      comp = 2,
+  tests\testthat\test-v5-preprocessing-apply.R:111:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-apply.R:112:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing-apply.R:113:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing-apply.R:114:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing-apply.R:115:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-apply.R:116:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing-apply.R:117:      intseed = 4
+  tests\testthat\test-v5-preprocessing-apply.R:118:    )
+  tests\testthat\test-v5-preprocessing-apply.R:119:
+  tests\testthat\test-v5-preprocessing-apply.R:120:    observed <- .apply_msma_preprocessor(
+  tests\testthat\test-v5-preprocessing-apply.R:148:      X = X,
+  tests\testthat\test-v5-preprocessing-apply.R:149:      Z = Z,
+  tests\testthat\test-v5-preprocessing-apply.R:150:      comp = 2,
+  tests\testthat\test-v5-preprocessing-apply.R:151:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-apply.R:152:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing-apply.R:153:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing-apply.R:154:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing-apply.R:155:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-apply.R:156:      scaling = FALSE,
+  tests\testthat\test-v5-preprocessing-apply.R:157:      intseed = 4
+  tests\testthat\test-v5-preprocessing-apply.R:158:    )
+  tests\testthat\test-v5-preprocessing-apply.R:159:
+  tests\testthat\test-v5-preprocessing-apply.R:160:    observed <- .apply_msma_preprocessor(
+  tests\testthat\test-v5-preprocessing-apply.R:179:      X = X,
+  tests\testthat\test-v5-preprocessing-apply.R:180:      Z = Z,
+  tests\testthat\test-v5-preprocessing-apply.R:181:      comp = 2,
+  tests\testthat\test-v5-preprocessing-apply.R:182:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-apply.R:183:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing-apply.R:184:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing-apply.R:185:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing-apply.R:186:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-apply.R:187:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing-apply.R:188:      intseed = 4
+  tests\testthat\test-v5-preprocessing-apply.R:189:    )
+  tests\testthat\test-v5-preprocessing-apply.R:190:
+  tests\testthat\test-v5-preprocessing-apply.R:191:    observed <- .apply_msma_preprocessor(
+  tests\testthat\test-v5-preprocessing-inverse.R:56:    X <- matrix(stats::rnorm(120), nrow = 20, ncol = 6)
+  tests\testthat\test-v5-preprocessing-inverse.R:57:    colnames(X) <- paste0("x", seq_len(ncol(X)))
+  tests\testthat\test-v5-preprocessing-inverse.R:58:    Z <- as.numeric(scale(X[, 1] + stats::rnorm(20)))
+  tests\testthat\test-v5-preprocessing-inverse.R:59:    fit <- msma(
+> tests\testthat\test-v5-preprocessing-inverse.R:60:      X = X, Z = Z, comp = 2, lambdaX = 0.1, muX = 0.8,
+> tests\testthat\test-v5-preprocessing-inverse.R:61:      structure.method = "soft", gammaX = 0.1, niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-inverse.R:62:      scaling = TRUE, intseed = 4
+  tests\testthat\test-v5-preprocessing-inverse.R:63:    )
+  tests\testthat\test-v5-preprocessing-inverse.R:64:
+  tests\testthat\test-v5-preprocessing-inverse.R:65:    transformed <- .apply_msma_preprocessor(fit$preprocess, X, side = "X")
+  tests\testthat\test-v5-preprocessing-inverse.R:66:    restored <- .invert_msma_preprocessor(fit$preprocess, transformed, side = "X")
+  tests\testthat\test-v5-preprocessing-inverse.R:67:
+  tests\testthat\test-v5-preprocessing-inverse.R:68:    testthat::expect_equal(restored, X, tolerance = 1e-15, ignore_attr = TRUE)
+  tests\testthat\test-v5-preprocessing-inverse.R:77:    X <- matrix(stats::rnorm(120), nrow = 20, ncol = 6)
+  tests\testthat\test-v5-preprocessing-inverse.R:78:    colnames(X) <- paste0("x", seq_len(ncol(X)))
+  tests\testthat\test-v5-preprocessing-inverse.R:79:    Z <- as.numeric(scale(X[, 1] + stats::rnorm(20)))
+  tests\testthat\test-v5-preprocessing-inverse.R:80:    fit <- msma(
+> tests\testthat\test-v5-preprocessing-inverse.R:81:      X = X, Z = Z, comp = 2, lambdaX = 0.1, muX = 0.8,
+> tests\testthat\test-v5-preprocessing-inverse.R:82:      structure.method = "soft", gammaX = 0.1, niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-inverse.R:83:      scaling = FALSE, intseed = 4
+  tests\testthat\test-v5-preprocessing-inverse.R:84:    )
+  tests\testthat\test-v5-preprocessing-inverse.R:85:
+  tests\testthat\test-v5-preprocessing-inverse.R:86:    restored <- .invert_msma_preprocessor(fit$preprocess, X, side = "X")
+  tests\testthat\test-v5-preprocessing-inverse.R:87:    testthat::expect_identical(restored, X)
+  tests\testthat\test-v5-preprocessing-inverse.R:88:  }
+  tests\testthat\test-v5-preprocessing-inverse.R:89:)
+  tests\testthat\test-v5-preprocessing-inverse.R:170:    Z <- as.numeric(scale(0.8 * X[, 1] - 0.4 * X[, 4] + stats::rnorm(30)))
+  tests\testthat\test-v5-preprocessing-inverse.R:171:    Xnew <- matrix(stats::rnorm(60), nrow = 10, ncol = 6)
+  tests\testthat\test-v5-preprocessing-inverse.R:172:    colnames(Xnew) <- colnames(X)
+  tests\testthat\test-v5-preprocessing-inverse.R:173:    fit <- msma(
+> tests\testthat\test-v5-preprocessing-inverse.R:174:      X = X, Z = Z, comp = 2, lambdaX = 0.1, muX = 0.8,
+> tests\testthat\test-v5-preprocessing-inverse.R:175:      structure.method = "soft", gammaX = 0.1, niterS4 = 10,
+  tests\testthat\test-v5-preprocessing-inverse.R:176:      scaling = TRUE, intseed = 4
+  tests\testthat\test-v5-preprocessing-inverse.R:177:    )
+  tests\testthat\test-v5-preprocessing-inverse.R:178:
+  tests\testthat\test-v5-preprocessing-inverse.R:179:    expected <- readRDS(testthat::test_path("reference", "m2e-reconstruction-baseline.rds"))
+  tests\testthat\test-v5-preprocessing-inverse.R:180:    observed <- list(
+  tests\testthat\test-v5-preprocessing-inverse.R:181:      training_analysis = s4pca_reconstruct(fit, scaled = TRUE),
+  tests\testthat\test-v5-preprocessing-inverse.R:182:      training_original = s4pca_reconstruct(fit, scaled = FALSE),
+  tests\testthat\test-v5-preprocessing-inverse.R:203:    Z <- as.numeric(scale(X[, 1] + stats::rnorm(30)))
+  tests\testthat\test-v5-preprocessing-inverse.R:204:    Xnew <- matrix(stats::rnorm(60), nrow = 10, ncol = 6)
+  tests\testthat\test-v5-preprocessing-inverse.R:205:    colnames(Xnew) <- colnames(X)
+  tests\testthat\test-v5-preprocessing-inverse.R:206:    fit_v5 <- msma(
+> tests\testthat\test-v5-preprocessing-inverse.R:207:      X = X, Z = Z, comp = 2, lambdaX = 0.1, muX = 0.8,
+> tests\testthat\test-v5-preprocessing-inverse.R:208:      structure.method = "soft", gammaX = 0.1, niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-inverse.R:209:      scaling = TRUE, intseed = 4
+  tests\testthat\test-v5-preprocessing-inverse.R:210:    )
+  tests\testthat\test-v5-preprocessing-inverse.R:211:    fit_v4_like <- fit_v5
+  tests\testthat\test-v5-preprocessing-inverse.R:212:    fit_v4_like$preprocess <- NULL
+  tests\testthat\test-v5-preprocessing-inverse.R:213:
+  tests\testthat\test-v5-preprocessing-inverse.R:214:    for (scaled_value in c(TRUE, FALSE)) {
+  tests\testthat\test-v5-preprocessing-inverse.R:215:      testthat::expect_equal(
+  tests\testthat\test-v5-preprocessing-serialization.R:154:      X = X,
+  tests\testthat\test-v5-preprocessing-serialization.R:155:      Z = Z,
+  tests\testthat\test-v5-preprocessing-serialization.R:156:      comp = 2,
+  tests\testthat\test-v5-preprocessing-serialization.R:157:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-serialization.R:158:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing-serialization.R:159:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing-serialization.R:160:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing-serialization.R:161:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-serialization.R:162:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing-serialization.R:163:      intseed = 4
+  tests\testthat\test-v5-preprocessing-serialization.R:164:    )
+  tests\testthat\test-v5-preprocessing-serialization.R:165:
+  tests\testthat\test-v5-preprocessing-serialization.R:166:    rds_file <- tempfile(
+  tests\testthat\test-v5-preprocessing-serialization.R:219:      X = X,
+  tests\testthat\test-v5-preprocessing-serialization.R:220:      Z = Z,
+  tests\testthat\test-v5-preprocessing-serialization.R:221:      comp = 2,
+  tests\testthat\test-v5-preprocessing-serialization.R:222:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-serialization.R:223:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing-serialization.R:224:      structure.method = "exclusive",
+  tests\testthat\test-v5-preprocessing-serialization.R:225:      gammaX = 0,
+  tests\testthat\test-v5-preprocessing-serialization.R:226:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-serialization.R:227:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing-serialization.R:228:      intseed = 4
+  tests\testthat\test-v5-preprocessing-serialization.R:229:    )
+  tests\testthat\test-v5-preprocessing-serialization.R:230:
+  tests\testthat\test-v5-preprocessing-serialization.R:231:    rds_file <- tempfile(
+  tests\testthat\test-v5-preprocessing-serialization.R:367:      X = X,
+  tests\testthat\test-v5-preprocessing-serialization.R:368:      Z = Z,
+  tests\testthat\test-v5-preprocessing-serialization.R:369:      comp = 2,
+  tests\testthat\test-v5-preprocessing-serialization.R:370:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-serialization.R:371:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing-serialization.R:372:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing-serialization.R:373:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing-serialization.R:374:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-serialization.R:375:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing-serialization.R:376:      intseed = 4
+  tests\testthat\test-v5-preprocessing-serialization.R:377:    )
+  tests\testthat\test-v5-preprocessing-serialization.R:378:
+  tests\testthat\test-v5-preprocessing-serialization.R:379:    fit_v4_like <- fit_v5
+  tests\testthat\test-v5-preprocessing.R:303:      X = X,
+  tests\testthat\test-v5-preprocessing.R:304:      Z = Z,
+  tests\testthat\test-v5-preprocessing.R:305:      comp = 2,
+  tests\testthat\test-v5-preprocessing.R:306:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing.R:307:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing.R:308:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing.R:309:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing.R:310:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing.R:311:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing.R:312:      intseed = 4
+  tests\testthat\test-v5-preprocessing.R:313:    )
+  tests\testthat\test-v5-preprocessing.R:314:
+  tests\testthat\test-v5-preprocessing.R:315:    prep <- .build_msma_preprocess(
+  tests\testthat\test-v5-preprocessing.R:339:      X = X,
+  tests\testthat\test-v5-preprocessing.R:340:      Z = Z,
+  tests\testthat\test-v5-preprocessing.R:341:      comp = 2,
+  tests\testthat\test-v5-preprocessing.R:342:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing.R:343:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing.R:344:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing.R:345:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing.R:346:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing.R:347:      scaling = FALSE,
+  tests\testthat\test-v5-preprocessing.R:348:      intseed = 4
+  tests\testthat\test-v5-preprocessing.R:349:    )
+  tests\testthat\test-v5-preprocessing.R:350:
+  tests\testthat\test-v5-preprocessing.R:351:    prep <- .build_msma_preprocess(
+  tests\testthat\test-v5-preprocessing.R:383:      X = X,
+  tests\testthat\test-v5-preprocessing.R:384:      Z = Z,
+  tests\testthat\test-v5-preprocessing.R:385:      comp = 2,
+  tests\testthat\test-v5-preprocessing.R:386:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing.R:387:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing.R:388:      structure.method = "exclusive",
+  tests\testthat\test-v5-preprocessing.R:389:      gammaX = 0,
+  tests\testthat\test-v5-preprocessing.R:390:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing.R:391:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing.R:392:      intseed = 4
+  tests\testthat\test-v5-preprocessing.R:393:    )
+  tests\testthat\test-v5-preprocessing.R:394:
+  tests\testthat\test-v5-preprocessing.R:395:    prep <- .build_msma_preprocess(
+  tests\testthat\test-v5-preprocessing.R:456:      X = X,
+  tests\testthat\test-v5-preprocessing.R:457:      Z = Z,
+  tests\testthat\test-v5-preprocessing.R:458:      comp = 2,
+  tests\testthat\test-v5-preprocessing.R:459:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing.R:460:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing.R:461:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing.R:462:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing.R:463:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing.R:464:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing.R:465:      intseed = 4
+  tests\testthat\test-v5-preprocessing.R:466:    )
+  tests\testthat\test-v5-preprocessing.R:467:
+  tests\testthat\test-v5-preprocessing.R:468:    exclusive_fit <- msma(
+  tests\testthat\test-v5-preprocessing.R:469:      X = X,
+  tests\testthat\test-v5-preprocessing.R:470:      Z = Z,
+  tests\testthat\test-v5-preprocessing.R:471:      comp = 2,
+  tests\testthat\test-v5-preprocessing.R:472:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing.R:473:      muX = 0.8,
+> tests\testthat\test-v5-preprocessing.R:474:      structure.method = "exclusive",
+  tests\testthat\test-v5-preprocessing.R:475:      gammaX = 0,
+  tests\testthat\test-v5-preprocessing.R:476:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing.R:477:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing.R:478:      intseed = 4
+  tests\testthat\test-v5-preprocessing.R:479:    )
+  tests\testthat\test-v5-preprocessing.R:480:
+  tests\testthat\test-v5-preprocessing.R:481:    fits <- list(
+  tests\testthat\test-v5-reconstruction-preprocessing.R:34:      X = X,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:35:      Z = Z,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:36:      comp = 2,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:37:      lambdaX = 0.1,
+> tests\testthat\test-v5-reconstruction-preprocessing.R:38:      muX = 0.8,
+> tests\testthat\test-v5-reconstruction-preprocessing.R:39:      structure.method = "soft",
+  tests\testthat\test-v5-reconstruction-preprocessing.R:40:      gammaX = 0.1,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:41:      niterS4 = 10,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:42:      scaling = TRUE,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:43:      intseed = 4
+  tests\testthat\test-v5-reconstruction-preprocessing.R:44:    )
+  tests\testthat\test-v5-reconstruction-preprocessing.R:45:
+  tests\testthat\test-v5-reconstruction-preprocessing.R:46:    expected <- readRDS(
+  tests\testthat\test-v5-reconstruction-preprocessing.R:118:      X = X,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:119:      Z = Z,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:120:      comp = 2,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:121:      lambdaX = 0.1,
+> tests\testthat\test-v5-reconstruction-preprocessing.R:122:      muX = 0.8,
+> tests\testthat\test-v5-reconstruction-preprocessing.R:123:      structure.method = "soft",
+  tests\testthat\test-v5-reconstruction-preprocessing.R:124:      gammaX = 0.1,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:125:      niterS4 = 5,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:126:      scaling = TRUE,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:127:      intseed = 4
+  tests\testthat\test-v5-reconstruction-preprocessing.R:128:    )
+  tests\testthat\test-v5-reconstruction-preprocessing.R:129:
+  tests\testthat\test-v5-reconstruction-preprocessing.R:130:    fit_v4_like <- fit_v5
+  tests\testthat\test-v5-reconstruction-preprocessing.R:175:      X = X,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:176:      Z = Z,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:177:      comp = 2,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:178:      lambdaX = 0.1,
+> tests\testthat\test-v5-reconstruction-preprocessing.R:179:      muX = 0.8,
+> tests\testthat\test-v5-reconstruction-preprocessing.R:180:      structure.method = "soft",
+  tests\testthat\test-v5-reconstruction-preprocessing.R:181:      gammaX = 0.1,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:182:      niterS4 = 5,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:183:      scaling = TRUE,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:184:      intseed = 4
+  tests\testthat\test-v5-reconstruction-preprocessing.R:185:    )
+  tests\testthat\test-v5-reconstruction-preprocessing.R:186:
+  tests\testthat\test-v5-reconstruction-preprocessing.R:187:    X_reordered <- X[
+  tests\testthat\test-version-3.2.R:8:
+  tests\testthat\test-version-3.2.R:9:test_that("matrix Z with one column agrees with vector Z", {
+  tests\testthat\test-version-3.2.R:10:  dat <- simdata(n = 20, Xps = 4, Yps = 3, seed = 2)
+  tests\testthat\test-version-3.2.R:11:  z <- rep(c(0, 1), 10)
+> tests\testthat\test-version-3.2.R:12:  fit_vec <- msma(dat$X[[1]], Z = z, comp = 1, muX = 0.2, intseed = 1)
+> tests\testthat\test-version-3.2.R:13:  fit_mat <- msma(dat$X[[1]], Z = cbind(z), comp = 1, muX = 0.2, intseed = 1)
+  tests\testthat\test-version-3.2.R:14:  expect_equal(fit_vec$wbX, fit_mat$wbX)
+  tests\testthat\test-version-3.2.R:15:})
+  tests\testthat\test-version-3.2.R:16:
+  tests\testthat\test-version-3.2.R:17:test_that("sNMF is reproducible and nonnegative", {
+  tests\testthat\test-version-3.2.R:18:  dat <- simdata(n = 20, Xps = c(3, 4), Yps = 3, seed = 3)
+  tests\testthat\test-version-3.2.R:19:  fit1 <- msma(dat$X, comp = c(2, 2), sprmethod = "sNMF",
+  tests\testthat\test-version-3.2.R:20:               lambdaXsup = 0.05, intseed = 11)
+  tests\testthat\test-version-3.2.R:29:  dat <- simdata(n = 20, Xps = c(4, 3), Yps = 3, seed = 101)
+  tests\testthat\test-version-3.2.R:30:  z <- rep(c(0, 1), 10)
+  tests\testthat\test-version-3.2.R:31:
+  tests\testthat\test-version-3.2.R:32:  set.seed(77)
+> tests\testthat\test-version-3.2.R:33:  fit_vector <- msma(dat$X, Z = z, comp = 1, muX = 0.2, intseed = 11)
+  tests\testthat\test-version-3.2.R:34:  set.seed(77)
+> tests\testthat\test-version-3.2.R:35:  fit_matrix <- msma(dat$X, Z = cbind(z), comp = 1, muX = 0.2, intseed = 11)
+  tests\testthat\test-version-3.2.R:36:
+  tests\testthat\test-version-3.2.R:37:  fit_vector$call <- NULL
+  tests\testthat\test-version-3.2.R:38:  fit_matrix$call <- NULL
+  tests\testthat\test-version-3.2.R:39:  expect_equal(fit_matrix, fit_vector, tolerance = 1e-8)
+  tests\testthat\test-version-3.2.R:40:})
+  tests\testthat\test-version-3.2.R:41:
+  tests\testthat\test-version-3.2.R:42:test_that("only the public default S3 method has an S3-style name", {
+  vignettes\msma-ecmsma.Rmd:122:fit_multi_z <- msma(
+  vignettes\msma-ecmsma.Rmd:123:  X = X, Z = Z,
+  vignettes\msma-ecmsma.Rmd:124:  con4spv = c(0.7, 0.3),
+  vignettes\msma-ecmsma.Rmd:125:  comp = 2,
+> vignettes\msma-ecmsma.Rmd:126:  muX = 0.20,
+  vignettes\msma-ecmsma.Rmd:127:  intseed = 1
+  vignettes\msma-ecmsma.Rmd:128:)
+  vignettes\msma-ecmsma.Rmd:129:fit_multi_z$predictiv
+  vignettes\msma-ecmsma.Rmd:130:```
+  vignettes\msma-ecmsma.Rmd:131:
+  vignettes\msma-ecmsma.Rmd:132:Conceptually, the combined supervision score is
+  vignettes\msma-ecmsma.Rmd:133:
+  vignettes\msma-ecmsma.Rmd:142:
+  vignettes\msma-ecmsma.Rmd:143:A vector and a one-column matrix produce the same result.
+  vignettes\msma-ecmsma.Rmd:144:
+  vignettes\msma-ecmsma.Rmd:145:```{r one-column-z}
+> vignettes\msma-ecmsma.Rmd:146:fit_z_vector <- msma(X, Z = z1, comp = 1, muX = 0.20, intseed = 1)
+> vignettes\msma-ecmsma.Rmd:147:fit_z_matrix <- msma(X, Z = cbind(z1), comp = 1, muX = 0.20, intseed = 1)
+  vignettes\msma-ecmsma.Rmd:148:fit_z_vector$call <- NULL
+  vignettes\msma-ecmsma.Rmd:149:fit_z_matrix$call <- NULL
+  vignettes\msma-ecmsma.Rmd:150:isTRUE(all.equal(fit_z_vector, fit_z_matrix, tolerance = 1e-8))
+  vignettes\msma-ecmsma.Rmd:151:```
+  vignettes\msma-ecmsma.Rmd:152:
+  vignettes\msma-ecmsma.Rmd:153:# Practical recommendations
+  vignettes\msma-ecmsma.Rmd:154:
+  vignettes\msma-introduction.Rmd:89:
+  vignettes\msma-introduction.Rmd:90:```{r supervised-pca}
+  vignettes\msma-introduction.Rmd:91:fit_sup_pca <- msma(
+  vignettes\msma-introduction.Rmd:92:  X = X, Z = Z, comp = 2,
+> vignettes\msma-introduction.Rmd:93:  lambdaX = 0.05, muX = 0.20,
+  vignettes\msma-introduction.Rmd:94:  intseed = 1
+  vignettes\msma-introduction.Rmd:95:)
+  vignettes\msma-introduction.Rmd:96:fit_sup_pca$predictiv
+  vignettes\msma-introduction.Rmd:97:```
+  vignettes\msma-introduction.Rmd:98:
+  vignettes\msma-introduction.Rmd:99:# PLS
+  vignettes\msma-introduction.Rmd:100:
+  vignettes\msma-introduction.Rmd:116:```{r sparse-supervised-pls}
+  vignettes\msma-introduction.Rmd:117:fit_spls <- msma(
+  vignettes\msma-introduction.Rmd:118:  X = X, Y = Y, Z = Z, comp = 2,
+  vignettes\msma-introduction.Rmd:119:  lambdaX = 0.10, lambdaY = 0.10,
+> vignettes\msma-introduction.Rmd:120:  muX = 0.10, muY = 0.10,
+  vignettes\msma-introduction.Rmd:121:  intseed = 1
+  vignettes\msma-introduction.Rmd:122:)
+  vignettes\msma-introduction.Rmd:123:fit_spls$nzwbX
+  vignettes\msma-introduction.Rmd:124:fit_spls$nzwbY
+  vignettes\msma-introduction.Rmd:125:```
+  vignettes\msma-introduction.Rmd:126:
+  vignettes\msma-introduction.Rmd:127:# Prediction and low-rank reconstruction
+  vignettes\msma-multiblock.Rmd:103:Z <- rnorm(nrow(X[[1]]))
+  vignettes\msma-multiblock.Rmd:104:fit_supervised <- msma(
+  vignettes\msma-multiblock.Rmd:105:  X = X, Z = Z, comp = 2,
+  vignettes\msma-multiblock.Rmd:106:  lambdaX = c(0.10, 0.10),
+> vignettes\msma-multiblock.Rmd:107:  muX = 0.20,
+  vignettes\msma-multiblock.Rmd:108:  intseed = 1
+  vignettes\msma-multiblock.Rmd:109:)
+  vignettes\msma-multiblock.Rmd:110:fit_supervised$predictiv
+  vignettes\msma-multiblock.Rmd:111:```
+  vignettes\msma-multiblock.Rmd:112:
+  vignettes\msma-multiblock.Rmd:113:# Multiblock PLS
+  vignettes\msma-multiblock.Rmd:114:
+  vignettes\msma-soft-structured.Rmd:14:
+  vignettes\msma-soft-structured.Rmd:15:# Overview
+  vignettes\msma-soft-structured.Rmd:16:
+  vignettes\msma-soft-structured.Rmd:17:Version 4.0 adds opt-in S4PCA for a single X matrix. The default
+> vignettes\msma-soft-structured.Rmd:18:`structure.method="none"` preserves Version 3.2 behavior.
+  vignettes\msma-soft-structured.Rmd:19:
+  vignettes\msma-soft-structured.Rmd:20:```{r example}
+  vignettes\msma-soft-structured.Rmd:21:set.seed(4)
+  vignettes\msma-soft-structured.Rmd:22:X <- scale(matrix(rnorm(50*12),50,12))
+  vignettes\msma-soft-structured.Rmd:23:Z <- as.numeric(scale(.7*X[,1]-.4*X[,5]+rnorm(50)))
+> vignettes\msma-soft-structured.Rmd:24:fit <- msma(X,Z=Z,comp=3,lambdaX=.1,muX=.8,
+> vignettes\msma-soft-structured.Rmd:25:            structure.method="soft",gammaX=.1,niterS4=30,
+  vignettes\msma-soft-structured.Rmd:26:            scaling=FALSE,intseed=4)
+  vignettes\msma-soft-structured.Rmd:27:fit$W
+  vignettes\msma-soft-structured.Rmd:28:fit$overlap_all
+  vignettes\msma-soft-structured.Rmd:29:fit$overlap_selected
+  vignettes\msma-soft-structured.Rmd:30:fit$diagnostics
+  vignettes\msma-soft-structured.Rmd:31:```
+  vignettes\msma-soft-structured.Rmd:32:
+> vignettes\msma-soft-structured.Rmd:33:Hard exclusion is selected with `structure.method="exclusive"`. Version 4.0
+  vignettes\msma-soft-structured.Rmd:34:initially limits structured PCA to single-matrix PCA, scalar `comp` and
+  vignettes\msma-soft-structured.Rmd:35:`lambdaX`, and vector or one-column `Z`.
+  vignettes\msma-soft-structured.Rmd:36:
+  vignettes\msma-soft-structured.Rmd:37:```{r session}
+  vignettes\msma-soft-structured.Rmd:38:sessionInfo()
+  vignettes\msma-soft-structured.Rmd:39:```
+  vignettes\msma-soft-structured.Rmd:40:
+  vignettes\msma-soft-structured.Rmd:43:The candidate grid can be evaluated by repeated calibration splits. The code
+  vignettes\msma-soft-structured.Rmd:44:below uses a deliberately small grid for illustration.
+  vignettes\msma-soft-structured.Rmd:45:
+  vignettes\msma-soft-structured.Rmd:46:```{r selection, eval=FALSE}
+> vignettes\msma-soft-structured.Rmd:47:selection <- s4pca_conformal_select(
+  vignettes\msma-soft-structured.Rmd:48:  X, Z,
+  vignettes\msma-soft-structured.Rmd:49:  lambdaX = c(0.05, 0.10),
+  vignettes\msma-soft-structured.Rmd:50:  gammaX = c(0, 0.10),
+  vignettes\msma-soft-structured.Rmd:51:  comp = 2:3,
+  vignettes\msma-soft-structured.Rmd:52:  repeats = 5,
+  vignettes\msma-soft-structured.Rmd:53:  alpha = 0.10,
+  vignettes\msma-soft-structured.Rmd:54:  max_overlap = 0.50,
+> vignettes\msma-soft-structured.Rmd:55:  muX = 0.8,
+  vignettes\msma-soft-structured.Rmd:56:  intseed = 4
+  vignettes\msma-soft-structured.Rmd:57:)
+  vignettes\msma-soft-structured.Rmd:58:selection$selected
+  vignettes\msma-soft-structured.Rmd:59:selection$summary
+  vignettes\msma-soft-structured.Rmd:60:selection$fit
+  vignettes\msma-soft-structured.Rmd:61:```
+  vignettes\msma-soft-structured.Rmd:62:
+

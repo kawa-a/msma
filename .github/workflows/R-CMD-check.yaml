@@ -90,5 +90,6 @@ jobs:
           name: check-${{ matrix.config.os }}-R-${{ matrix.config.r }}
           path: |
             msma.Rcheck/
-            msma_4.0.tar.gz
+            msma_*.tar.gz
           if-no-files-found: warn
+

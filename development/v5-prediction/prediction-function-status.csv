@@ -1,0 +1,7 @@
+"function_name","exists"
+"predict.msma",TRUE
+"predict.s4pca",FALSE
+"s4pca_reconstruct",TRUE
+".s4pca_project_reference",TRUE
+".apply_msma_preprocessor",TRUE
+".invert_msma_preprocessor",TRUE

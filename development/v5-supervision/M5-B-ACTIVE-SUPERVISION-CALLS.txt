@@ -1,0 +1,396 @@
+
+  src.r:407:  gammaX = 0,
+  src.r:408:  sprmethod = "PCA",
+  src.r:409:  Z = NULL,
+> src.r:410:  con4spv = NULL
+  src.r:411:) {
+  src.r:412:  structure.method <- match.arg(
+  src.r:413:    structure.method,
+  src.r:414:    choices = c(
+  src.r:415:      "none",
+  src.r:472:  inXsup=NULL, inYsup=NULL, muX=0, muY=0, defmethod="canonical",
+  src.r:473:  scaling=TRUE, verbose=FALSE, intseed=1, ceps=0.0001,
+  src.r:474:  sprmethod=c("PCA", "NMF", "sNMF", "CMP")[1],
+> src.r:475:  nneg=c("posneg", "absolute", "min")[1], con4spv=NULL,
+  src.r:476:  structure.method=c("none", "soft", "exclusive")[1], gammaX=0,
+  src.r:477:  history.method=c("sumabs", "any", "count")[1], niterS4=30, ...)
+  src.r:478:{
+  src.r:479:  engine <- .resolve_msma_engine(
+  src.r:480:    structure.method = structure.method,
+  src.r:481:    gammaX = gammaX,
+  src.r:482:    sprmethod = sprmethod,
+  src.r:483:    Z = Z,
+> src.r:484:    con4spv = con4spv
+  src.r:485:  )
+  src.r:486:
+  src.r:487:  use_s4pca <- engine %in% c("soft", "exclusive")
+  src.r:488:
+  src.r:489:  if(use_s4pca){
+  src.r:551:    inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX=muX, muY=muY,
+  src.r:552:    defmethod=defmethod, scaling=scaling, verbose=verbose,
+  src.r:553:    intseed=intseed, ceps=ceps, sprmethod=sprmethod, nneg=nneg,
+> src.r:554:    con4spv=con4spv, ...
+  src.r:555:  )
+  src.r:556:
+  src.r:557:  fit <- .attach_msma_preprocess(
+  src.r:558:    fit = fit,
+  src.r:559:    engine = engine,
+  src.r:852:out
+  src.r:853:}
+  src.r:854:
+> src.r:855:.msma_default_extended = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, defmethod = "canonical", scaling = TRUE, verbose=FALSE, intseed=1, ceps=0.0001, sprmethod=c("PCA", "NMF", "sNMF", "CMP")[1], nneg = c("posneg", "absolute", "min")[1], con4spv=NULL,...)
+  src.r:856:{
+  src.r:857:# number of nested componets
+  src.r:858:comp2 = ifelse(length(comp)<2, 1, comp[2])
+  src.r:859:comp = comp[1]
+  src.r:860:
+  src.r:1668:#'cv2 = cvmsma(X, Y, comp = 2, lambdaX=2, lambdaY=1:3, nfold=5, seed=1)
+  src.r:1669:#'cv2
+  src.r:1670:#'
+> src.r:1671:cvmsma = function(X, Y=NULL, Z=NULL, comp=1, lambdaX, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, nfold=5, seed=1, intseed=1, sprmethod=c("PCA", "NMF", "sNMF", "CMP")[1], nneg = c("posneg", "absolute", "min")[1], con4spv=NULL){
+  src.r:1672:##### Requirement #####
+  src.r:1673:if(missing(X)) stop("X should be specified")
+  src.r:1674:if(is.null(Y)){ 
+  src.r:1675:dmode = "PCA"
+  src.r:1676:Y = X
+  src.r:1737:testZ = Z[(fold == i),,drop=FALSE]
+  src.r:1738:}
+  src.r:1739:
+> src.r:1740:fit = msma(tmpX, tmpY, tmpZ, comp, lambdaX=lambdaX, lambdaY=lambdaY, lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta, type, inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX = muX, muY = muY, intseed=intseed, sprmethod=sprmethod, nneg=nneg, con4spv=con4spv)
+  src.r:1741:test = predict(fit, newX=testX, newY=testY)
+  src.r:1742:
+  src.r:1743:#testX = lapply(1:length(testX), function(x) scale(testX[[x]], center=fit$Xscale[[x]]$`scaled:center`, scale=fit$Xscale[[x]]$`scaled:scale`))
+  src.r:1744:testX = lapply(1:length(testX), function(x) scale(testX[[x]], center=fit$Xscale[[x]]$`scaled:center`))
+  src.r:1745:Xerr = matserr(testX, test$X)
+  src.r:2284:list(wbX=wbX, sbX=sbX, wbY=wbY, sbY=sbY, ssX=ssX, wsX=wsX, ssY=ssY, wsY=wsY)
+  src.r:2285:}
+  src.r:2286:
+> src.r:2287:.msma_onecomp_extended = function(X, Y, Z=NULL, lambdaX=NULL, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, dmode = "PLS", verbose=FALSE, intseed=1, ceps=0.0001, con4spv=NULL){
+  src.r:2288:
+  src.r:2289:Ynb = length(Y); Xnb = length(X)
+  src.r:2290:
+  src.r:2291:if(any(is.null(lambdaX))){ lambdaX = rep(0, Xnb)}
+  src.r:2292:if(any(is.null(lambdaY))){ lambdaY = rep(0, Ynb)}
+  src.r:2294:if(any(is.null(lambdaYsup))){ lambdaYsup = 0}
+  src.r:2295:
+  src.r:2296:if(is.null(Z)) Z = matrix(0, nrow(X[[1]]), 1)
+> src.r:2297:if(is.null(con4spv)){ con4spv = rep(1, ncol(Z))}
+> src.r:2298:con4spv=con4spv/sum(abs(con4spv))
+  src.r:2299:
+  src.r:2300:muXY = 1 - muX - muY
+  src.r:2301:if(muXY < 0) stop("muX or muY should be smaller values to be 0 <= 1 - muX - muY <= 1.")
+  src.r:2302:
+  src.r:2303:#svd0 = svd(do.call(cbind, Y)); ssY = normvec(svd0$u[,1])
+  src.r:3129:s4pca_conformal_select <- function(
+  src.r:3130:    X, Z = NULL, lambdaX = c(0.05, 0.1, 0.2), gammaX = c(0, 0.05, 0.1),
+  src.r:3131:    comp = 2:4, alpha = 0.1, repeats = 5, calibration_fraction = 0.25,
+> src.r:3132:    max_overlap = 1, muX = 1, history.method = "sumabs", niterS4 = 30,
+  src.r:3133:    scaling = TRUE, intseed = 1, refit = TRUE) {
+  src.r:3134:  input <- .s4pca_validate_inputs(X = X, Z = Z, comp = 1, lambda = 0,
+  src.r:3135:    gamma = 0, history_method = history.method, mu = muX,
+  src.r:3136:    hard_exclusion = FALSE, niter = niterS4, seed = intseed)
+  src.r:3137:  X <- input$X; Z <- input$Z
+  tests\testthat\test-soft-structure-contract.R:27:
+  tests\testthat\test-soft-structure-contract.R:28:test_that("exclusive API matches hard exclusion", {
+  tests\testthat\test-soft-structure-contract.R:29:  d <- make_s4pca_fixture(n=40,p=20)
+> tests\testthat\test-soft-structure-contract.R:30:  a <- msma(d$X,Z=d$Z,comp=3,lambdaX=.05,muX=1,structure.method="exclusive",
+  tests\testthat\test-soft-structure-contract.R:31:            niterS4=30,scaling=FALSE,intseed=11)
+  tests\testthat\test-soft-structure-contract.R:32:  b <- getFromNamespace(".s4pca_fit","msma")(d$X,d$Z,comp=3,lambda=.05,
+  tests\testthat\test-soft-structure-contract.R:33:       gamma=0,mu=1,hard_exclusion=TRUE,niter=30,seed=11)
+  tests\testthat\test-soft-structure-contract.R:34:  expect_equal(a$W,b$W,tolerance=1e-12); expect_equal(a$S,b$S,tolerance=1e-12)
+  tests\testthat\test-soft-structure-contract.R:35:})
+  tests\testthat\test-v5-dispatcher.R:53:    )
+  tests\testthat\test-v5-dispatcher.R:54:
+  tests\testthat\test-v5-dispatcher.R:55:    testthat::expect_identical(
+> tests\testthat\test-v5-dispatcher.R:56:      .resolve_msma_engine(con4spv = list()),
+  tests\testthat\test-v5-dispatcher.R:57:      "extended"
+  tests\testthat\test-v5-dispatcher.R:58:    )
+  tests\testthat\test-v5-dispatcher.R:59:  }
+  tests\testthat\test-v5-dispatcher.R:60:)
+  tests\testthat\test-v5-dispatcher.R:61:
+  tests\testthat\test-v5-preprocessing-apply.R:109:      Z = Z,
+  tests\testthat\test-v5-preprocessing-apply.R:110:      comp = 2,
+  tests\testthat\test-v5-preprocessing-apply.R:111:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-apply.R:112:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing-apply.R:113:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing-apply.R:114:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing-apply.R:115:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-apply.R:116:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing-apply.R:117:      intseed = 4
+  tests\testthat\test-v5-preprocessing-apply.R:149:      Z = Z,
+  tests\testthat\test-v5-preprocessing-apply.R:150:      comp = 2,
+  tests\testthat\test-v5-preprocessing-apply.R:151:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-apply.R:152:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing-apply.R:153:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing-apply.R:154:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing-apply.R:155:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-apply.R:156:      scaling = FALSE,
+  tests\testthat\test-v5-preprocessing-apply.R:157:      intseed = 4
+  tests\testthat\test-v5-preprocessing-apply.R:180:      Z = Z,
+  tests\testthat\test-v5-preprocessing-apply.R:181:      comp = 2,
+  tests\testthat\test-v5-preprocessing-apply.R:182:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-apply.R:183:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing-apply.R:184:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing-apply.R:185:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing-apply.R:186:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-apply.R:187:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing-apply.R:188:      intseed = 4
+  tests\testthat\test-v5-preprocessing-inverse.R:57:    colnames(X) <- paste0("x", seq_len(ncol(X)))
+  tests\testthat\test-v5-preprocessing-inverse.R:58:    Z <- as.numeric(scale(X[, 1] + stats::rnorm(20)))
+  tests\testthat\test-v5-preprocessing-inverse.R:59:    fit <- msma(
+> tests\testthat\test-v5-preprocessing-inverse.R:60:      X = X, Z = Z, comp = 2, lambdaX = 0.1, muX = 0.8,
+  tests\testthat\test-v5-preprocessing-inverse.R:61:      structure.method = "soft", gammaX = 0.1, niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-inverse.R:62:      scaling = TRUE, intseed = 4
+  tests\testthat\test-v5-preprocessing-inverse.R:63:    )
+  tests\testthat\test-v5-preprocessing-inverse.R:64:
+  tests\testthat\test-v5-preprocessing-inverse.R:65:    transformed <- .apply_msma_preprocessor(fit$preprocess, X, side = "X")
+  tests\testthat\test-v5-preprocessing-inverse.R:78:    colnames(X) <- paste0("x", seq_len(ncol(X)))
+  tests\testthat\test-v5-preprocessing-inverse.R:79:    Z <- as.numeric(scale(X[, 1] + stats::rnorm(20)))
+  tests\testthat\test-v5-preprocessing-inverse.R:80:    fit <- msma(
+> tests\testthat\test-v5-preprocessing-inverse.R:81:      X = X, Z = Z, comp = 2, lambdaX = 0.1, muX = 0.8,
+  tests\testthat\test-v5-preprocessing-inverse.R:82:      structure.method = "soft", gammaX = 0.1, niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-inverse.R:83:      scaling = FALSE, intseed = 4
+  tests\testthat\test-v5-preprocessing-inverse.R:84:    )
+  tests\testthat\test-v5-preprocessing-inverse.R:85:
+  tests\testthat\test-v5-preprocessing-inverse.R:86:    restored <- .invert_msma_preprocessor(fit$preprocess, X, side = "X")
+  tests\testthat\test-v5-preprocessing-inverse.R:171:    Xnew <- matrix(stats::rnorm(60), nrow = 10, ncol = 6)
+  tests\testthat\test-v5-preprocessing-inverse.R:172:    colnames(Xnew) <- colnames(X)
+  tests\testthat\test-v5-preprocessing-inverse.R:173:    fit <- msma(
+> tests\testthat\test-v5-preprocessing-inverse.R:174:      X = X, Z = Z, comp = 2, lambdaX = 0.1, muX = 0.8,
+  tests\testthat\test-v5-preprocessing-inverse.R:175:      structure.method = "soft", gammaX = 0.1, niterS4 = 10,
+  tests\testthat\test-v5-preprocessing-inverse.R:176:      scaling = TRUE, intseed = 4
+  tests\testthat\test-v5-preprocessing-inverse.R:177:    )
+  tests\testthat\test-v5-preprocessing-inverse.R:178:
+  tests\testthat\test-v5-preprocessing-inverse.R:179:    expected <- readRDS(testthat::test_path("reference", "m2e-reconstruction-baseline.rds"))
+  tests\testthat\test-v5-preprocessing-inverse.R:204:    Xnew <- matrix(stats::rnorm(60), nrow = 10, ncol = 6)
+  tests\testthat\test-v5-preprocessing-inverse.R:205:    colnames(Xnew) <- colnames(X)
+  tests\testthat\test-v5-preprocessing-inverse.R:206:    fit_v5 <- msma(
+> tests\testthat\test-v5-preprocessing-inverse.R:207:      X = X, Z = Z, comp = 2, lambdaX = 0.1, muX = 0.8,
+  tests\testthat\test-v5-preprocessing-inverse.R:208:      structure.method = "soft", gammaX = 0.1, niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-inverse.R:209:      scaling = TRUE, intseed = 4
+  tests\testthat\test-v5-preprocessing-inverse.R:210:    )
+  tests\testthat\test-v5-preprocessing-inverse.R:211:    fit_v4_like <- fit_v5
+  tests\testthat\test-v5-preprocessing-inverse.R:212:    fit_v4_like$preprocess <- NULL
+  tests\testthat\test-v5-preprocessing-serialization.R:155:      Z = Z,
+  tests\testthat\test-v5-preprocessing-serialization.R:156:      comp = 2,
+  tests\testthat\test-v5-preprocessing-serialization.R:157:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-serialization.R:158:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing-serialization.R:159:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing-serialization.R:160:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing-serialization.R:161:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-serialization.R:162:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing-serialization.R:163:      intseed = 4
+  tests\testthat\test-v5-preprocessing-serialization.R:220:      Z = Z,
+  tests\testthat\test-v5-preprocessing-serialization.R:221:      comp = 2,
+  tests\testthat\test-v5-preprocessing-serialization.R:222:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-serialization.R:223:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing-serialization.R:224:      structure.method = "exclusive",
+  tests\testthat\test-v5-preprocessing-serialization.R:225:      gammaX = 0,
+  tests\testthat\test-v5-preprocessing-serialization.R:226:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-serialization.R:227:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing-serialization.R:228:      intseed = 4
+  tests\testthat\test-v5-preprocessing-serialization.R:368:      Z = Z,
+  tests\testthat\test-v5-preprocessing-serialization.R:369:      comp = 2,
+  tests\testthat\test-v5-preprocessing-serialization.R:370:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing-serialization.R:371:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing-serialization.R:372:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing-serialization.R:373:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing-serialization.R:374:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing-serialization.R:375:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing-serialization.R:376:      intseed = 4
+  tests\testthat\test-v5-preprocessing.R:304:      Z = Z,
+  tests\testthat\test-v5-preprocessing.R:305:      comp = 2,
+  tests\testthat\test-v5-preprocessing.R:306:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing.R:307:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing.R:308:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing.R:309:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing.R:310:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing.R:311:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing.R:312:      intseed = 4
+  tests\testthat\test-v5-preprocessing.R:340:      Z = Z,
+  tests\testthat\test-v5-preprocessing.R:341:      comp = 2,
+  tests\testthat\test-v5-preprocessing.R:342:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing.R:343:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing.R:344:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing.R:345:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing.R:346:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing.R:347:      scaling = FALSE,
+  tests\testthat\test-v5-preprocessing.R:348:      intseed = 4
+  tests\testthat\test-v5-preprocessing.R:384:      Z = Z,
+  tests\testthat\test-v5-preprocessing.R:385:      comp = 2,
+  tests\testthat\test-v5-preprocessing.R:386:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing.R:387:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing.R:388:      structure.method = "exclusive",
+  tests\testthat\test-v5-preprocessing.R:389:      gammaX = 0,
+  tests\testthat\test-v5-preprocessing.R:390:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing.R:391:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing.R:392:      intseed = 4
+  tests\testthat\test-v5-preprocessing.R:457:      Z = Z,
+  tests\testthat\test-v5-preprocessing.R:458:      comp = 2,
+  tests\testthat\test-v5-preprocessing.R:459:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing.R:460:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing.R:461:      structure.method = "soft",
+  tests\testthat\test-v5-preprocessing.R:462:      gammaX = 0.1,
+  tests\testthat\test-v5-preprocessing.R:463:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing.R:464:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing.R:465:      intseed = 4
+  tests\testthat\test-v5-preprocessing.R:470:      Z = Z,
+  tests\testthat\test-v5-preprocessing.R:471:      comp = 2,
+  tests\testthat\test-v5-preprocessing.R:472:      lambdaX = 0.1,
+> tests\testthat\test-v5-preprocessing.R:473:      muX = 0.8,
+  tests\testthat\test-v5-preprocessing.R:474:      structure.method = "exclusive",
+  tests\testthat\test-v5-preprocessing.R:475:      gammaX = 0,
+  tests\testthat\test-v5-preprocessing.R:476:      niterS4 = 5,
+  tests\testthat\test-v5-preprocessing.R:477:      scaling = TRUE,
+  tests\testthat\test-v5-preprocessing.R:478:      intseed = 4
+  tests\testthat\test-v5-reconstruction-preprocessing.R:35:      Z = Z,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:36:      comp = 2,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:37:      lambdaX = 0.1,
+> tests\testthat\test-v5-reconstruction-preprocessing.R:38:      muX = 0.8,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:39:      structure.method = "soft",
+  tests\testthat\test-v5-reconstruction-preprocessing.R:40:      gammaX = 0.1,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:41:      niterS4 = 10,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:42:      scaling = TRUE,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:43:      intseed = 4
+  tests\testthat\test-v5-reconstruction-preprocessing.R:119:      Z = Z,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:120:      comp = 2,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:121:      lambdaX = 0.1,
+> tests\testthat\test-v5-reconstruction-preprocessing.R:122:      muX = 0.8,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:123:      structure.method = "soft",
+  tests\testthat\test-v5-reconstruction-preprocessing.R:124:      gammaX = 0.1,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:125:      niterS4 = 5,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:126:      scaling = TRUE,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:127:      intseed = 4
+  tests\testthat\test-v5-reconstruction-preprocessing.R:176:      Z = Z,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:177:      comp = 2,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:178:      lambdaX = 0.1,
+> tests\testthat\test-v5-reconstruction-preprocessing.R:179:      muX = 0.8,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:180:      structure.method = "soft",
+  tests\testthat\test-v5-reconstruction-preprocessing.R:181:      gammaX = 0.1,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:182:      niterS4 = 5,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:183:      scaling = TRUE,
+  tests\testthat\test-v5-reconstruction-preprocessing.R:184:      intseed = 4
+  tests\testthat\test-version-3.2.R:9:test_that("matrix Z with one column agrees with vector Z", {
+  tests\testthat\test-version-3.2.R:10:  dat <- simdata(n = 20, Xps = 4, Yps = 3, seed = 2)
+  tests\testthat\test-version-3.2.R:11:  z <- rep(c(0, 1), 10)
+> tests\testthat\test-version-3.2.R:12:  fit_vec <- msma(dat$X[[1]], Z = z, comp = 1, muX = 0.2, intseed = 1)
+> tests\testthat\test-version-3.2.R:13:  fit_mat <- msma(dat$X[[1]], Z = cbind(z), comp = 1, muX = 0.2, intseed = 1)
+  tests\testthat\test-version-3.2.R:14:  expect_equal(fit_vec$wbX, fit_mat$wbX)
+  tests\testthat\test-version-3.2.R:15:})
+  tests\testthat\test-version-3.2.R:16:
+  tests\testthat\test-version-3.2.R:17:test_that("sNMF is reproducible and nonnegative", {
+  tests\testthat\test-version-3.2.R:18:  dat <- simdata(n = 20, Xps = c(3, 4), Yps = 3, seed = 3)
+  tests\testthat\test-version-3.2.R:30:  z <- rep(c(0, 1), 10)
+  tests\testthat\test-version-3.2.R:31:
+  tests\testthat\test-version-3.2.R:32:  set.seed(77)
+> tests\testthat\test-version-3.2.R:33:  fit_vector <- msma(dat$X, Z = z, comp = 1, muX = 0.2, intseed = 11)
+  tests\testthat\test-version-3.2.R:34:  set.seed(77)
+> tests\testthat\test-version-3.2.R:35:  fit_matrix <- msma(dat$X, Z = cbind(z), comp = 1, muX = 0.2, intseed = 11)
+  tests\testthat\test-version-3.2.R:36:
+  tests\testthat\test-version-3.2.R:37:  fit_vector$call <- NULL
+  tests\testthat\test-version-3.2.R:38:  fit_matrix$call <- NULL
+  tests\testthat\test-version-3.2.R:39:  expect_equal(fit_matrix, fit_vector, tolerance = 1e-8)
+  tests\testthat\test-version-3.2.R:40:})
+  vignettes\msma-ecmsma.Rmd:121:
+  vignettes\msma-ecmsma.Rmd:122:fit_multi_z <- msma(
+  vignettes\msma-ecmsma.Rmd:123:  X = X, Z = Z,
+> vignettes\msma-ecmsma.Rmd:124:  con4spv = c(0.7, 0.3),
+  vignettes\msma-ecmsma.Rmd:125:  comp = 2,
+> vignettes\msma-ecmsma.Rmd:126:  muX = 0.20,
+  vignettes\msma-ecmsma.Rmd:127:  intseed = 1
+  vignettes\msma-ecmsma.Rmd:128:)
+  vignettes\msma-ecmsma.Rmd:129:fit_multi_z$predictiv
+  vignettes\msma-ecmsma.Rmd:130:```
+  vignettes\msma-ecmsma.Rmd:131:
+  vignettes\msma-ecmsma.Rmd:143:A vector and a one-column matrix produce the same result.
+  vignettes\msma-ecmsma.Rmd:144:
+  vignettes\msma-ecmsma.Rmd:145:```{r one-column-z}
+> vignettes\msma-ecmsma.Rmd:146:fit_z_vector <- msma(X, Z = z1, comp = 1, muX = 0.20, intseed = 1)
+> vignettes\msma-ecmsma.Rmd:147:fit_z_matrix <- msma(X, Z = cbind(z1), comp = 1, muX = 0.20, intseed = 1)
+  vignettes\msma-ecmsma.Rmd:148:fit_z_vector$call <- NULL
+  vignettes\msma-ecmsma.Rmd:149:fit_z_matrix$call <- NULL
+  vignettes\msma-ecmsma.Rmd:150:isTRUE(all.equal(fit_z_vector, fit_z_matrix, tolerance = 1e-8))
+  vignettes\msma-ecmsma.Rmd:151:```
+  vignettes\msma-ecmsma.Rmd:152:
+  vignettes\msma-introduction.Rmd:90:```{r supervised-pca}
+  vignettes\msma-introduction.Rmd:91:fit_sup_pca <- msma(
+  vignettes\msma-introduction.Rmd:92:  X = X, Z = Z, comp = 2,
+> vignettes\msma-introduction.Rmd:93:  lambdaX = 0.05, muX = 0.20,
+  vignettes\msma-introduction.Rmd:94:  intseed = 1
+  vignettes\msma-introduction.Rmd:95:)
+  vignettes\msma-introduction.Rmd:96:fit_sup_pca$predictiv
+  vignettes\msma-introduction.Rmd:97:```
+  vignettes\msma-introduction.Rmd:98:
+  vignettes\msma-introduction.Rmd:117:fit_spls <- msma(
+  vignettes\msma-introduction.Rmd:118:  X = X, Y = Y, Z = Z, comp = 2,
+  vignettes\msma-introduction.Rmd:119:  lambdaX = 0.10, lambdaY = 0.10,
+> vignettes\msma-introduction.Rmd:120:  muX = 0.10, muY = 0.10,
+  vignettes\msma-introduction.Rmd:121:  intseed = 1
+  vignettes\msma-introduction.Rmd:122:)
+  vignettes\msma-introduction.Rmd:123:fit_spls$nzwbX
+  vignettes\msma-introduction.Rmd:124:fit_spls$nzwbY
+  vignettes\msma-introduction.Rmd:125:```
+  vignettes\msma-multiblock.Rmd:104:fit_supervised <- msma(
+  vignettes\msma-multiblock.Rmd:105:  X = X, Z = Z, comp = 2,
+  vignettes\msma-multiblock.Rmd:106:  lambdaX = c(0.10, 0.10),
+> vignettes\msma-multiblock.Rmd:107:  muX = 0.20,
+  vignettes\msma-multiblock.Rmd:108:  intseed = 1
+  vignettes\msma-multiblock.Rmd:109:)
+  vignettes\msma-multiblock.Rmd:110:fit_supervised$predictiv
+  vignettes\msma-multiblock.Rmd:111:```
+  vignettes\msma-multiblock.Rmd:112:
+  vignettes\msma-soft-structured.Rmd:52:  repeats = 5,
+  vignettes\msma-soft-structured.Rmd:53:  alpha = 0.10,
+  vignettes\msma-soft-structured.Rmd:54:  max_overlap = 0.50,
+> vignettes\msma-soft-structured.Rmd:55:  muX = 0.8,
+  vignettes\msma-soft-structured.Rmd:56:  intseed = 4
+  vignettes\msma-soft-structured.Rmd:57:)
+  vignettes\msma-soft-structured.Rmd:58:selection$selected
+  vignettes\msma-soft-structured.Rmd:59:selection$summary
+  vignettes\msma-soft-structured.Rmd:60:selection$fit
+  README.md:104:  Z = Z,
+  README.md:105:  comp = 2,
+  README.md:106:  lambdaX = 0.10,
+> README.md:107:  muX = 0.50
+  README.md:108:)
+  README.md:109:```
+  README.md:110:
+  README.md:111:This is equivalent to explicitly specifying:
+  README.md:112:
+  README.md:116:  Z = Z,
+  README.md:117:  comp = 2,
+  README.md:118:  lambdaX = 0.10,
+> README.md:119:  muX = 0.50,
+  README.md:120:  structure.method = "none",
+  README.md:121:  gammaX = 0
+  README.md:122:)
+  README.md:123:```
+  README.md:124:
+  README.md:137:  Z = Z,
+  README.md:138:  comp = 3,
+  README.md:139:  lambdaX = 0.10,
+> README.md:140:  muX = 0.80,
+  README.md:141:  structure.method = "soft",
+  README.md:142:  gammaX = 0.10,
+  README.md:143:  history.method = "sumabs",
+  README.md:144:  niterS4 = 30,
+  README.md:145:  scaling = FALSE,
+  README.md:178:  Z = Z,
+  README.md:179:  comp = 3,
+  README.md:180:  lambdaX = 0.05,
+> README.md:181:  muX = 0.80,
+  README.md:182:  structure.method = "exclusive",
+  README.md:183:  niterS4 = 30,
+  README.md:184:  scaling = FALSE,
+  README.md:185:  intseed = 4
+  README.md:186:)
+  README.md:212:  repeats = 3,
+  README.md:213:  calibration_fraction = 0.25,
+  README.md:214:  max_overlap = 0.50,
+> README.md:215:  muX = 0.80,
+  README.md:216:  history.method = "sumabs",
+  README.md:217:  niterS4 = 20,
+  README.md:218:  scaling = FALSE,
+  README.md:219:  intseed = 4
+  README.md:220:)
+

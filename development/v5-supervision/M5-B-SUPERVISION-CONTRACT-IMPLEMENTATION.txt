@@ -1,0 +1,77 @@
+msma Version 5 M5-B supervision contract implementation
+Date: 2026-11-06 23:35:28 +0900
+Branch: feature/v5-supervision-contract
+Parent commit: 8299c03cc4c6fcdf59597b12c8a2ff84e723881d
+
+Implementation:
+* Added common supervision canonicalization before dispatcher resolution.
+* Inactive supervision removes Z and con4spv from the estimation path.
+* Nonzero inactive contrasts are ignored with a warning.
+* Inactive contrasts are not normalized.
+* Active contrasts are validated before L1 normalization.
+* One-column Z uses canonical contrast 1 when con4spv is omitted.
+* Active multicolumn Z requires an explicit contrast.
+* Added requested and used metadata in fit$supervision.
+* Preserved structured, legacy, and extended engine contracts.
+* Preserved preprocessing and prediction metadata order.
+
+Regression suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 1026
+
+R CMD build:
+status: 0
+
+R CMD check:
+mode: as-cran
+CRAN connection failure: FALSE
+effective status: 0
+errors: 0
+warnings: 0
+notes: 2
+effective log: D:/ADNI2/Multimodal/program/package/Ver5/development/v5-build-check/logs/R-CMD-check.log
+
+R CMD check notes:
+* CRAN incoming feasibility reported the development version
+  5.0.0.9000 as containing large version components.
+* The future-file-timestamps check could not verify the current time.
+* These notes do not indicate a package code, test, or documentation failure.
+
+Supplementary standard check:
+* R CMD check --no-manual completed with Status: OK.
+* Log: D:/ADNI2/Multimodal/program/package/Ver5/development/v5-supervision/R-CMD-check-standard.log
+
+Source documentation:
+muX_zero_documented: TRUE
+canonical_unsupervised_documented: TRUE
+muY_zero_documented: TRUE
+l1_normalization_documented: TRUE
+one_column_contract_documented: TRUE
+multicolumn_contract_documented: TRUE
+
+NEWS:
+inactive_contract: TRUE
+canonical_path: TRUE
+active_validation: TRUE
+zero_contrast_error: TRUE
+one_column_compatibility: TRUE
+supervision_metadata: TRUE
+
+Generated msma.Rd:
+muX_zero: TRUE
+muY_zero: TRUE
+canonical_unsupervised: TRUE
+l1_normalization: TRUE
+one_column_contrast: TRUE
+multicolumn_contrast: TRUE
+
+Scope:
+* muX and muY remain finite numeric scalars.
+* Block-specific supervision weights were not introduced.
+* Soft-structured multiblock estimation was not introduced.
+* Previous manuscript results are not replaced by this change.
+
+M5-B status: IMPLEMENTATION COMPLETE

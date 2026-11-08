@@ -1,0 +1,929 @@
+   61 | #' @return \item{X}{Scaled X which has a list form.}
+   62 | #' @return \item{Y}{Scaled Y which has a list form.}
+   63 | #' @return \item{Xscale}{Scaling information for X. The means and standard deviations for each block of X are returned.}
+   64 | #' @return \item{Yscale}{Scaling information for Y. The means and standard deviations for each block of Y are returned.}
+   65 | #' @return \item{comp}{the number of componets}
+   66 | #' @return \item{wbX}{block loading for X}
+   67 | #' @return \item{sbX}{block score for X}
+   68 | #' @return \item{wbY}{block loading for Y}
+   69 | #' @return \item{sbY}{block score for Y}
+   70 | #' @return \item{ssX}{super score for X}
+   71 | #' @return \item{wsX}{super loading for X}
+   72 | #' @return \item{ssY}{super score for Y}
+   73 | #' @return \item{wsY}{super loading for Y}
+   74 | #' @return \item{nzwbX}{number of nonzeros in block loading for X}
+   75 | #' @return \item{nzwbY}{number of nonzeros in block loading for Y}
+   76 | #' @return \item{nzwsX}{number of nonzeros in super loading for X}
+   77 | #' @return \item{nzwsY}{number of nonzeros in super loading for Y}
+   78 | #' @return \item{selectXnames}{names of selected variables for X}
+   79 | #' @return \item{selectYnames}{names of selected variables for Y}
+   80 | #' @return \item{avX}{the adjusted variance of the score for X}
+   81 | #' @return \item{avY}{the adjusted variance of the score for Y}
+   82 | #' @return \item{cpevX}{the cumulative percentage of the explained variance for X}
+   83 | #' @return \item{cpevY}{the cumulative percentage of the explained variance for Y}
+   84 | #' @return \item{reproduct}{Predictivity. Correlation between Y and the predicted Y}
+   85 | #' @return \item{predictiv}{Reproductivity. Correlation between the score for Y and the outcome Z}
+   86 | #'
+   87 | #' @examples
+   88 | #' ##### data #####
+   89 | #' tmpdata = simdata(n = 50, rho = 0.8, Yps = c(10, 12, 15), Xps = 20, seed=1)
+   90 | #' X = tmpdata$X; Y = tmpdata$Y
+   91 | #'
+   92 | #' ##### One Component #####
+   93 | #' fit1 = msma(X, Y, comp=1, lambdaX=2, lambdaY=1:3)
+   94 | #' fit1
+   95 | #'
+  462 |     Z_input=if(!is.null(Z) && is.matrix(Z) && ncol(Z)==1L) drop(Z) else Z
+  463 |     fit_s4=.s4pca_fit(X_input,Z_input,comp=comp,lambda=lambda_s4,gamma=gammaX,
+  464 |       history_method=history.method,mu=muX,hard_exclusion=identical(structure.method,"exclusive"),
+  465 |       niter=niterS4,seed=intseed,verbose=verbose)
+  466 |     fit_s4$call=match.call(); fit_s4$Xcenter=X_center; fit_s4$Xscale=X_scale
+  467 |     fit_s4$reconstruction_loadings=.s4pca_project_reference(X_input, fit_s4$S)
+  468 |     fit_s4$scaling=scaling; fit_s4$structure.method=structure.method
+  469 |     fit_s4$gammaX=gammaX; fit_s4$lambdaX=lambda_s4; fit_s4$muX=muX; fit_s4$dmode="PCA"
+  470 |     class(fit_s4)="s4pca"
+  471 |
+  472 |     fit_s4 <- .attach_msma_preprocess(
+  473 |       fit = fit_s4,
+  474 |       engine = engine,
+  475 |       scaling = scaling
+  476 |     )
+  477 |
+  604 |
+  605 | ##### Fit #####
+  606 | out[[ncomp]] = out1 = .msma_onecomp_legacy(Xd, Yd, Z, lambdaX, lambdaY, lambdaXsup, lambdaYsup, eta, type, inX, inY, inXsup, inYsup, muX, muY, dmode, verbose, intseed, ceps)
+  607 |
+  608 | ##### Nest #####
+  609 | sbXd = sbX0 = list(do.call(cbind, out1$sbX))
+  610 | sbYd = sbY0 = list(do.call(cbind, out1$sbY))
+  611 |
+  612 | for(ncomp2 in 1:comp2){
+  613 |
+  614 | if(ncomp2 == 1){
+  615 | out21 = out1
+  616 | out21$wbX[[1]] = out1$wsX; out21$wbY[[1]] = out1$wsY
+  617 | out2[[ncomp]][[ncomp2]] = out21
+  618 | }else{
+  619 | out2[[ncomp]][[ncomp2]] = out21 = .msma_onecomp_legacy(sbXd, sbYd, Z, lambdaXsup, lambdaYsup, NULL, NULL, eta, type, inXsup, inYsup, NULL, NULL, muX, muY, dmode, verbose, intseed, ceps)
+  620 | }
+  621 |
+  622 | # arrange
+  623 | ssX = do.call(cbind, lapply(out2[[ncomp]], function(y) y$ssX))
+  624 | ssY = do.call(cbind, lapply(out2[[ncomp]], function(y) y$ssY))
+  625 |
+  626 | # Prediction
+  627 | predSX = ssX %*% project(sbX0[[1]], ssX)
+  628 | predSY = ssY %*% project(sbY0[[1]], ssY)
+  629 |
+  630 | # Deflation
+  631 | sbXd = lapply(sbX0, function(x) x - predSX)
+  632 | sbYd = lapply(sbY0, function(x) x - predSY)
+  633 |
+  634 | # arrange
+  635 | wsX = lapply(out2[1:ncomp], function(x) do.call(cbind, lapply(x, function(y) y$wbX[[1]])))
+  636 | wsY = lapply(out2[1:ncomp], function(x) do.call(cbind, lapply(x, function(y) y$wbY[[1]])))
+  637 |
+  638 | nzwsX = lapply(wsX, function(x) apply(x, 2, function(z2) sum(z2!=0)) )
+  639 | nzwsY = lapply(wsY, function(x) apply(x, 2, function(z2) sum(z2!=0)) )
+  640 |
+  641 | # Information Criteria
+  642 | if(dmode == "PCA"){
+  643 | tmpse = sum(unlist(lapply(sbXd, function(x) sum(x^2))))
+  644 | #print(tmpse)
+  645 | bic2[[ncomp]][ncomp2] = log(tmpse/(n*Xnb)) + log(n*Xnb)/(n*Xnb)*(sum(unlist(nzwsX)))
+  646 | }else
+  647 | {
+  648 | tmpse = sum(unlist(lapply(sbYd, function(x) sum(x^2))))
+  649 | bic2Y[[ncomp]][ncomp2] = log(tmpse/(n*Ynb)) + log(n*Ynb)/(n*Ynb)*(sum(unlist(nzwsY)))
+  650 | tmpse = sum(unlist(lapply(sbXd, function(x) sum(x^2))))
+  651 | bic2X[[ncomp]][ncomp2] = log(tmpse/(n*Xnb)) + log(n*Xnb)/(n*Xnb)*(sum(unlist(nzwsX)))
+  652 | }
+  653 |
+  654 | }
+  655 |
+  656 | ##### arrange #####
+  657 | sbX = lapply(1:Xnb, function(x){ do.call(cbind, lapply(out, function(y) y$sbX[[x]]))})
+  658 | sbY = lapply(1:Ynb, function(x){ do.call(cbind, lapply(out, function(y) y$sbY[[x]]))})
+  659 |
+  660 | wbX = lapply(1:Xnb, function(x){
+  661 | tmp = do.call(cbind, lapply(out, function(y) y$wbX[[x]]))
+  662 | colnames(tmp) = paste("comp", 1:ncol(tmp), sep="")
+  663 | if(is.null(colnames(X[[x]]))){rownames(tmp) = paste("X", x, 1:ncol(X[[x]]), sep=".")}else{rownames(tmp) = colnames(X[[x]])}
+  664 | tmp
+  665 | })
+  666 | names(sbX) = names(wbX) = paste("block", 1:Xnb, sep="")
+  667 |
+  668 | wbY = lapply(1:Ynb, function(x){
+  669 | tmp = do.call(cbind, lapply(out, function(y) y$wbY[[x]]))
+  670 | colnames(tmp) = paste("comp", 1:ncol(tmp), sep="")
+  671 | if(is.null(colnames(Y[[x]]))){rownames(tmp) = paste("Y", x, 1:ncol(Y[[x]]), sep=".")}else{rownames(tmp) = colnames(Y[[x]])}
+  672 | tmp
+  673 | })
+  674 | names(sbY) = names(wbY) = paste("block", 1:Ynb, sep="")
+  675 |
+  676 | ##### Number of nonzero #####
+  677 | nzwbX = do.call(rbind, lapply(wbX, function(z) apply(z, 2, function(z2) sum(z2!=0))))
+  678 | nzwbY = do.call(rbind, lapply(wbY, function(z) apply(z, 2, function(z2) sum(z2!=0))))
+  679 |
+  680 | ##### Prediction #####
+  681 | predX = lapply(1:Xnb, function(x) sbX[[x]] %*% project(X[[x]], sbX[[x]]))
+  682 | predY = lapply(1:Ynb, function(x) sbY[[x]] %*% project(Y[[x]], sbY[[x]]))
+  683 |
+  684 | cpevX[[ncomp]] = sapply(1:Xnb, function(x) sum(predX[[x]]^2)/tvarX[[x]] )
+  685 | cpevY[[ncomp]] = sapply(1:Ynb, function(x) sum(predY[[x]]^2)/tvarY[[x]] )
+  686 |
+  687 | ##### Deflation #####
+  688 | if(defmethod == "canonical"){
+  689 | Xd = lapply(1:Xnb, function(x) X[[x]] - predX[[x]])
+  690 | Yd = lapply(1:Ynb, function(x) Y[[x]] - predY[[x]])
+  691 | }else
+  692 | if(defmethod == "canonical2"){
+  704 |
+  705 | ##### Information Criteria #####
+  706 | if(dmode == "PCA"){
+  707 | tmpse = sum(unlist(lapply(Xd, function(x) sum(x^2))))
+  708 | #print(tmpse)
+  709 | bic[ncomp] = log(tmpse/(n*sum(Xps))) + log(n*sum(Xps))/(n*sum(Xps))*(sum(nzwbX))
+  710 | }else
+  711 | {
+  712 | #tmpse = sum(unlist(lapply(Xd, function(x) sum(x^2)))) + sum(unlist(lapply(Yd, function(x) sum(x^2))))
+  713 | tmpse = sum(unlist(lapply(Yd, function(x) sum(x^2))))
+  714 | bicY[ncomp] = log(tmpse/(n*sum(Yps))) + log(n*sum(Yps))/(n*sum(Yps))*(sum(nzwbY))
+  715 | #bic[ncomp] = log(tmpse/(n*sum(c(Xps,Yps)))) + log(n*sum(c(Xps,Yps)))/(n*sum(c(Xps,Yps)))*(sum(c(nzwbX,nzwbY)))
+  716 | tmpse = sum(unlist(lapply(Xd, function(x) sum(x^2))))
+  717 | bicX[ncomp] = log(tmpse/(n*sum(Xps))) + log(n*sum(Xps))/(n*sum(Xps))*(sum(nzwbX))
+  718 | }
+  719 |
+  720 | }
+  721 | ############### Iteration for components End ###############
+  722 |
+  723 | ##### arrange #####
+  724 | ssX = lapply(out2, function(x) do.call(cbind, lapply(x, function(y) y$ssX)))
+  725 | ssY = lapply(out2, function(x) do.call(cbind, lapply(x, function(y) y$ssY)))
+  726 |
+  727 | cpevX = do.call(cbind, cpevX)
+  736 | }else{
+  737 | avX = cbind(cpevX[,1], t(apply(cpevX, 1, diff)))
+  738 | avY = cbind(cpevY[,1], t(apply(cpevY, 1, diff)))
+  739 | }
+  740 | colnames(cpevY) = colnames(cpevX) = colnames(avY) = colnames(avX) = paste("comp", 1:comp, sep="")
+  741 | rownames(cpevX) = rownames(avX) = paste("block", 1:nrow(nzwbX), sep="")
+  742 | rownames(cpevY) = rownames(avY) = paste("block", 1:nrow(nzwbY), sep="")
+  743 |
+  744 | colnames(nzwbX) = colnames(nzwbY) = paste("comp", 1:comp, sep="")
+  745 | rownames(nzwbX) = paste("block", 1:nrow(nzwbX), sep="")
+  746 | rownames(nzwbY) = paste("block", 1:nrow(nzwbY), sep="")
+  747 |
+  748 | names(wsY) = names(wsX) = paste("comp", 1:comp, sep="")
+  749 | for(i in 1:length(wsY)){
+  750 | colnames(wsY[[i]]) = paste("comp", 1:comp2, sep="")
+  751 | rownames(wsY[[i]]) = paste("block", 1:nrow(nzwbY), sep="")
+  752 | }
+  753 | for(i in 1:length(wsX)){
+  754 | colnames(wsX[[i]]) = paste("comp", 1:comp2, sep="")
+  755 | rownames(wsX[[i]]) = paste("block", 1:nrow(nzwbX), sep="")
+  756 | }
+  757 |
+  758 | names(nzwsX) = names(nzwsY) = paste("comp", 1:comp, sep="")
+  759 | for(i in 1:length(nzwsX)) names(nzwsX[[i]]) = paste("comp", i, "-", 1:comp2, sep="")
+  760 | for(i in 1:length(nzwsY)) names(nzwsY[[i]]) = paste("comp", i, "-", 1:comp2, sep="")
+  761 |
+  762 | names(bic) = names(bicX) = names(bicY) = names(bic2) = paste("comp", 1:comp, sep="")
+  763 | if(comp2 == 1) bic2 = unlist(bic2)
+  764 |
+  765 | ##### Names of variables #####
+  766 | selectXnames = lapply(1:length(wbX), function(z) apply(wbX[[z]], 2, function(z2){
+  767 | if(is.null(colnames(X[[z]]))) colnames(X[[z]]) = paste("X", z, 1:ncol(X[[z]]), sep=".")
+  768 | colnames(X[[z]])[z2!=0]
+  769 | }))
+  770 | selectYnames = lapply(1:length(wbY), function(z) apply(wbY[[z]], 2, function(z2){
+  771 | if(is.null(colnames(Y[[z]]))) colnames(Y[[z]]) = paste("Y", z, 1:ncol(Y[[z]]), sep=".")
+  772 | colnames(Y[[z]])[z2!=0]
+  773 | }))
+  774 |
+  775 | ##### Output #####
+  776 | if(dmode == "PCA"){
+  777 | out = list(call = match.call(),
+  778 | dmode=dmode,
+  779 | X=X, Z=Z, Xscale=Xscale, comp = c(comp, comp2),
+  780 | muX=muX,
+  781 | wbX=wbX, sbX=sbX, ssX=ssX, wsX=wsX,
+  782 | nzwbX = nzwbX, nzwsX=nzwsX,
+  783 | selectXnames = selectXnames,
+  784 | cpevX = cpevX,
+  785 | avX = avX,
+  786 | bic = bic, bic2=bic2,
+  787 | reproduct = reproduct, predictiv=predictiv
+  788 | )
+  789 | }else
+  790 | {
+  791 | out = list(call = match.call(),
+  792 | dmode=dmode,
+  793 | X=X, Y=Y, Z=Z,
+  794 | Xscale=Xscale, Yscale=Yscale, comp = c(comp, comp2),
+  795 | muX=muX, muY=muY,
+  796 | wbX=wbX, sbX=sbX, wbY=wbY, sbY=sbY, ssX=ssX, wsX=wsX, ssY=ssY, wsY=wsY,
+  797 | nzwbX = nzwbX, nzwbY = nzwbY, nzwsX=nzwsX, nzwsY=nzwsY,
+  798 | selectXnames = selectXnames, selectYnames = selectYnames,
+  799 | cpevX = cpevX, cpevY = cpevY,
+  800 | avX = avX, avY = avY,
+  801 | bic = bicY, bicX = bicX, bicY = bicY,
+  802 | bic2 = bic2Y, bic2X = bic2X, bic2Y = bic2Y,
+  803 | reproduct = reproduct, predictiv=predictiv
+  804 | )
+  805 | }
+  806 | class(out) = "msma"
+  807 | out
+  902 |
+  903 | ##### Fit #####
+  904 | out[[ncomp]] = out1 = .msma_onecomp_extended(Xd, Yd, Z, lambdaX, lambdaY, lambdaXsup, lambdaYsup, eta, type, inX, inY, inXsup, inYsup, muX, muY, dmode, verbose, intseed, ceps, con4spv)
+  905 |
+  906 | ##### Nest #####
+  907 | sbXd = sbX0 = list(do.call(cbind, out1$sbX))
+  908 | sbYd = sbY0 = list(do.call(cbind, out1$sbY))
+  909 |
+  910 | if(sprmethod=="PCA"){
+  911 |
+  912 | for(ncomp2 in 1:comp2){
+  913 |
+  914 | if(ncomp2 == 1){
+  915 | out21 = out1
+  916 | out21$wbX[[1]] = out1$wsX; out21$wbY[[1]] = out1$wsY
+  917 | out2[[ncomp]][[ncomp2]] = out21
+  918 | }else{
+  919 | out2[[ncomp]][[ncomp2]] = out21 = .msma_onecomp_extended(sbXd, sbYd, Z, lambdaXsup, lambdaYsup, NULL, NULL, eta, type, inXsup, inYsup, NULL, NULL, muX, muY, dmode, verbose, intseed, ceps, con4spv)
+  920 | }
+  921 |
+  922 | # arrange
+  923 | ssX = do.call(cbind, lapply(out2[[ncomp]], function(y) y$ssX))
+  924 | ssY = do.call(cbind, lapply(out2[[ncomp]], function(y) y$ssY))
+  925 |
+  926 | # Prediction
+  927 | predSX = ssX %*% project(sbX0[[1]], ssX)
+  928 | predSY = ssY %*% project(sbY0[[1]], ssY)
+  929 |
+  930 | # Deflation
+  931 | sbXd = lapply(sbX0, function(x) x - predSX)
+  932 | sbYd = lapply(sbY0, function(x) x - predSY)
+  933 |
+  934 | # arrange
+  935 | wsX = lapply(out2[1:ncomp], function(x) do.call(cbind, lapply(x, function(y) y$wbX[[1]])))
+  936 | wsY = lapply(out2[1:ncomp], function(x) do.call(cbind, lapply(x, function(y) y$wbY[[1]])))
+  937 |
+  938 | nzwsX = lapply(wsX, function(x) apply(x, 2, function(z2) sum(z2!=0)) )
+  939 | nzwsY = lapply(wsY, function(x) apply(x, 2, function(z2) sum(z2!=0)) )
+  940 |
+  941 | # Information Criteria
+  942 | if(dmode == "PCA"){
+  943 | tmpse = sum(unlist(lapply(sbXd, function(x) sum(x^2))))
+  944 | #print(tmpse)
+  945 | bic2[[ncomp]][ncomp2] = log(tmpse/(n*Xnb)) + log(n*Xnb)/(n*Xnb)*(sum(unlist(nzwsX)))
+  946 | }else
+  947 | {
+  948 | tmpse = sum(unlist(lapply(sbYd, function(x) sum(x^2))))
+  949 | bic2Y[[ncomp]][ncomp2] = log(tmpse/(n*Ynb)) + log(n*Ynb)/(n*Ynb)*(sum(unlist(nzwsY)))
+  950 | tmpse = sum(unlist(lapply(sbXd, function(x) sum(x^2))))
+  951 | bic2X[[ncomp]][ncomp2] = log(tmpse/(n*Xnb)) + log(n*Xnb)/(n*Xnb)*(sum(unlist(nzwsX)))
+  952 | }
+  953 | }
+  954 |
+  955 | }else if(sprmethod%in%c("NMF","sNMF")){
+  956 |
+  957 | V0 = sbXd[[1]]
+  958 | if(nneg == "posneg"){ V1 = do.call(cbind, lapply(c(1, -1), function(s1) apply(V0, 2, function(v){ ifelse(sign(v)==s1, v*s1, 0) })))
+  959 | }else if(nneg == "absolute"){ V1 = abs(V0)
+  960 | }else if(nneg == "min"){ V1 = apply(V0, 2, function(v){ x=v-min(v); x/max(x)}) }
+  961 |
+  962 | if(sprmethod=="NMF"){
+  963 | NMFout = sprNMF(V1, comp2, seed=intseed)
+  964 | }else{
+  965 | NMFout = sprNMF(V1, comp2, lambdaXsup, seed=intseed)
+  966 | }
+  967 | ssX[[ncomp]] = ssY[[ncomp]] = NMFout$Basis
+  969 |
+  970 | nzwsX = lapply(wsX, function(x) apply(x, 2, function(z2) sum(z2!=0)) )
+  971 | nzwsY = lapply(wsY, function(x) apply(x, 2, function(z2) sum(z2!=0)) )
+  972 |
+  973 | for(ncomp2 in 1:comp2){
+  974 | predSX = ssX[[ncomp]][,1:ncomp2,drop=FALSE] %*% project(V0, ssX[[ncomp]][,1:ncomp2,drop=FALSE])
+  975 | sbXd = lapply(sbX0, function(x) x - predSX)
+  976 | tmpse = sum(unlist(lapply(sbXd, function(x) sum(x^2))))
+  977 | bic2[[ncomp]][ncomp2] = log(tmpse/(n*Xnb)) + log(n*Xnb)/(n*Xnb)*(sum(unlist(nzwsX)[1:ncomp2]))
+  978 | }
+  979 |
+  980 | }
+  981 |
+  982 |
+  983 | ##### arrange #####
+  984 | sbX = lapply(1:Xnb, function(x){ do.call(cbind, lapply(out, function(y) y$sbX[[x]]))})
+  985 | sbY = lapply(1:Ynb, function(x){ do.call(cbind, lapply(out, function(y) y$sbY[[x]]))})
+  986 |
+  987 | wbX = lapply(1:Xnb, function(x){
+  988 | tmp = do.call(cbind, lapply(out, function(y) y$wbX[[x]]))
+  989 | colnames(tmp) = paste("comp", 1:ncol(tmp), sep="")
+  990 | if(is.null(colnames(X[[x]]))){rownames(tmp) = paste("X", x, 1:ncol(X[[x]]), sep=".")}else{rownames(tmp) = colnames(X[[x]])}
+  991 | tmp
+  992 | })
+  993 | names(sbX) = names(wbX) = Xbnames
+  994 |
+  995 | wbY = lapply(1:Ynb, function(x){
+  996 | tmp = do.call(cbind, lapply(out, function(y) y$wbY[[x]]))
+  997 | colnames(tmp) = paste("comp", 1:ncol(tmp), sep="")
+  998 | if(is.null(colnames(Y[[x]]))){rownames(tmp) = paste("Y", x, 1:ncol(Y[[x]]), sep=".")}else{rownames(tmp) = colnames(Y[[x]])}
+  999 | tmp
+ 1000 | })
+ 1001 | names(sbY) = names(wbY) = Ybnames
+ 1002 |
+ 1003 | ##### Number of nonzero #####
+ 1004 | nzwbX = do.call(rbind, lapply(wbX, function(z) apply(z, 2, function(z2) sum(z2!=0))))
+ 1005 | nzwbY = do.call(rbind, lapply(wbY, function(z) apply(z, 2, function(z2) sum(z2!=0))))
+ 1006 |
+ 1007 | ##### Prediction #####
+ 1008 | predX = lapply(1:Xnb, function(x) sbX[[x]] %*% project(X[[x]], sbX[[x]]))
+ 1009 | predY = lapply(1:Ynb, function(x) sbY[[x]] %*% project(Y[[x]], sbY[[x]]))
+ 1010 |
+ 1011 | cpevX[[ncomp]] = sapply(1:Xnb, function(x) sum(predX[[x]]^2)/tvarX[[x]] )
+ 1012 | cpevY[[ncomp]] = sapply(1:Ynb, function(x) sum(predY[[x]]^2)/tvarY[[x]] )
+ 1013 |
+ 1014 | ##### Deflation #####
+ 1015 | if(defmethod == "canonical"){
+ 1016 | Xd = lapply(1:Xnb, function(x) X[[x]] - predX[[x]])
+ 1017 | Yd = lapply(1:Ynb, function(x) Y[[x]] - predY[[x]])
+ 1018 | }else
+ 1019 | if(defmethod == "canonical2"){
+ 1031 |
+ 1032 | ##### Information Criteria #####
+ 1033 | if(dmode == "PCA"){
+ 1034 | tmpse = sum(unlist(lapply(Xd, function(x) sum(x^2))))
+ 1035 | #print(tmpse)
+ 1036 | bic[ncomp] = log(tmpse/(n*sum(Xps))) + log(n*sum(Xps))/(n*sum(Xps))*(sum(nzwbX))
+ 1037 | }else
+ 1038 | {
+ 1039 | #tmpse = sum(unlist(lapply(Xd, function(x) sum(x^2)))) + sum(unlist(lapply(Yd, function(x) sum(x^2))))
+ 1040 | tmpse = sum(unlist(lapply(Yd, function(x) sum(x^2))))
+ 1041 | bicY[ncomp] = log(tmpse/(n*sum(Yps))) + log(n*sum(Yps))/(n*sum(Yps))*(sum(nzwbY))
+ 1042 | #bic[ncomp] = log(tmpse/(n*sum(c(Xps,Yps)))) + log(n*sum(c(Xps,Yps)))/(n*sum(c(Xps,Yps)))*(sum(c(nzwbX,nzwbY)))
+ 1043 | tmpse = sum(unlist(lapply(Xd, function(x) sum(x^2))))
+ 1044 | bicX[ncomp] = log(tmpse/(n*sum(Xps))) + log(n*sum(Xps))/(n*sum(Xps))*(sum(nzwbX))
+ 1045 | }
+ 1046 |
+ 1047 | }
+ 1048 | ############### Iteration for components End ###############
+ 1049 |
+ 1050 | ##### arrange #####
+ 1051 | if(sprmethod=="PCA"){
+ 1052 | ssX = lapply(out2, function(x) do.call(cbind, lapply(x, function(y) y$ssX)))
+ 1053 | ssY = lapply(out2, function(x) do.call(cbind, lapply(x, function(y) y$ssY)))
+ 1054 | }
+ 1068 | avY = cbind(cpevY[,1], cpevY[,2]-cpevY[,1])
+ 1069 | }else{
+ 1070 | avX = cbind(cpevX[,1], t(apply(cpevX, 1, diff)))
+ 1071 | avY = cbind(cpevY[,1], t(apply(cpevY, 1, diff)))
+ 1072 | }
+ 1073 | colnames(cpevY) = colnames(cpevX) = colnames(avY) = colnames(avX) = colnames(nzwbX) = colnames(nzwbY) = paste("comp", 1:comp, sep="")
+ 1074 | rownames(cpevX) = rownames(avX) = rownames(nzwbX) = Xbnames
+ 1075 | rownames(cpevY) = rownames(avY) = rownames(nzwbY) = Ybnames
+ 1076 |
+ 1077 | names(wsY) = names(wsX) = paste("comp", 1:comp, sep="")
+ 1078 | for(i in 1:length(wsY)){
+ 1079 | colnames(wsY[[i]]) = paste("comp", 1:comp2, sep="")
+ 1080 | if(sprmethod%in%c("NMF","sNMF") & nneg == "posneg"){
+ 1081 | rownames(wsY[[i]]) = paste(Ybnames, rep(c("pos", "neg"),each=Ynb), sep="")
+ 1082 | }else{
+ 1083 | rownames(wsY[[i]]) = Ybnames
+ 1084 | }
+ 1085 | }
+ 1098 |
+ 1099 | names(bic) = names(bicX) = names(bicY) = names(bic2) = paste("comp", 1:comp, sep="")
+ 1100 | if(comp2 == 1) bic2 = unlist(bic2)
+ 1101 |
+ 1102 | ##### Names of variables #####
+ 1103 | selectXnames = lapply(1:length(wbX), function(z) apply(wbX[[z]], 2, function(z2){
+ 1104 | if(is.null(colnames(X[[z]]))) colnames(X[[z]]) = paste("X", z, 1:ncol(X[[z]]), sep=".")
+ 1105 | colnames(X[[z]])[z2!=0]
+ 1106 | }))
+ 1107 | selectYnames = lapply(1:length(wbY), function(z) apply(wbY[[z]], 2, function(z2){
+ 1108 | if(is.null(colnames(Y[[z]]))) colnames(Y[[z]]) = paste("Y", z, 1:ncol(Y[[z]]), sep=".")
+ 1109 | colnames(Y[[z]])[z2!=0]
+ 1110 | }))
+ 1111 |
+ 1112 | ##### Output #####
+ 1113 | if(dmode == "PCA"){
+ 1114 | out = list(call = match.call(),
+ 1115 | dmode=dmode,
+ 1116 | X=X, Z=Z, Xscale=Xscale, comp = c(comp, comp2),
+ 1117 | muX=muX,
+ 1118 | wbX=wbX, sbX=sbX, ssX=ssX, wsX=wsX,
+ 1119 | nzwbX = nzwbX, nzwsX=nzwsX,
+ 1120 | selectXnames = selectXnames,
+ 1121 | cpevX = cpevX,
+ 1122 | avX = avX,
+ 1123 | bic = bic, bic2=bic2,
+ 1124 | reproduct = reproduct, predictiv=predictiv
+ 1125 | )
+ 1126 | }else
+ 1127 | {
+ 1128 | out = list(call = match.call(),
+ 1129 | dmode=dmode,
+ 1130 | X=X, Y=Y, Z=Z,
+ 1131 | Xscale=Xscale, Yscale=Yscale, comp = c(comp, comp2),
+ 1132 | muX=muX, muY=muY,
+ 1133 | wbX=wbX, sbX=sbX, wbY=wbY, sbY=sbY, ssX=ssX, wsX=wsX, ssY=ssY, wsY=wsY,
+ 1134 | nzwbX = nzwbX, nzwbY = nzwbY, nzwsX=nzwsX, nzwsY=nzwsY,
+ 1135 | selectXnames = selectXnames, selectYnames = selectYnames,
+ 1136 | cpevX = cpevX, cpevY = cpevY,
+ 1137 | avX = avX, avY = avY,
+ 1138 | bic = bicY, bicX = bicX, bicY = bicY,
+ 1139 | bic2 = bic2Y, bic2X = bic2X, bic2Y = bic2Y,
+ 1140 | reproduct = reproduct, predictiv=predictiv
+ 1141 | )
+ 1142 | }
+ 1143 | class(out) = "msma"
+ 1144 | out
+ 1151 | {
+ 1152 | cat("Call:\n")
+ 1153 | print(x$call)
+ 1154 | cat("\n")
+ 1155 | cat("Numbers of non-zeros for X block: \n")
+ 1156 | print(x$nzwbX)
+ 1157 | cat("\n")
+ 1158 | cat("Numbers of non-zeros for X super: \n")
+ 1159 | nzwsX = do.call(cbind,x$nzwsX)
+ 1160 | print(nzwsX)
+ 1161 | cat("\n")
+ 1162 | if(x$dmode == "PLS"){
+ 1163 | cat("Numbers of non-zeros for Y block: \n")
+ 1164 | print(x$nzwbY)
+ 1165 | cat("\n")
+ 1166 | cat("Numbers of non-zeros for Y super: \n")
+ 1167 | nzwsY = do.call(cbind,x$nzwsY)
+ 1168 | print(nzwsY)
+ 1169 | cat("\n")
+ 1170 | }
+ 1171 | }
+ 1172 |
+ 1173 | #' Summarizing Fits
+ 1174 | #'
+ 1236 | #' @method plot msma
+ 1237 | #' @docType methods
+ 1238 | #' @export
+ 1239 | #'
+ 1240 | #' @param x an object of class "\code{msma}." Usually, a result of a call to \code{\link{msma}}
+ 1241 | #' @param v a character, "weight" for the weight, "score" for the score, and "cpev" for the cumulative percentage of explained variance (CPEV) .
+ 1242 | #' @param axes a numeric (or vector), specifying the root component(s) to plot.
+ 1243 | #' @param axes2 a numeric (or vector), specifying the nested component(s) to plot.
+ 1244 | #' @param block a character, indicating which the "block" or "super" is used.
+ 1245 | #' @param plottype a character, indicating the plot type. "bar" for the bar plot, "scatter" for the scatter plot.
+ 1246 | #' @param XY a character, indicating "X" or "Y". "XY" for the scatter plots using X and Y scores from PLS.
+ 1247 | #' @param col a color vector.
+ 1248 | #' @param signflip a numeric vector if the sign in the block is flipped to pose the super as possitive.
+ 1249 | #' @param xlim a numeric vector x coordinate ranges.
+ 1250 | #' @param ylim a numeric vector y coordinate ranges.
+ 1251 | #' @param ... further arguments passed to or from other methods.
+ 1252 | #'
+ 1253 | #' @examples
+ 1254 | #'tmpdata = simdata(n = 50, rho = 0.8, Yps = c(10, 12, 15), Xps = 20, seed=1)
+ 1255 | #'X = tmpdata$X; Y = tmpdata$Y
+ 1256 | #'
+ 1257 | #'fit1 = msma(X, Y, comp=1, lambdaX=2, lambdaY=1:3)
+ 1258 | #'#plot(fit1)
+ 1259 | #'
+ 1260 | plot.msma = function(x, v=c("weight", "score", "cpev")[1], axes = 1, axes2 = 1, block=c("block", "super")[1], plottype=c("bar", "scatter")[1], XY=c("X", "Y", "XY")[1], col=NULL, signflip=FALSE, xlim=NULL, ylim=NULL,...) {
+ 1261 |
+ 1262 | ### ###
+ 1263 | if(length(axes) > 2) stop("the length of axes should be less than 2.")
+ 1264 | if(length(axes2) > 2) stop("the length of axes should be less than 2.")
+ 1265 |
+ 1266 | if(x$comp[1] == 1){
+ 1267 | axes = 1
+ 1268 | if(plottype == "scatter") stop("number of components should be more than 2")
+ 1269 | }
+ 1270 |
+ 1276 | s2 = do.call(cbind, lapply(x[[paste0(v1, "sY")]][axes], function(x2) x2[, axes2,drop=FALSE]))
+ 1277 | cor1 = cor.test(s1, s2)
+ 1278 | m1 = round(max(abs(range(c(s1, s2)))))
+ 1279 | if(is.null(xlim)) xlim=c(-m1, m1)
+ 1280 | if(is.null(ylim)) ylim=c(-m1, m1)
+ 1281 | plot(s1, s2, xlab="X score", ylab="Y score", main=paste("Component", axes[1]), sub=paste0("r=", round(cor1$estimate,2), " (p", ifelse(cor1$p.value>0.0001, "=", ""), format.pval(round(cor1$p.value, 4), eps=0.0001, scientific=FALSE), ")"), xlim=xlim, ylim=ylim, ...)
+ 1282 | abline(lm(s2 ~ s1), col=2)
+ 1283 | }else{
+ 1284 | ### ###
+ 1285 | if(v == "cpev"){
+ 1286 | if(is.null(ylim)) ylim=c(0,1)
+ 1287 | matplot(t(x$cpevX), type="b", xlab="Components", ylab=v, ylim=ylim, ...)
+ 1288 | if(x$dmode == "PLS"){
+ 1289 | matplot(t(x$cpevY), type="b", lty=2, add = TRUE)
+ 1290 | }
+ 1291 | }else{
+ 1349 | #' @param newX a matrix in which to look for variables with which to predict X.
+ 1350 | #' @param newY a matrix in which to look for variables with which to predict Y.
+ 1351 | #' @param ... further arguments passed to or from other methods.
+ 1352 | #'
+ 1353 | #' @return \item{X}{predicted X}
+ 1354 | #' @return \item{sbX}{block score for X}
+ 1355 | #' @return \item{Y}{predicted Y}
+ 1356 | #' @return \item{sbY}{block score for Y}
+ 1357 | #'
+ 1358 | #' @examples
+ 1359 | #' ##### data #####
+ 1360 | #' tmpdata = simdata(n = 50, rho = 0.8, Yps = c(10, 12, 15), Xps = 20, seed=1)
+ 1361 | #' X = tmpdata$X; Y = tmpdata$Y
+ 1362 | #'
+ 1363 | #' ##### Two Component #####
+ 1364 | #' fit2 = msma(X, Y, comp=2, lambdaX=2, lambdaY=1:3)
+ 1365 | #' summary(fit2)
+ 1366 | #'
+ 1367 | #' ##### Predict #####
+ 1368 | #' test = predict(fit2, newX=X, newY=Y)
+ 1369 | #'
+ 1370 | .predict_msma_legacy <- function(object, newX, newY = NULL) {
+ 1371 |   if (missing(newX)) stop("newX should be specified")
+ 1372 |   if (is.null(newY) | (object$dmode == "PCA")) newY <- newX
+ 1373 |   if (!inherits(newX, "list")) newX <- list(newX)
+ 1374 |   if (!inherits(newY, "list")) newY <- list(newY)
+ 1375 |   if (!inherits(newX, "list")) stop("newX should be a list")
+ 1376 |   if (!inherits(newY, "list")) stop("newY should be a list")
+ 1377 |   Ynb <- length(newY)
+ 1378 |   Xnb <- length(newX)
+ 1379 |   newX <- lapply(seq_along(newX), function(x) {
+ 1380 |     scale(newX[[x]], center = object$Xscale[[x]]$`scaled:center`)
+ 1381 |   })
+ 1382 |   newX <- lapply(newX, function(x) apply(x, 2, function(x2) {
+ 1383 |     x2[is.na(x2)] <- 0
+ 1384 |     x2
+ 1385 |   }))
+ 1386 |   sbX <- lapply(seq_len(Xnb), function(x) newX[[x]] %*% object$wbX[[x]])
+ 1387 |   predX <- lapply(seq_len(Xnb), function(x) {
+ 1388 |     cbind(sbX[[x]]) %*% project(newX[[x]], sbX[[x]])
+ 1389 |   })
+ 1390 |   if (!(is.null(newY) | object$dmode == "PCA")) {
+ 1391 |     newY <- lapply(seq_along(newY), function(x) {
+ 1392 |       scale(newY[[x]], center = object$Yscale[[x]]$`scaled:center`)
+ 1393 |     })
+ 1394 |     newY <- lapply(newY, function(y) apply(y, 2, function(y2) {
+ 1395 |       y2[is.na(y2)] <- 0
+ 1396 |       y2
+ 1397 |     }))
+ 1398 |     sbY <- lapply(seq_len(Ynb), function(x) newY[[x]] %*% object$wbY[[x]])
+ 1399 |     predY <- lapply(seq_len(Ynb), function(x) {
+ 1400 |       cbind(sbY[[x]]) %*% project(newY[[x]], sbY[[x]])
+ 1401 |     })
+ 1402 |   } else {
+ 1403 |     predY <- sbY <- NULL
+ 1404 |   }
+ 1405 |   list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
+ 1406 | }
+ 1407 |
+ 1408 | .predict_msma_replace_missing <- function(blocks) {
+ 1409 |   lapply(blocks, function(block) {
+ 1410 |     block[is.na(block)] <- 0
+ 1411 |     block
+ 1412 |   })
+ 1413 | }
+ 1414 |
+ 1415 | .predict_msma_fitted <- function(object, newX, newY = NULL) {
+ 1416 |   if (missing(newX)) stop("newX should be specified", call. = FALSE)
+ 1417 |   if (is.null(object$preprocess) ||
+ 1418 |       !inherits(object$preprocess, "msma_preprocess")) {
+ 1419 |     stop(
+ 1420 |       "Fitted preprocessing requires a Version 5 fit with `preprocess` metadata.",
+ 1421 |       call. = FALSE
+ 1422 |     )
+ 1423 |   }
+ 1424 |   if (identical(object$dmode, "PLS") && is.null(newY)) {
+ 1425 |     stop("`newY` must be supplied for fitted PLS prediction.", call. = FALSE)
+ 1430 |   x_blocks <- .apply_msma_preprocessor(
+ 1431 |     preprocess = object$preprocess,
+ 1432 |     newdata = x_blocks,
+ 1433 |     side = "X"
+ 1434 |   )
+ 1435 |   x_blocks <- .predict_msma_replace_missing(x_blocks)
+ 1436 |   sbX <- lapply(seq_along(x_blocks), function(i) {
+ 1437 |     x_blocks[[i]] %*% object$wbX[[i]]
+ 1438 |   })
+ 1439 |   predX <- lapply(seq_along(x_blocks), function(i) {
+ 1440 |     cbind(sbX[[i]]) %*% project(x_blocks[[i]], sbX[[i]])
+ 1441 |   })
+ 1442 |   names(sbX) <- names(x_blocks)
+ 1443 |   names(predX) <- names(x_blocks)
+ 1444 |
+ 1445 |   if (identical(object$dmode, "PCA")) {
+ 1446 |     predY <- sbY <- NULL
+ 1447 |   } else {
+ 1448 |     input_y_was_list <- is.list(newY)
+ 1449 |     y_blocks <- if (input_y_was_list) newY else list(newY)
+ 1450 |     y_blocks <- .apply_msma_preprocessor(
+ 1451 |       preprocess = object$preprocess,
+ 1452 |       newdata = y_blocks,
+ 1453 |       side = "Y"
+ 1454 |     )
+ 1455 |     y_blocks <- .predict_msma_replace_missing(y_blocks)
+ 1456 |     sbY <- lapply(seq_along(y_blocks), function(i) {
+ 1457 |       y_blocks[[i]] %*% object$wbY[[i]]
+ 1458 |     })
+ 1459 |     predY <- lapply(seq_along(y_blocks), function(i) {
+ 1460 |       cbind(sbY[[i]]) %*% project(y_blocks[[i]], sbY[[i]])
+ 1461 |     })
+ 1462 |     names(sbY) <- names(y_blocks)
+ 1463 |     names(predY) <- names(y_blocks)
+ 1464 |   }
+ 1465 |
+ 1466 |   list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
+ 1467 | }
+ 1468 |
+ 1469 | predict.msma <- function(object, newX, newY = NULL, ...) {
+ 1470 |   dots <- list(...)
+ 1471 |   preprocessing <- if (is.null(dots$preprocessing)) {
+ 1472 |     "legacy"
+ 1473 |   } else {
+ 1474 |     match.arg(dots$preprocessing, c("legacy", "fitted"))
+ 1475 |   }
+ 1476 |   if (identical(preprocessing, "legacy")) {
+ 1477 |     return(.predict_msma_legacy(object = object, newX = newX, newY = newY))
+ 1478 |   }
+ 1479 |   .predict_msma_fitted(object = object, newX = newX, newY = newY)
+ 1480 | }
+ 1481 |
+ 1482 | #' Cross-Validation
+ 1483 | #'
+ 1484 | #' cross-validated method to evaluate the fit of "msma".
+ 1485 | #'
+ 1486 | #' k-fold cross-validation for \code{msma}
+ 1487 | #'
+ 1488 | #' @name cvmsma
+ 1489 | #' @aliases cvmsma
+ 1834 | if(length(comp)<2) comp[2] = 1
+ 1835 |
+ 1836 | ##### Candidates for Regularized Parameters #####
+ 1837 | intfit = msma(X, Y, Z, comp=1, lambdaX=rep(NULL, length(X)), lambdaY=rep(NULL, length(Y)), lambdaXsup=NULL, lambdaYsup=NULL, eta, type, inX, inY, inXsup=NULL, inYsup=NULL, muX = muX, muY = muY, intseed=intseed, sprmethod=sprmethod, nneg=nneg)
+ 1838 |
+ 1839 | intweight = list(X=intfit$wbX, Y=intfit$wbY, Xsup=intfit$wsX, Ysup=intfit$wsY)
+ 1840 | if(!is.null(homo)){
+ 1841 | for(h1 in homo){
+ 1842 | intweight[[h1]] = list(unlist(intweight[[h1]]))
+ 1843 | }}
+ 1844 |
+ 1845 | if(is.null(whichselect)) whichselect = names(which(unlist( lapply(intweight, function(x) (!is.null(unlist(x))) & length(unlist(x))>1)
+ 1846 |  )))
+ 1847 | intweight[!(names(intweight) %in% whichselect)] = NULL
+ 1848 |
+ 1849 | lambdaXYcands = lapply(intweight, function(y){
+ 2103 | repeat{
+ 2104 |
+ 2105 | ### Xside (block) ###
+ 2106 | XwsX = lapply(1:length(X), function(x) X[[x]] * wsX[x]) #XwsX = X
+ 2107 | argus = lapply(XwsX, function(x){ tmp = c(t(x) %*% (muXY * ssY + muX * Z)); tmp[is.na(tmp)] = 0; tmp })
+ 2108 | wbX = lapply(1:Xnb, function(x) normvec(sparse(normvec(argus[[x]]), lambdaX[x], eta, type, inX[[x]])))
+ 2109 | sbX = lapply(1:Xnb, function(x) c(X[[x]] %*% wbX[[x]]) )
+ 2110 | sbX2 = do.call(cbind, sbX)
+ 2111 |
+ 2112 | ### Xside (super) ###
+ 2113 | argusups = t(sbX2) %*% (muXY * ssY + muX * Z)
+ 2114 | wsX = normvec(sparse(normvec(argusups), lambdaXsup, eta, type, inXsup))
+ 2115 | ssX = sbX2 %*% wsX
+ 2116 |
+ 2117 | ### Yside (block) ###
+ 2118 | YwsY = lapply(1:length(Y), function(x) Y[[x]] * wsY[x]) #YwsY = Y
+ 2119 | argvs = lapply(YwsY, function(x){ tmp = c(t(x) %*% (muXY * ssX + muY * Z)); tmp[is.na(tmp)] = 0; tmp})
+ 2120 | wbY = lapply(1:Ynb, function(y) normvec(sparse(normvec(argvs[[y]]), lambdaY[y], eta, type, inY[[y]])))
+ 2121 | sbY = lapply(1:Ynb, function(x) c(Y[[x]] %*% wbY[[x]]) )
+ 2122 | sbY2 = do.call(cbind, sbY)
+ 2123 |
+ 2124 | ### Yside (super) ###
+ 2125 | #wsY = normvec(t(sbY2) %*% (muXY * ssX + muY * Z))
+ 2126 | argvsups = t(sbY2) %*% (muXY * ssX + muY * Z)
+ 2127 | wsY = normvec(sparse(normvec(argvsups), lambdaYsup, eta, type, inYsup))
+ 2128 | ssY = sbY2 %*% wsY
+ 2129 |
+ 2130 | ### Convergence ###
+ 2131 | if(itr > 2){
+ 2132 | #dif = drop(crossprod(ssX - oldssX))
+ 2133 | difX = drop(crossprod(ssX - oldssX))
+ 2134 | difY = drop(crossprod(ssY - oldssY))
+ 2135 | dif = max(difX, difY)
+ 2136 | if(verbose) print(c(itr, dif))
+ 2137 | if(dif < ceps | itr > 20){break}
+ 2138 | }
+ 2139 | oldssX = ssX
+ 2140 | oldssY = ssY
+ 2141 | itr = itr + 1
+ 2142 | }
+ 2143 |
+ 2144 | ### Output ###
+ 2145 | list(wbX=wbX, sbX=sbX, wbY=wbY, sbY=sbY, ssX=ssX, wsX=wsX, ssY=ssY, wsY=wsY)
+ 2146 | }
+ 2147 |
+ 2148 | .msma_onecomp_extended = function(X, Y, Z=NULL, lambdaX=NULL, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, dmode = "PLS", verbose=FALSE, intseed=1, ceps=0.0001, con4spv=NULL){
+ 2149 |
+ 2150 | Ynb = length(Y); Xnb = length(X)
+ 2151 |
+ 2152 | if(any(is.null(lambdaX))){ lambdaX = rep(0, Xnb)}
+ 2153 | if(any(is.null(lambdaY))){ lambdaY = rep(0, Ynb)}
+ 2154 | if(any(is.null(lambdaXsup))){ lambdaXsup = 0}
+ 2155 | if(any(is.null(lambdaYsup))){ lambdaYsup = 0}
+ 2173 | repeat{
+ 2174 |
+ 2175 | ### Xside (block) ###
+ 2176 | XwsX = lapply(1:length(X), function(x) X[[x]] * wsX[x]) #XwsX = X
+ 2177 | argus = lapply(XwsX, function(x){ tmp = c(t(x) %*% (muXY * ssY + muX * Z %*% con4spv)); tmp[is.na(tmp)] = 0; tmp })
+ 2178 | wbX = lapply(1:Xnb, function(x) normvec(sparse(normvec(argus[[x]]), lambdaX[x], eta, type, inX[[x]])))
+ 2179 | sbX = lapply(1:Xnb, function(x) c(X[[x]] %*% wbX[[x]]) )
+ 2180 | sbX2 = do.call(cbind, sbX)
+ 2181 |
+ 2182 | ### Xside (super) ###
+ 2183 | argusups = t(sbX2) %*% (muXY * ssY + muX * Z %*% con4spv)
+ 2184 | wsX = normvec(sparse(normvec(argusups), lambdaXsup, eta, type, inXsup))
+ 2185 | ssX = sbX2 %*% wsX
+ 2186 |
+ 2187 | ### Yside (block) ###
+ 2188 | YwsY = lapply(1:length(Y), function(x) Y[[x]] * wsY[x]) #YwsY = Y
+ 2189 | argvs = lapply(YwsY, function(x){ tmp = c(t(x) %*% (muXY * ssX + muY * Z %*% con4spv)); tmp[is.na(tmp)] = 0; tmp})
+ 2190 | wbY = lapply(1:Ynb, function(y) normvec(sparse(normvec(argvs[[y]]), lambdaY[y], eta, type, inY[[y]])))
+ 2191 | sbY = lapply(1:Ynb, function(x) c(Y[[x]] %*% wbY[[x]]) )
+ 2192 | sbY2 = do.call(cbind, sbY)
+ 2193 |
+ 2194 | ### Yside (super) ###
+ 2195 | #wsY = normvec(t(sbY2) %*% (muXY * ssX + muY * Z))
+ 2196 | argvsups = t(sbY2) %*% (muXY * ssX + muY * Z %*% con4spv)
+ 2197 | wsY = normvec(sparse(normvec(argvsups), lambdaYsup, eta, type, inYsup))
+ 2198 | ssY = sbY2 %*% wsY
+ 2199 |
+ 2200 | ### Convergence ###
+ 2201 | if(itr > 2){
+ 2202 | #dif = drop(crossprod(ssX - oldssX))
+ 2203 | difX = drop(crossprod(ssX - oldssX))
+ 2204 | difY = drop(crossprod(ssY - oldssY))
+ 2205 | dif = max(difX, difY)
+ 2206 | if(verbose) print(c(itr, dif))
+ 2207 | if(dif < ceps | itr > 20){break}
+ 2208 | }
+ 2209 | oldssX = ssX
+ 2210 | oldssY = ssY
+ 2211 | itr = itr + 1
+ 2212 | }
+ 2213 |
+ 2214 | ### Output ###
+ 2215 | list(wbX=wbX, sbX=sbX, wbY=wbY, sbY=sbY, ssX=ssX, wsX=wsX, ssY=ssY, wsY=wsY)
+ 2216 | }
+ 2217 |
+ 2218 | #' @rdname msma-internal
+ 2219 | normvec = function(a){if(all(a == 0)){a}else{ c(a) / sqrt(drop(crossprod(c(a))))}}
+ 2220 |
+ 2221 | #' @rdname msma-internal
+ 2222 | sparse = function(x, lam, eta=1, type="lasso", inidx=NULL){
+ 2223 | if(all(x == 0)){ lam = 0 }else if(lam >= max(abs(x))){
+ 2224 | tmpdiff = diff(sort(unique(abs(x)))); tmpdiff = tmpdiff[tmpdiff > 1e-8]
+ 2225 | lam = max(abs(x)) - tmpdiff[length(tmpdiff)]/2
+ 2226 | }
+ 2227 | lam = rep(lam, length(x))
+ 2228 | if(!is.null(inidx)) lam[inidx] = 0
+ 2229 | sout = sapply(1:length(x), function(x1) {
+ 2262 | }
+ 2263 |
+ 2264 | #' @rdname msma-internal
+ 2265 | project = function(x, y){
+ 2266 | if(is.null(ncol(y)))
+ 2267 | {c(x %*% cbind(y) / drop(crossprod(y)))}else
+ 2268 | {
+ 2269 | crossy = t(y) %*% y
+ 2270 | i = 0; judge = TRUE
+ 2271 | while(judge){
+ 2272 | invcrossy = try(solve(crossy + 1e-18*10^i * diag(ncol(crossy))), silent = TRUE)
+ 2273 | judge = (inherits(invcrossy, "try-error"))
+ 2274 | i = i + 1
+ 2275 | }
+ 2276 | invcrossy %*% t(y) %*% x
+ 2277 | }
+ 2278 | }
+ 2279 |
+ 2280 | #' @rdname msma-internal
+ 2281 | matserr = function(X1, X2) mean(sapply(1:length(X1), function(x) mean((X1[[x]]-X2[[x]])^2)))
+ 2282 |
+ 2535 |     dimnames = dnx[2:1])
+ 2536 | }
+ 2537 |
+ 2538 | #' Hierarchical cluster analysis
+ 2539 | #'
+ 2540 | #' This is a function for performing a hierarchical cluster analysis using scores
+ 2541 | #'
+ 2542 | #' This function performs a hierarchical cluster analysis using scores.
+ 2543 | #'
+ 2544 | #' @name hcmsma
+ 2545 | #' @aliases hcmsma
+ 2546 | #' @rdname hcmsma
+ 2547 | #' @docType methods
+ 2548 | #' @export
+ 2549 | #'
+ 2550 | #' @param object an object of class "\code{msma}", usually, a result of a call to \code{\link{msma}}
+ 2551 | #' @param nclust a numeric scalar, number of clusters.
+ 2552 | #' @param graph a numeric vector, numbers of columns for Y. The length of vector corresponds to the number of blocks.
+ 2650 | # This internal function intentionally preserves the manuscript-generating
+ 2651 | # algorithm before later validation, diagnostics, and public API integration.
+ 2652 | ####################################################################################################
+ 2653 |
+ 2654 | .s4pca_norm_reference <- function(a) {
+ 2655 |   if (all(a == 0)) a else c(a) / sqrt(drop(crossprod(c(a))))
+ 2656 | }
+ 2657 |
+ 2658 | .s4pca_sparse_reference <- function(x, lam, eta = 1, type = "lasso", inidx = NULL) {
+ 2659 |   if (all(x == 0)) {
+ 2660 |     lam <- 0
+ 2661 |   } else if (isTRUE(length(lam) == 1) && lam >= max(abs(x))) {
+ 2662 |     tmpdiff <- diff(sort(unique(abs(x))))
+ 2663 |     tmpdiff <- tmpdiff[tmpdiff > 1e-8]
+ 2664 |     lam <- max(abs(x)) - ifelse(length(tmpdiff) > 0, utils::tail(tmpdiff, 1) / 2, 1e-6)
+ 2665 |   }
+ 2686 |   })
+ 2687 | }
+ 2688 |
+ 2689 | .s4pca_project_reference <- function(x, y) {
+ 2690 |   if (is.null(ncol(y))) {
+ 2691 |     c(x %*% cbind(y) / drop(crossprod(y)))
+ 2692 |   } else {
+ 2693 |     crossy <- t(y) %*% y
+ 2694 |     i <- 0
+ 2695 |     judge <- TRUE
+ 2696 |     while (judge) {
+ 2697 |       invcrossy <- try(solve(crossy + 1e-18 * 10^i * diag(ncol(crossy))), silent = TRUE)
+ 2698 |       judge <- inherits(invcrossy, "try-error")
+ 2699 |       i <- i + 1
+ 2700 |     }
+ 2701 |     invcrossy %*% t(y) %*% x
+ 2702 |   }
+ 2703 | }
+ 2704 |
+ 2705 | .s4pca_fit_reference <- function(X, Z = NULL, comp = 6, lambda = 0.02,
+ 2706 |                                  gamma = 0, history_method = "sumabs", mu = 1.0,
+ 2707 |                                  hard_exclusion = FALSE, niter = 30, seed = NULL,
+ 2863 | # S4PCA Milestone 5: reconstruction and repeated split conformal model selection.
+ 2864 | ####################################################################################################
+ 2865 |
+ 2866 | #' Reconstruct data from an S4PCA fit
+ 2867 | #'
+ 2868 | #' Reconstructs the training data or a new matrix using the score subspace and
+ 2869 | #' reconstruction coefficients learned by a public S4PCA call to \code{msma}.
+ 2870 | #'
+ 2871 | #' @param object an object of class \code{s4pca}.
+ 2872 | #' @param newdata optional numeric matrix with the same variables as the fitted X.
+ 2873 | #' @param scaled logical; if TRUE, return reconstruction on the standardized scale.
+ 2874 | #' @return a reconstructed numeric matrix.
+ 2875 | #' @export
+ 2876 | s4pca_reconstruct <- function(object, newdata = NULL, scaled = FALSE) {
+ 2877 |   if (!inherits(object, "s4pca")) stop("object must inherit from 's4pca'", call. = FALSE)
+ 2878 |   if (length(scaled) != 1L || !is.logical(scaled) || is.na(scaled)) {
+ 2879 |     stop("scaled must be TRUE or FALSE", call. = FALSE)
+ 2880 |   }
+ 2881 |   B <- object$reconstruction_loadings
+ 2882 |   if (is.null(B)) stop("object does not contain reconstruction coefficients", call. = FALSE)
+ 2883 |   if (is.null(newdata)) {
+ 2884 |     Xhat <- object$S %*% B
+ 2885 |   } else {
+ 2886 |     X <- as.matrix(newdata)
+ 2887 |     if (!is.numeric(X) || ncol(X) != nrow(object$W) || any(!is.finite(X))) {
+ 2888 |       stop("newdata must be a finite numeric matrix with the fitted variables", call. = FALSE)
+ 2889 |     }
+ 2890 |     if (!is.null(object$preprocess) &&
+ 2891 |         inherits(object$preprocess, "msma_preprocess")) {
+ 2953 |     pred <- s4pca_reconstruct(fit, X[cal_idx, , drop = FALSE], scaled = FALSE)
+ 2954 |     conformity <- rowMeans((X[cal_idx, , drop = FALSE] - pred)^2)
+ 2955 |     q <- as.numeric(stats::quantile(conformity, probs = 1 - alpha, type = 8, names = FALSE))
+ 2956 |     out[[g]] <- data.frame(
+ 2957 |       lambdaX = grid$lambdaX[g], gammaX = grid$gammaX[g], comp = grid$comp[g],
+ 2958 |       score = q, overlap_all = fit$overlap_all,
+ 2959 |       overlap_selected = fit$overlap_selected,
+ 2960 |       admissible = fit$overlap_selected <= max_overlap
+ 2961 |     )
+ 2962 |   }
+ 2963 |   do.call(rbind, out)
+ 2964 | }
+ 2965 |
+ 2966 | #' Repeated split conformal selection for S4PCA
+ 2967 | #'
+ 2968 | #' Evaluates combinations of sparsity, overlap penalty, and component count by
+ 3025 |   details <- do.call(rbind, split_results)
+ 3026 |   key <- interaction(details$lambdaX, details$gammaX, details$comp, drop = TRUE)
+ 3027 |   groups <- split(details, key)
+ 3028 |   summary <- do.call(rbind, lapply(groups, function(d) data.frame(
+ 3029 |     lambdaX = d$lambdaX[1], gammaX = d$gammaX[1], comp = d$comp[1],
+ 3030 |     score = stats::median(d$score),
+ 3031 |     overlap_all = stats::median(d$overlap_all),
+ 3032 |     overlap_selected = stats::median(d$overlap_selected),
+ 3033 |     admissible = stats::median(d$overlap_selected) <= max_overlap
+ 3034 |   )))
+ 3035 |   rownames(summary) <- NULL
+ 3036 |   eligible <- which(summary$admissible)
+ 3037 |   if (!length(eligible)) {
+ 3038 |     warning("No candidate satisfied max_overlap; selecting from the full grid", call. = FALSE)
+ 3039 |     eligible <- seq_len(nrow(summary))
+ 3040 |   }
+ 3041 |   ord <- order(summary$score[eligible], summary$overlap_selected[eligible],
+ 3042 |                summary$comp[eligible], summary$lambdaX[eligible], summary$gammaX[eligible])
+ 3043 |   selected <- summary[eligible[ord[1]], , drop = FALSE]
+ 3044 |   final_fit <- NULL
+ 3045 |   if (refit) {
+ 3046 |     final_fit <- msma(X = X, Z = Z, comp = selected$comp,
+ 3047 |       lambdaX = selected$lambdaX, muX = muX, structure.method = "soft",
+ 3048 |       gammaX = selected$gammaX, history.method = input$history_method,
+ 3049 |       niterS4 = input$niter, scaling = scaling, intseed = intseed)
+ 3050 |   }
+ 3051 |   result <- list(selected = selected, summary = summary, details = details,

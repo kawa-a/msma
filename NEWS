@@ -1,3 +1,67 @@
+Changes in version 5.1
+
+* Fixed prediction regression tests on macOS arm64. Numerically
+  equivalent floating-point results are now compared using an explicit
+  absolute tolerance instead of requiring bitwise identity.
+
+* Separated the single-row legacy projection-score contract from the
+  platform-dependent reconstructed-X reference values.
+
+* No prediction algorithm, default behavior, fitted-object structure,
+  or public API was changed in this release.
+
+Changes in version 5.0
+
+* When all corresponding supervision weights are zero, supervision
+  inputs are now ignored and the model is fitted through a canonical
+  unsupervised path. This ensures that contrast coefficients cannot
+  affect estimation when the supervision term is inactive.
+
+* Active multicolumn supervision contrasts are now validated for
+  dimension, finite coefficients, and a positive L1 norm before
+  normalization. All-zero active contrasts produce an explicit error.
+
+* One-column supervision retains backward compatibility by using the
+  canonical contrast 1 when `con4spv` is omitted.
+
+* Fitted objects now retain requested and used supervision
+  specifications in the `supervision` component.
+
+PREDICTION WORKFLOW
+
+* Added fitted preprocessing to predict.msma() through
+  preprocessing = "fitted".
+
+* Added training-derived fixed reconstruction coefficients through
+  reconstruction = "fitted".
+
+* Added reconstruction output-scale control through
+  output_scale = "analysis" and output_scale = "original".
+
+* Preserved historical prediction behavior as the default for backward
+  numerical compatibility.
+
+* Added validation of block counts, dimensions, column names, and column
+  order for fitted preprocessing.
+
+* Added serialization of preprocessing and prediction-reconstruction
+  metadata.
+
+* Clarified that predict.msma() projects and reconstructs X and Y
+  independently and does not predict Y from X.
+
+* Started the Version 5 development cycle.
+
+* Version 4.0 numerical behavior is retained as the initial
+  regression reference.
+
+* Initial development focuses on estimation-engine dispatch,
+  preprocessing infrastructure, structured control objects, and
+  unified diagnostic outputs.
+
+* Additional visualization and model-selection functionality will
+  be added after the internal infrastructure is stabilized.
+
 CHANGES IN VERSION 4.0
 
 NEW FEATURES

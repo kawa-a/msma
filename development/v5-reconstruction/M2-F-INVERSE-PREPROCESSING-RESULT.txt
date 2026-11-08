@@ -1,0 +1,46 @@
+msma Version 5 M2-F inverse preprocessing integration
+Date: 2026-10-31 17:55:37 +0900
+Branch: feature/v5-reconstruction-preprocessing
+Parent commit: bcc5b69877971b55aca8cfe43b7fc8bacfe9d41e
+
+M2-F unit tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 17
+
+Full regression test suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 735
+
+Implemented:
+* .invert_msma_preprocessor()
+* inverse preprocessing in s4pca_reconstruct()
+* Version 4-like reconstruction fallback
+* multiblock name preservation in forward transformation
+* multiblock name preservation in inverse transformation
+
+Confirmed behavior:
+* legacy centering-only round-trip
+* legacy centering and scaling round-trip
+* PLS Y-side round-trip
+* structured scaling TRUE round-trip
+* structured scaling FALSE identity
+* multiblock list structure and block names are preserved
+* zero and non-finite scale values are handled safely
+* Z remains unchanged
+* column-order validation is active
+* M2-E reconstruction baseline is preserved
+* Version 4-like saved fit objects remain supported
+
+Test results:
+* no failures
+* no errors
+* no skipped tests
+* no warnings
+
+No public function signature was changed.

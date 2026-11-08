@@ -1,0 +1,67 @@
+msma Version 5 M5-A supervision contract pre-change audit
+Date: 2026-11-06 22:18:16 +0900
+Branch: feature/v5-supervision-contract
+Commit: ef887217a20f0a8392d0e91b69ba415b7754da37
+
+Current dispatcher contract:
+* .resolve_msma_engine() uses multivariate Z or non-NULL con4spv to select the extended engine.
+* The dispatcher does not currently receive muX or muY.
+* Therefore inactive supervision may still change the selected engine.
+
+Current contrast contract:
+* .msma_onecomp_extended() creates equal weights when con4spv is NULL.
+* .msma_onecomp_extended() normalizes con4spv without first checking supervision activity.
+* An all-zero contrast can therefore produce division by zero.
+* Z %*% con4spv may be evaluated even when the corresponding supervision weight is zero.
+
+Structured PCA:
+* Structured PCA rejects non-NULL con4spv before inactive supervision is canonicalized.
+* Soft and exclusive structure methods must be preserved; only supervision inputs should be canonicalized.
+
+Scalar and multiblock contract:
+* muX and muY are documented and implemented as scalar weights.
+* In multiblock models, scalar muX applies to all X blocks and scalar muY applies to all Y blocks.
+* Block-specific supervision weights are outside the M5 scope.
+
+Planned common layer:
+* Add .canonicalize_msma_supervision() before dispatcher resolution.
+* Add .attach_msma_supervision() for fit metadata.
+* Pass canonicalized rather than requested Z and con4spv to all engines.
+* Remove duplicate contrast normalization from .msma_onecomp_extended().
+
+Backward compatibility:
+* muX = 0 with a nonzero con4spv will remain a successful call.
+* The contrast will be ignored when all corresponding supervision weights are zero.
+* A warning will disclose the ignored nonzero contrast.
+* Requested and used specifications will be stored separately.
+
+Planned tests:
+* muX = 0 contrast invariance
+* inactive nonzero contrast warning
+* active all-zero contrast error
+* contrast scale invariance
+* dimension validation
+* finite validation
+* supervision metadata
+* X-side and Y-side activity
+* scalar mu validation
+* dispatcher canonicalization
+* complete Version 5 regression suite
+
+
+Observed baseline behavior:
+* Engine without explicit contrast: extended
+* Engine with nonzero contrast: extended
+* X loadings identical in the audited example: TRUE
+* X scores identical in the audited example: TRUE
+* All-zero contrast produced an error: TRUE
+* Multivariate Z selected the extended engine even when muX = 0 and con4spv was omitted.
+* The numerical equality in this example does not establish the required canonical path.
+* The all-zero contrast failure confirms that inactive contrasts are currently normalized.
+
+Required post-change baseline:
+* muX = 0 and muY = 0 must produce Z_used = NULL and contrast_used = NULL.
+* Ordinary PCA must use the same canonical engine regardless of requested con4spv.
+* All-zero contrast must not be normalized when supervision is inactive.
+* Requested contrast values must remain available in fit$supervision metadata.
+M5-A status: AUDIT COMPLETE

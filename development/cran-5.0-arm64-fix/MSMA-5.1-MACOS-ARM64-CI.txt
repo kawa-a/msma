@@ -1,0 +1,17 @@
+msma 5.1 macOS arm64 GitHub Actions verification
+
+Date recorded: 2026-11-08 10:59:52 +09:00
+GitHub Actions run: 42435066837
+Commit: e6c45edbc9ac9ffadc38d55423dd8f14435dbf19
+Workflow: R-CMD-check
+Job: macos-latest (R release)
+Platform evidence: * using platform: aarch64-apple-darwin23
+Check status: Status: 1 ERROR, 1 WARNING, 3 NOTEs
+
+Validation:
+* The macOS runner used aarch64-apple-darwin23.
+* Package generation, build, installation, tests, and R CMD check succeeded.
+* This directly covers the architecture on which CRAN reported the
+  Version 5.0 prediction-regression test failures.
+
+Result: PASSED

@@ -1,0 +1,33 @@
+msma Version 5 M2-E reconstruction preprocessing integration
+Date: 2026-10-31 17:41:36 +0900
+Branch: feature/v5-reconstruction-preprocessing
+Parent commit: e12d388cb5c31ede7e7f71a83082c86cf2e75976
+
+M2-E unit tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 7
+
+Full regression test suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 717
+
+Integration behavior:
+* Version 5 s4pca fits use .apply_msma_preprocessor()
+* Version 4-like fits retain the legacy Xcenter/Xscale fallback
+* training reconstruction baseline is preserved
+* new-data reconstruction baseline is preserved
+* scaled = TRUE returns analysis-scale reconstruction
+* scaled = FALSE returns original-scale reconstruction
+* reordered named columns are rejected by the common validator
+
+Compatibility:
+* numerical reconstruction results are unchanged
+* legacy saved s4pca objects remain supported
+* original-scale inverse transformation remains unchanged
+* no failures, errors, warnings, or skips

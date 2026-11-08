@@ -1,0 +1,129 @@
+PCA fit reconstruction-related fields
+[1] "Xscale"     "wbX"        "sbX"        "nzwbX"      "preprocess"
+
+$Xscale
+List of 1
+ $ :List of 4
+  ..$ dim          : int [1:2] 40 6
+  ..$ dimnames     :List of 2
+  ..$ scaled:center: Named num [1:6] 0.056 0.1713 0.3025 -0.1607 -0.0874 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ scaled:scale : Named num [1:6] 0.79 1.043 0.892 0.941 1.049 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+
+$wbX
+List of 1
+ $ block1: num [1:6, 1:2] 0.634 -0.284 -0.208 0.484 -0.36 ...
+  ..- attr(*, "dimnames")=List of 2
+
+$sbX
+List of 1
+ $ block1: num [1:40, 1:2] -0.405 1.373 1.216 -2.384 -3.434 ...
+
+$nzwbX
+ int [1, 1:2] 6 6
+ - attr(*, "dimnames")=List of 2
+  ..$ : chr "block1"
+  ..$ : chr [1:2] "comp1" "comp2"
+
+$preprocess
+List of 5
+ $ engine : chr "legacy"
+ $ scaling: logi TRUE
+ $ X      :List of 5
+  ..$ centered      : logi TRUE
+  ..$ scaled        : logi TRUE
+  ..$ center        :List of 1
+  ..$ scale         :List of 1
+  ..$ missing_method: chr "replace_with_zero_after_scaling"
+ $ Y      :List of 5
+  ..$ centered      : logi FALSE
+  ..$ scaled        : logi FALSE
+  ..$ center        : NULL
+  ..$ scale         : NULL
+  ..$ missing_method: chr "not_used"
+ $ Z      :List of 5
+  ..$ method  : chr "legacy_scale_if_supplied"
+  ..$ centered: NULL
+  ..$ scaled  : NULL
+  ..$ center  : NULL
+  ..$ scale   : NULL
+ - attr(*, "class")= chr "msma_preprocess"
+
+
+PLS fit reconstruction-related fields
+[1] "Xscale"     "Yscale"     "wbX"        "sbX"        "wbY"        "sbY"        "nzwbX"      "nzwbY"      "preprocess"
+
+$Xscale
+List of 1
+ $ :List of 4
+  ..$ dim          : int [1:2] 40 6
+  ..$ dimnames     :List of 2
+  ..$ scaled:center: Named num [1:6] 0.056 0.1713 0.3025 -0.1607 -0.0874 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+  ..$ scaled:scale : Named num [1:6] 0.79 1.043 0.892 0.941 1.049 ...
+  .. ..- attr(*, "names")= chr [1:6] "x1" "x2" "x3" "x4" ...
+
+$Yscale
+List of 1
+ $ :List of 4
+  ..$ dim          : int [1:2] 40 4
+  ..$ dimnames     :List of 2
+  ..$ scaled:center: Named num [1:4] -0.1175 0.0582 0.4633 0.3666
+  .. ..- attr(*, "names")= chr [1:4] "y1" "y2" "y3" "y4"
+  ..$ scaled:scale : Named num [1:4] 1.24 1.02 1.1 1
+  .. ..- attr(*, "names")= chr [1:4] "y1" "y2" "y3" "y4"
+
+$wbX
+List of 1
+ $ block1: num [1:6, 1:2] 0.3282 0.0232 0.3108 0.637 0.1297 ...
+  ..- attr(*, "dimnames")=List of 2
+
+$sbX
+List of 1
+ $ block1: num [1:40, 1:2] 0.6 0.818 2.007 -1.897 -1.704 ...
+
+$wbY
+List of 1
+ $ block1: num [1:4, 1:2] -0.06507 0.19345 -0.97891 -0.00843 -0.12509 ...
+  ..- attr(*, "dimnames")=List of 2
+
+$sbY
+List of 1
+ $ block1: num [1:40, 1:2] -0.8002 0.0138 -0.2475 -0.1988 -0.2623 ...
+
+$nzwbX
+ int [1, 1:2] 6 6
+ - attr(*, "dimnames")=List of 2
+  ..$ : chr "block1"
+  ..$ : chr [1:2] "comp1" "comp2"
+
+$nzwbY
+ int [1, 1:2] 4 4
+ - attr(*, "dimnames")=List of 2
+  ..$ : chr "block1"
+  ..$ : chr [1:2] "comp1" "comp2"
+
+$preprocess
+List of 5
+ $ engine : chr "legacy"
+ $ scaling: logi TRUE
+ $ X      :List of 5
+  ..$ centered      : logi TRUE
+  ..$ scaled        : logi TRUE
+  ..$ center        :List of 1
+  ..$ scale         :List of 1
+  ..$ missing_method: chr "replace_with_zero_after_scaling"
+ $ Y      :List of 5
+  ..$ centered      : logi TRUE
+  ..$ scaled        : logi TRUE
+  ..$ center        :List of 1
+  ..$ scale         :List of 1
+  ..$ missing_method: chr "replace_with_zero_after_scaling"
+ $ Z      :List of 5
+  ..$ method  : chr "legacy_scale_if_supplied"
+  ..$ centered: NULL
+  ..$ scaled  : NULL
+  ..$ center  : NULL
+  ..$ scale   : NULL
+ - attr(*, "class")= chr "msma_preprocess"

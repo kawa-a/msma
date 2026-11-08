@@ -1,0 +1,78 @@
+msma Version 5 M3-A prediction path audit
+Date: 2026-10-31 19:02:20 +0900
+Branch: feature/v5-preprocessing-serialization
+Commit: 5fa227ac7508ba8262a796b1ae8976634b722f37
+
+Existing public prediction interface:
+* predict.msma(object, newX, newY = NULL, ...)
+* predict.s4pca() does not exist
+* s4pca_reconstruct() is the structured reconstruction API
+
+predict.msma semantics:
+* X and Y are projected independently
+* predict.msma does not predict Y from X
+* X contains low-rank X reconstructions
+* sbX contains X component scores
+* Y contains low-rank Y reconstructions
+* sbY contains Y component scores
+* PCA returns Y = NULL and sbY = NULL
+
+predictiv field:
+* numeric vector with length equal to comp
+* PCA audit value: 1, 1
+* PLS audit value: 1, 1
+* predictiv is not the output of predict.msma()
+
+PLS newY behavior:
+* newY is required in practice
+* if newY is NULL, newY is replaced with newX
+* different X/Y column counts cause an indirect center-length error
+
+Current prediction preprocessing:
+* fitted center is used
+* fitted scale is not used
+* prediction-batch scale is recomputed by scale()
+* missing transformed values are replaced with zero
+* behavior applies even when the fit used scaling = FALSE
+
+Batch-dependency audit:
+* score identical: FALSE
+* reconstruction identical: FALSE
+* score maximum absolute difference: 1.0388781305998411
+* reconstruction maximum absolute difference: 1.0962220324224672
+
+Single-row audit:
+* prediction succeeds
+* centered values are divided by their own absolute magnitudes
+* transformed values become exact -1 or 1 in the audited example
+* component scores remain finite
+* maximum difference from fitted preprocessing: 0.86571265779775142
+
+Scaling FALSE audit:
+* fitted preprocessing is centering only
+* current predict.msma additionally standardizes the prediction batch
+* preprocessing equal: FALSE
+* preprocessing maximum absolute difference: 0.67691625765525099
+* score equal: FALSE
+* score maximum absolute difference: 0.57636905482195
+
+Column-order audit:
+* reordered columns raise an error: FALSE
+* score equal after reordering: FALSE
+* reconstruction equal after reordering: FALSE
+
+Multiblock-name audit:
+* input is named: TRUE
+* reconstruction names preserved: FALSE
+* score names preserved: FALSE
+
+Existing direct predict.msma testthat tests:
+* 0
+
+M3-A conclusion:
+* current behavior must be fixture-tested before modification
+* fitted preprocessing would intentionally change numerical results
+* a compatibility policy is required before integration
+* no source implementation was changed
+
+M3-A status: COMPLETE

@@ -1,0 +1,31 @@
+{
+    if (!inherits(object, "s4pca")) 
+        stop("object must inherit from 's4pca'", call. = FALSE)
+    if (length(scaled) != 1L || !is.logical(scaled) || is.na(scaled)) {
+        stop("scaled must be TRUE or FALSE", call. = FALSE)
+    }
+    B <- object$reconstruction_loadings
+    if (is.null(B)) 
+        stop("object does not contain reconstruction coefficients", call. = FALSE)
+    if (is.null(newdata)) {
+        Xhat <- object$S %*% B
+    }
+    else {
+        X <- as.matrix(newdata)
+        if (!is.numeric(X) || ncol(X) != nrow(object$W) || any(!is.finite(X))) {
+            stop("newdata must be a finite numeric matrix with the fitted variables", call. = FALSE)
+        }
+        if (!is.null(object$preprocess) && inherits(object$preprocess, "msma_preprocess")) {
+            X <- .apply_msma_preprocessor(preprocess = object$preprocess, newdata = X, side = "X")
+        }
+        else if (isTRUE(object$scaling)) {
+            X <- sweep(sweep(X, 2, object$Xcenter, "-"), 2, object$Xscale, "/")
+        }
+        Xhat <- (X %*% object$W) %*% B
+    }
+    colnames(Xhat) <- rownames(object$W)
+    if (!scaled && isTRUE(object$scaling)) {
+        Xhat <- sweep(sweep(Xhat, 2, object$Xscale, "*"), 2, object$Xcenter, "+")
+    }
+    Xhat
+}

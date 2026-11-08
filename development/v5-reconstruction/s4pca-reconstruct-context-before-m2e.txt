@@ -1,0 +1,28 @@
+   1 | {
+   2 |     if (!inherits(object, "s4pca")) 
+   3 |         stop("object must inherit from 's4pca'", call. = FALSE)
+   4 |     if (length(scaled) != 1L || !is.logical(scaled) || is.na(scaled)) {
+   5 |         stop("scaled must be TRUE or FALSE", call. = FALSE)
+   6 |     }
+   7 |     B <- object$reconstruction_loadings
+   8 |     if (is.null(B)) 
+   9 |         stop("object does not contain reconstruction coefficients", call. = FALSE)
+  10 |     if (is.null(newdata)) {
+  11 |         Xhat <- object$S %*% B
+  12 |     }
+  13 |     else {
+  14 |         X <- as.matrix(newdata)
+  15 |         if (!is.numeric(X) || ncol(X) != nrow(object$W) || any(!is.finite(X))) {
+  16 |             stop("newdata must be a finite numeric matrix with the fitted variables", call. = FALSE)
+  17 |         }
+  18 |         if (isTRUE(object$scaling)) {
+  19 |             X <- sweep(sweep(X, 2, object$Xcenter, "-"), 2, object$Xscale, "/")
+  20 |         }
+  21 |         Xhat <- (X %*% object$W) %*% B
+  22 |     }
+  23 |     colnames(Xhat) <- rownames(object$W)
+  24 |     if (!scaled && isTRUE(object$scaling)) {
+  25 |         Xhat <- sweep(sweep(Xhat, 2, object$Xscale, "*"), 2, object$Xcenter, "+")
+  26 |     }
+  27 |     Xhat
+  28 | }

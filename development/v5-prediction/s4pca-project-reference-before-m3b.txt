@@ -1,0 +1,16 @@
+   1 | {
+   2 |     if (is.null(ncol(y))) {
+   3 |         c(x %*% cbind(y)/drop(crossprod(y)))
+   4 |     }
+   5 |     else {
+   6 |         crossy <- t(y) %*% y
+   7 |         i <- 0
+   8 |         judge <- TRUE
+   9 |         while (judge) {
+  10 |             invcrossy <- try(solve(crossy + 1e-18 * 10^i * diag(ncol(crossy))), silent = TRUE)
+  11 |             judge <- inherits(invcrossy, "try-error")
+  12 |             i <- i + 1
+  13 |         }
+  14 |         invcrossy %*% t(y) %*% x
+  15 |     }
+  16 | }

@@ -1,0 +1,44 @@
+msma Version 5 M3-G-A prediction documentation audit
+Date: 2026-11-01 10:09:16 +0900
+Branch: feature/v5-preprocessing-serialization
+Commit: 8870c715edbf6b371ec28600e277f14d1c94a044
+
+Current public prediction contract:
+* default preprocessing: legacy
+* fitted preprocessing: preprocessing = fitted
+* default fitted reconstruction: reconstruction = batch
+* fixed fitted reconstruction: reconstruction = fitted
+* default output scale: output_scale = analysis
+* original-variable output: output_scale = original
+* return names: X, sbX, Y, sbY
+* predict.msma does not predict Y from X
+* X and Y are scored and reconstructed independently
+* sbX and sbY remain on the analysis scale
+
+Documentation entry points:
+* src.r: TRUE
+* NEWS.md: FALSE
+* NEWS: TRUE
+* README.md: TRUE
+* DESCRIPTION: TRUE
+* NAMESPACE: FALSE
+* man/predict.msma.Rd: FALSE
+* vignettes: TRUE
+
+Rd files found: 0
+Vignette files found: 5
+Documentation inventory hits: 4402
+
+Required M3-G deliverables:
+* update predict.msma user documentation
+* document preprocessing, reconstruction, and output_scale
+* explain the X, sbX, Y, sbY return contract
+* state that predict.msma does not predict Y from X
+* add PCA and PLS examples
+* add multiblock example if supported by existing vignette structure
+* add Version 5 migration guidance
+* update NEWS
+* add documentation regression tests
+* run full tests and package check
+
+M3-G-A status: DOCUMENTATION PATHS IDENTIFIED; SOURCE UNCHANGED

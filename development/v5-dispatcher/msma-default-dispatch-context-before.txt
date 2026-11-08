@@ -1,0 +1,60 @@
+   1 | {
+   2 |     structure.method = match.arg(structure.method, c("none", "soft", "exclusive"))
+   3 |     use_s4pca = !identical(structure.method, "none") || (length(gammaX) == 1L && is.numeric(gammaX) && is.finite(gammaX) && 
+   4 |         gammaX > 0)
+   5 |     if (use_s4pca) {
+   6 |         if (identical(structure.method, "none")) 
+   7 |             structure.method = "soft"
+   8 |         if (!is.matrix(X) || is.list(X)) 
+   9 |             stop("Structured PCA requires X to be a single numeric matrix", call. = FALSE)
+  10 |         if (!is.null(Y)) 
+  11 |             stop("Structured PCA with Y is not supported in msma 4.0", call. = FALSE)
+  12 |         if (length(comp) != 1L) 
+  13 |             stop("Structured PCA requires a single component count", call. = FALSE)
+  14 |         if (!is.null(lambdaY) || !is.null(lambdaXsup) || !is.null(lambdaYsup)) 
+  15 |             stop("Y-side and super-level penalties are not supported for structured PCA", call. = FALSE)
+  16 |         if (!identical(type, "lasso")) 
+  17 |             stop("Structured PCA supports type = \"lasso\" only", call. = FALSE)
+  18 |         if (!is.null(inX) || !is.null(inY) || !is.null(inXsup) || !is.null(inYsup)) 
+  19 |             stop("Forced-in variables are not supported for structured PCA", call. = FALSE)
+  38 |         else if (!identical(scaling, FALSE)) 
+  39 |             stop("scaling must be TRUE or FALSE", call. = FALSE)
+  40 |         Z_input = if (!is.null(Z) && is.matrix(Z) && ncol(Z) == 1L) 
+  41 |             drop(Z)
+  42 |         else Z
+  43 |         fit_s4 = .s4pca_fit(X_input, Z_input, comp = comp, lambda = lambda_s4, gamma = gammaX, history_method = history.method, 
+  44 |             mu = muX, hard_exclusion = identical(structure.method, "exclusive"), niter = niterS4, seed = intseed, verbose = verbose)
+  45 |         fit_s4$call = match.call()
+  46 |         fit_s4$Xcenter = X_center
+  47 |         fit_s4$Xscale = X_scale
+  48 |         fit_s4$reconstruction_loadings = .s4pca_project_reference(X_input, fit_s4$S)
+  49 |         fit_s4$scaling = scaling
+  50 |         fit_s4$structure.method = structure.method
+  51 |         fit_s4$gammaX = gammaX
+  52 |         fit_s4$lambdaX = lambda_s4
+  53 |         fit_s4$muX = muX
+  54 |         fit_s4$dmode = "PCA"
+  55 |         class(fit_s4) = "s4pca"
+  56 |         return(fit_s4)
+  57 |     }
+  58 |     z_is_matrix = !is.null(Z) && !is.null(dim(Z))
+  59 |     z_ncol = if (z_is_matrix) 
+  60 |         ncol(as.matrix(Z))
+  61 |     else if (is.null(Z)) 
+  62 |         0L
+  63 |     else 1L
+  64 |     z_is_multivariate = z_ncol > 1L
+  65 |     use_extended = !identical(sprmethod, "PCA") || z_is_multivariate || !is.null(con4spv)
+  66 |     if (!use_extended) {
+  67 |         Z_legacy = if (z_is_matrix && z_ncol == 1L) 
+  68 |             drop(Z)
+  69 |         else Z
+  70 |         return(.msma_default_legacy(X = X, Y = Y, Z = Z_legacy, comp = comp, lambdaX = lambdaX, lambdaY = lambdaY, lambdaXsup = lambdaXsup, 
+  71 |             lambdaYsup = lambdaYsup, eta = eta, type = type, inX = inX, inY = inY, inXsup = inXsup, inYsup = inYsup, muX = muX, 
+  72 |             muY = muY, defmethod = defmethod, scaling = scaling, verbose = verbose, intseed = intseed, ceps = ceps, ...))
+  73 |     }
+  74 |     .msma_default_extended(X = X, Y = Y, Z = Z, comp = comp, lambdaX = lambdaX, lambdaY = lambdaY, lambdaXsup = lambdaXsup, 
+  75 |         lambdaYsup = lambdaYsup, eta = eta, type = type, inX = inX, inY = inY, inXsup = inXsup, inYsup = inYsup, muX = muX, 
+  76 |         muY = muY, defmethod = defmethod, scaling = scaling, verbose = verbose, intseed = intseed, ceps = ceps, sprmethod = sprmethod, 
+  77 |         nneg = nneg, con4spv = con4spv, ...)
+  78 | }

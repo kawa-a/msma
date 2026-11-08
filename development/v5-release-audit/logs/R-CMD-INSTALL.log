@@ -1,0 +1,21 @@
+Command: C:/R/R040502/bin/x64/R.exe CMD INSTALL --library C:\Users\kawaa\AppData\Local\Temp\RtmpcjvrVg/msma-m4c-release/library C:\Users\kawaa\AppData\Local\Temp\RtmpcjvrVg/msma-m4c-release/msma_5.0.0.9000.tar.gz
+Working directory: C:/Users/kawaa/AppData/Local/Temp/RtmpcjvrVg/msma-m4c-release
+Exit status: 0
+
+Warning: unknown option '--library'
+Warning: invalid package 'C:\Users\kawaa\AppData\Local\Temp\RtmpcjvrVg/msma-m4c-release/library'
+* installing to library 'C:/R/R040502/library'
+* installing *source* package 'msma' ...
+** this is package 'msma' version '5.0.0.9000'
+** using staged installation
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (msma)

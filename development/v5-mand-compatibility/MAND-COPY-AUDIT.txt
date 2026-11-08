@@ -1,0 +1,31 @@
+mand source-copy audit
+
+Date: 2026-11-07 11:04:41 +09:00
+Source: C:\Users\kawaa\佐賀大学生物統計学 Dropbox\川口淳\ADNI2\R4BrainImage\program\package\Ver3\mand
+Destination: D:\ADNI2\R4BrainImage\program\package\Ver3
+msma repository: D:\ADNI2\Multimodal\program\package\Ver5
+Package: mand
+Type: Package
+Title: Multivariate Analysis for Neuroimaging Data
+Version: 3.0
+Authors@R: person("Atsushi", "Kawaguchi", role = c("aut", "cre"), email = "kawa_a24@yahoo.co.jp")
+Description: Provides functions for multivariate analysis and visualization of neuroimaging data. The package contains the functions and example data used in the book 'Multivariate Analysis for Neuroimaging Data' by Kawaguchi (2021, ISBN:
+                           978-0367255329). It includes utilities for image visualization, image data matrix construction, basis reconstruction, multicomponent visualization, predictive modeling, simulation, and multiblock analysis. Version
+                           3.0 preserves the public interfaces used in the accompanying package vignettes.
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+Imports: stats, methods, graphics, grDevices, oro.nifti
+Suggests: testthat, knitr, rmarkdown, caret, mnormt, msma
+VignetteBuilder: knitr
+RoxygenNote: 7.3.3
+Depends: R (>= 3.5.0)
+Language: en-US
+
+Copy result:
+Robocopy exit code: 1
+Destination DESCRIPTION: present
+SHA256 comparison failures: 0
+mand commit: not-a-git-repository
+mand working-tree status:
+not-a-git-repository

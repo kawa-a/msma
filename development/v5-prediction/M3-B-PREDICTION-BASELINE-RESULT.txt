@@ -1,0 +1,45 @@
+msma Version 5 M3-B predict.msma baseline result
+Date: 2026-10-31 19:25:36 +0900
+Branch: feature/v5-preprocessing-serialization
+Parent commit: 0e4cace3cce9788fad7ecd1fe0c07cdd75da077f
+
+M3-B unit tests:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 30
+
+Full regression test suite:
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 779
+
+Fixture:
+* tests/testthat/reference/m3b-predict-msma-legacy-baseline.rds
+
+Fixed legacy prediction behaviors:
+* PCA with scaling TRUE
+* PCA with scaling FALSE
+* PLS with newX and newY
+* indirect center error when PLS newY is omitted
+* finite single-row prediction
+* prediction-batch dependency
+* reordered columns are accepted and alter results
+* named multiblock outputs lose block names
+* transformed missing values are replaced with zero
+* prediction is unchanged after saveRDS/readRDS
+
+Portability:
+* the PLS error contract is locale independent
+* the test requires a try-error containing center and scale.default
+
+Compatibility policy:
+* these tests describe legacy behavior
+* these tests do not endorse the statistical behavior
+* predict.msma implementation remains unchanged
+* future fitted preprocessing behavior requires a separate contract
+
+M3-B status: COMPLETE

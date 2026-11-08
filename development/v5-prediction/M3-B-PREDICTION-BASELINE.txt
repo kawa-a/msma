@@ -1,0 +1,21 @@
+msma Version 5 M3-B predict.msma legacy baseline
+Date: 2026-10-31 19:21:31 +0900 
+Branch: feature/v5-preprocessing-serialization 
+Commit: 0e4cace3cce9788fad7ecd1fe0c07cdd75da077f 
+
+Fixture file: tests/testthat/reference/m3b-predict-msma-legacy-baseline.rds 
+Test file: tests/testthat/test-v5-prediction-baseline.R 
+
+Stored scenarios:
+* PCA scaling TRUE
+* PCA scaling FALSE
+* PLS with newX and newY
+* PLS without newY error
+* single-row prediction
+* batch dependency
+* reordered columns accepted
+* multiblock names lost
+* transformed missing values replaced by zero
+* saveRDS/readRDS prediction identity
+
+No predict.msma implementation was changed.

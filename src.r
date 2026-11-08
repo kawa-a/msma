@@ -41,8 +41,13 @@
 #' @param inY a vector or list of numeric vectors specifying the variables in Y, always included in the model
 #' @param inXsup a (list of) numeric vector to specify the blocks of X which are always in the model. 
 #' @param inYsup a (list of) numeric vector to specify the blocks of Y which are always in the model. 
-#' @param muX a numeric scalar for the weight of X for the supervised case. 0 <= muX <= 1.
-#' @param muY a numeric scalar for the weight of Y for the supervised case. 0 <= muY <= 1. 
+#' @param muX a finite numeric scalar for X-side supervision.
+#' When \code{muX = 0}, X-side supervision is inactive. If no other
+#' supervision weight is positive, \code{Z} and \code{con4spv} do not
+#' affect estimation, and the model is fitted through the canonical
+#' unsupervised path.
+#' @param muY a finite numeric scalar for Y-side supervision.
+#' When \code{muY = 0}, Y-side supervision is inactive.
 #' @param defmethod a character representing the deflation method. This version has only the choice "canonical." 
 #' @param scaling a logical, indicating whether or not data scaling is performed. The default is TRUE.
 #' @param verbose information
@@ -51,7 +56,12 @@
 #' @param ceps a numeric scalar for the convergence condition of the algorithm
 #' @param sprmethod a character, 
 #' @param nneg a character 
-#' @param con4spv a numeric vector
+#' @param con4spv the signed supervision-contrast vector.
+#' This argument is used only when at least one corresponding
+#' supervision weight is positive. Active contrast vectors are
+#' normalized by their L1 norm before estimation. For one-column
+#' \code{Z}, omission uses the canonical contrast 1. For multicolumn
+#' \code{Z}, an explicit contrast is required when supervision is active.
 #' @param structure.method one of \"none\", \"soft\", or \"exclusive\".
 #' @param gammaX non-negative history-dependent penalty strength.
 #' @param history.method one of \"sumabs\", \"any\", or \"count\".
@@ -103,11 +113,646 @@
 #' 
 msma = function(X, ...) UseMethod("msma")
 
+# Backward-compatible dispatcher for msma 3.2.
+# The exact version 3.1 engine is used unless a version 3.2 feature is requested.
+
+# Resolve the Version 5 computational path without performing estimation.
+
+# Create Version 5 preprocessing metadata without transforming data.
+# Create Version 5 preprocessing metadata without transforming data.
+.new_msma_preprocess <- function (engine, scaling) 
+{
+    structure(list(engine = engine, scaling = scaling, X = list(centered = NULL, scaled = NULL, center = NULL, scale = NULL, 
+        missing_method = NULL), Y = list(centered = NULL, scaled = NULL, center = NULL, scale = NULL, missing_method = NULL), 
+        Z = list(method = "none", centered = NULL, scaled = NULL, center = NULL, scale = NULL)), class = "msma_preprocess")
+}
+
+# Extract centering and scaling metadata created by base::scale().
+.extract_msma_scale_metadata <- function (scale_metadata) 
+{
+    if (is.null(scale_metadata)) {
+        return(list(center = NULL, scale = NULL, centered = FALSE, scaled = FALSE))
+    }
+    center <- scale_metadata[["scaled:center"]]
+    scale <- scale_metadata[["scaled:scale"]]
+    list(center = center, scale = scale, centered = !is.null(center), scaled = !is.null(scale))
+}
+
+# Build common preprocessing metadata from an existing fitted object.
+.build_msma_preprocess <- function (fit, engine, scaling) 
+{
+    preprocess <- .new_msma_preprocess(engine = engine, scaling = scaling)
+    if (engine %in% c("soft", "exclusive")) {
+        preprocess$X$center <- fit$Xcenter
+        preprocess$X$scale <- fit$Xscale
+        preprocess$X$centered <- isTRUE(scaling)
+        preprocess$X$scaled <- isTRUE(scaling)
+        preprocess$X$missing_method <- "none"
+        preprocess$Y$centered <- FALSE
+        preprocess$Y$scaled <- FALSE
+        preprocess$Y$missing_method <- "not_used"
+        preprocess$Z$method <- "unchanged"
+        preprocess$Z$centered <- FALSE
+        preprocess$Z$scaled <- FALSE
+        return(preprocess)
+    }
+    if (identical(engine, "legacy")) {
+        x_metadata <- lapply(fit$Xscale, .extract_msma_scale_metadata)
+        preprocess$X$center <- lapply(x_metadata, `[[`, "center")
+        preprocess$X$scale <- lapply(x_metadata, `[[`, "scale")
+        preprocess$X$centered <- vapply(x_metadata, `[[`, logical(1), "centered")
+        preprocess$X$scaled <- vapply(x_metadata, `[[`, logical(1), "scaled")
+        preprocess$X$missing_method <- "replace_with_zero_after_scaling"
+        if (!is.null(fit$Yscale)) {
+            y_metadata <- lapply(fit$Yscale, .extract_msma_scale_metadata)
+            preprocess$Y$center <- lapply(y_metadata, `[[`, "center")
+            preprocess$Y$scale <- lapply(y_metadata, `[[`, "scale")
+            preprocess$Y$centered <- vapply(y_metadata, `[[`, logical(1), "centered")
+            preprocess$Y$scaled <- vapply(y_metadata, `[[`, logical(1), "scaled")
+            preprocess$Y$missing_method <- "replace_with_zero_after_scaling"
+        }
+        else {
+            preprocess$Y$centered <- FALSE
+            preprocess$Y$scaled <- FALSE
+            preprocess$Y$missing_method <- "not_used"
+        }
+        preprocess$Z$method <- "legacy_scale_if_supplied"
+        return(preprocess)
+    }
+    if (identical(engine, "extended")) {
+        if (!is.null(fit$Xscale)) {
+            x_metadata <- lapply(fit$Xscale, .extract_msma_scale_metadata)
+            preprocess$X$center <- lapply(x_metadata, `[[`, "center")
+            preprocess$X$scale <- lapply(x_metadata, `[[`, "scale")
+            preprocess$X$centered <- vapply(x_metadata, `[[`, logical(1), "centered")
+            preprocess$X$scaled <- vapply(x_metadata, `[[`, logical(1), "scaled")
+        }
+        if (!is.null(fit$Yscale)) {
+            y_metadata <- lapply(fit$Yscale, .extract_msma_scale_metadata)
+            preprocess$Y$center <- lapply(y_metadata, `[[`, "center")
+            preprocess$Y$scale <- lapply(y_metadata, `[[`, "scale")
+            preprocess$Y$centered <- vapply(y_metadata, `[[`, logical(1), "centered")
+            preprocess$Y$scaled <- vapply(y_metadata, `[[`, logical(1), "scaled")
+        }
+        preprocess$X$missing_method <- "engine_specific"
+        preprocess$Y$missing_method <- "engine_specific"
+        preprocess$Z$method <- "engine_specific"
+        return(preprocess)
+    }
+    stop("Unknown preprocessing engine.", call. = FALSE)
+}
+
+
+# Attach preprocessing metadata without changing existing fit elements.
+
+# Build training-derived coefficients for batch-independent reconstruction.
+.build_msma_prediction_reconstruction <- function(fit) {
+  build_side <- function(data, scores) {
+    if (is.null(data) || is.null(scores)) return(NULL)
+    data_blocks <- if (is.list(data)) data else list(data)
+    score_blocks <- if (is.list(scores)) scores else list(scores)
+    if (length(data_blocks) != length(score_blocks)) {
+      stop("Training data and score block counts differ.", call. = FALSE)
+    }
+    coefficients <- lapply(seq_along(data_blocks), function(i) {
+      coefficient <- project(data_blocks[[i]], score_blocks[[i]])
+      if (!is.matrix(coefficient) || any(!is.finite(coefficient))) {
+        stop("Fitted reconstruction coefficients must be finite matrices.", call. = FALSE)
+      }
+      coefficient
+    })
+    names(coefficients) <- names(data_blocks)
+    coefficients
+  }
+
+  x_coefficients <- build_side(fit$X, fit$sbX)
+  y_coefficients <- if (identical(fit$dmode, "PLS")) {
+    build_side(fit$Y, fit$sbY)
+  } else {
+    NULL
+  }
+
+  if (is.null(x_coefficients)) return(NULL)
+
+  structure(
+    list(
+      X = x_coefficients,
+      Y = y_coefficients,
+      scale = "analysis",
+      method = "training-score-projection",
+      version = 1L
+    ),
+    class = "msma_prediction_reconstruction"
+  )
+}
+
+.attach_msma_preprocess <- function(
+  fit,
+  engine,
+  scaling
+) {
+  fit$preprocess <- .build_msma_preprocess(
+    fit = fit,
+    engine = engine,
+    scaling = scaling
+  )
+
+  fit$prediction_reconstruction <-
+    .build_msma_prediction_reconstruction(fit)
+
+  fit
+}
+
+
+# Validate preprocessing metadata and new data before transformation.
+.validate_msma_preprocessor <- function(
+  preprocess,
+  newdata,
+  side = c("X", "Y", "Z")
+) {
+  side <- match.arg(side)
+
+  if (!inherits(preprocess, "msma_preprocess")) {
+    stop("`preprocess` must inherit from \"msma_preprocess\".", call. = FALSE)
+  }
+
+  side_metadata <- preprocess[[side]]
+  if (is.null(side_metadata)) {
+    stop(paste0("No preprocessing metadata are available for side ", side, "."), call. = FALSE)
+  }
+
+  if (identical(side, "Z")) return(invisible(TRUE))
+
+  blocks <- if (is.list(newdata)) newdata else list(newdata)
+  if (length(blocks) == 0L) stop("`newdata` must contain at least one data block.", call. = FALSE)
+
+  valid_blocks <- vapply(blocks, function(block) is.matrix(block) && is.numeric(block), logical(1))
+  if (!all(valid_blocks)) {
+    stop("`newdata` must be a numeric matrix or a list of numeric matrices.", call. = FALSE)
+  }
+
+  centers <- side_metadata$center
+  scales <- side_metadata$scale
+  if (is.null(centers) && is.null(scales)) return(invisible(TRUE))
+
+  centers <- if (is.list(centers)) centers else list(centers)
+  scales <- if (is.list(scales)) scales else list(scales)
+  expected_blocks <- max(length(centers), length(scales))
+
+  if (length(blocks) != expected_blocks) {
+    stop(paste0("`newdata` has ", length(blocks), " block(s), but preprocessing metadata require ", expected_blocks, " block(s)."), call. = FALSE)
+  }
+
+  for (block_index in seq_along(blocks)) {
+    block <- blocks[[block_index]]
+    center <- centers[[block_index]]
+    scale <- scales[[block_index]]
+
+    expected_columns <- if (!is.null(center)) length(center) else if (!is.null(scale)) length(scale) else ncol(block)
+    if (ncol(block) != expected_columns) {
+      stop(paste0("Block ", block_index, " has ", ncol(block), " column(s), but preprocessing metadata require ", expected_columns, "."), call. = FALSE)
+    }
+
+    expected_names <- if (!is.null(center)) names(center) else if (!is.null(scale)) names(scale) else NULL
+    observed_names <- colnames(block)
+    if (!is.null(expected_names) && !is.null(observed_names) && !identical(observed_names, expected_names)) {
+      stop(paste0("Column names or column order do not match the fitted preprocessing metadata for block ", block_index, "."), call. = FALSE)
+    }
+  }
+
+  invisible(TRUE)
+}
+
+# Apply fitted preprocessing metadata to new data.
+.apply_msma_preprocessor <- function(
+  preprocess,
+  newdata,
+  side = c("X", "Y", "Z")
+) {
+  side <- match.arg(side)
+  .validate_msma_preprocessor(preprocess = preprocess, newdata = newdata, side = side)
+
+  if (identical(side, "Z")) return(newdata)
+
+  side_metadata <- preprocess[[side]]
+  input_was_list <- is.list(newdata)
+  blocks <- if (input_was_list) newdata else list(newdata)
+
+  centers <- side_metadata$center
+  scales <- side_metadata$scale
+  centers <- if (is.null(centers)) rep(list(NULL), length(blocks)) else if (is.list(centers)) centers else list(centers)
+  scales <- if (is.null(scales)) rep(list(NULL), length(blocks)) else if (is.list(scales)) scales else list(scales)
+
+  transformed <- lapply(seq_along(blocks), function(block_index) {
+    result <- blocks[[block_index]]
+    center <- centers[[block_index]]
+    scale <- scales[[block_index]]
+
+    if (!is.null(center)) result <- sweep(result, 2, center, "-")
+    if (!is.null(scale)) {
+      safe_scale <- scale
+      safe_scale[!is.finite(safe_scale) | safe_scale == 0] <- 1
+      result <- sweep(result, 2, safe_scale, "/")
+    }
+    result
+  })
+
+
+  if (input_was_list) {
+    names(transformed) <- names(blocks)
+  }
+
+  if (input_was_list) transformed else transformed[[1]]
+}
+
+
+# Invert fitted preprocessing metadata and return data to the original scale.
+.invert_msma_preprocessor <- function(
+  preprocess,
+  data,
+  side = c("X", "Y", "Z")
+) {
+  side <- match.arg(side)
+  .validate_msma_preprocessor(
+    preprocess = preprocess,
+    newdata = data,
+    side = side
+  )
+
+  if (identical(side, "Z")) return(data)
+
+  side_metadata <- preprocess[[side]]
+  input_was_list <- is.list(data)
+  blocks <- if (input_was_list) data else list(data)
+
+  centers <- side_metadata$center
+  scales <- side_metadata$scale
+  centers <- if (is.null(centers)) rep(list(NULL), length(blocks)) else if (is.list(centers)) centers else list(centers)
+  scales <- if (is.null(scales)) rep(list(NULL), length(blocks)) else if (is.list(scales)) scales else list(scales)
+
+  inverted <- lapply(seq_along(blocks), function(block_index) {
+    result <- blocks[[block_index]]
+    center <- centers[[block_index]]
+    scale <- scales[[block_index]]
+
+    if (!is.null(scale)) {
+      safe_scale <- scale
+      safe_scale[!is.finite(safe_scale) | safe_scale == 0] <- 1
+      result <- sweep(result, 2, safe_scale, "*")
+    }
+    if (!is.null(center)) result <- sweep(result, 2, center, "+")
+    result
+  })
+
+
+  if (input_was_list) {
+    names(inverted) <- names(blocks)
+  }
+
+  if (input_was_list) inverted else inverted[[1]]
+}
+
+.canonicalize_msma_supervision <- function(
+    Z = NULL,
+    muX = 0,
+    muY = 0,
+    con4spv = NULL,
+    dmode = c("PCA", "PLS"),
+    warn_ignored = TRUE
+) {
+  dmode <- match.arg(dmode)
+  
+  validate_mu <- function(mu, name) {
+    if (
+      !is.numeric(mu) ||
+      length(mu) != 1L ||
+      !is.finite(mu)
+    ) {
+      stop(
+        paste0(
+          "'",
+          name,
+          "' must be a finite numeric scalar."
+        ),
+        call. = FALSE
+      )
+    }
+    
+    if (mu < 0) {
+      stop(
+        paste0(
+          "'",
+          name,
+          "' must be non-negative."
+        ),
+        call. = FALSE
+      )
+    }
+    
+    mu
+  }
+  
+  muX_requested <- validate_mu(
+    muX,
+    "muX"
+  )
+  
+  muY_requested <- validate_mu(
+    muY,
+    "muY"
+  )
+  
+  if (muX_requested + muY_requested > 1) {
+    stop(
+      "'muX + muY' must not exceed 1.",
+      call. = FALSE
+    )
+  }
+  
+  active_X <- muX_requested > 0
+  
+  active_Y <- (
+    identical(dmode, "PLS") &&
+      muY_requested > 0
+  )
+  
+  active_any <- active_X || active_Y
+  contrast_requested <- con4spv
+  
+  if (!active_any) {
+    contrast_is_nonzero <- (
+      !is.null(contrast_requested) &&
+        is.numeric(contrast_requested) &&
+        any(
+          is.finite(contrast_requested) &
+            contrast_requested != 0
+        )
+    )
+    
+    if (
+      isTRUE(warn_ignored) &&
+      contrast_is_nonzero
+    ) {
+      warning(
+        paste0(
+          "'con4spv' is ignored because all corresponding ",
+          "supervision weights are zero; the supervision ",
+          "term is inactive."
+        ),
+        call. = FALSE
+      )
+    }
+    
+    reason <- if (
+      identical(dmode, "PCA") &&
+      identical(muX_requested, 0)
+    ) {
+      "muX_zero"
+    } else {
+      "supervision_weights_zero"
+    }
+    
+    metadata <- structure(
+      list(
+        mu_requested = list(
+          X = muX_requested,
+          Y = if (identical(dmode, "PLS")) {
+            muY_requested
+          } else {
+            NULL
+          }
+        ),
+        contrast_requested = contrast_requested,
+        mu_used = list(
+          X = 0,
+          Y = if (identical(dmode, "PLS")) {
+            0
+          } else {
+            NULL
+          }
+        ),
+        contrast_used = NULL,
+        active = list(
+          X = FALSE,
+          Y = FALSE
+        ),
+        canonicalized = TRUE,
+        reason = reason
+      ),
+      class = "msma_supervision"
+    )
+    
+    return(
+      list(
+        Z = NULL,
+        muX = 0,
+        muY = 0,
+        con4spv = NULL,
+        dispatcher_Z = NULL,
+        dispatcher_con4spv = NULL,
+        metadata = metadata
+      )
+    )
+  }
+  
+  if (is.null(Z)) {
+    stop(
+      "'Z' must be supplied when a supervision weight is positive.",
+      call. = FALSE
+    )
+  }
+  
+  Z_matrix <- as.matrix(Z)
+  
+  if (
+    !is.numeric(Z_matrix) ||
+    any(!is.finite(Z_matrix))
+  ) {
+    stop(
+      "'Z' must contain only finite numeric values.",
+      call. = FALSE
+    )
+  }
+  
+  if (is.null(contrast_requested)) {
+    if (ncol(Z_matrix) == 1L) {
+      contrast_used <- 1
+      contrast_reason <- "single_column_canonical_contrast"
+    } else {
+      stop(
+        paste0(
+          "'con4spv' must be supplied when a supervision ",
+          "weight is positive and 'Z' has multiple columns."
+        ),
+        call. = FALSE
+      )
+    }
+  } else {
+    if (
+      !is.numeric(contrast_requested) ||
+      length(contrast_requested) != ncol(Z_matrix)
+    ) {
+      stop(
+        "'con4spv' must have length equal to 'ncol(Z)'.",
+        call. = FALSE
+      )
+    }
+    
+    if (any(!is.finite(contrast_requested))) {
+      stop(
+        "'con4spv' must contain only finite values.",
+        call. = FALSE
+      )
+    }
+    
+    contrast_norm <- sum(
+      abs(contrast_requested)
+    )
+    
+    if (contrast_norm <= 0) {
+      stop(
+        paste0(
+          "'con4spv' must contain at least one nonzero ",
+          "coefficient when a supervision weight is positive."
+        ),
+        call. = FALSE
+      )
+    }
+    
+    contrast_used <- (
+      contrast_requested /
+        contrast_norm
+    )
+    
+    contrast_reason <- "active_l1_normalized"
+  }
+  
+  if (ncol(Z_matrix) == 1L) {
+    dispatcher_Z <- drop(Z_matrix)
+    dispatcher_con4spv <- NULL
+  } else {
+    dispatcher_Z <- Z_matrix
+    dispatcher_con4spv <- contrast_used
+  }
+  
+  metadata <- structure(
+    list(
+      mu_requested = list(
+        X = muX_requested,
+        Y = if (identical(dmode, "PLS")) {
+          muY_requested
+        } else {
+          NULL
+        }
+      ),
+      contrast_requested = contrast_requested,
+      mu_used = list(
+        X = muX_requested,
+        Y = if (identical(dmode, "PLS")) {
+          muY_requested
+        } else {
+          NULL
+        }
+      ),
+      contrast_used = contrast_used,
+      active = list(
+        X = active_X,
+        Y = active_Y
+      ),
+      canonicalized = !identical(
+        contrast_requested,
+        contrast_used
+      ),
+      reason = contrast_reason
+    ),
+    class = "msma_supervision"
+  )
+  
+  list(
+    Z = Z_matrix,
+    muX = muX_requested,
+    muY = muY_requested,
+    con4spv = contrast_used,
+    dispatcher_Z = dispatcher_Z,
+    dispatcher_con4spv = dispatcher_con4spv,
+    metadata = metadata
+  )
+}
+
+
+.attach_msma_supervision <- function(
+    fit,
+    supervision
+) {
+  fit$supervision <- supervision$metadata
+  fit
+}
+
+.resolve_msma_engine <- function(
+  structure.method = "none",
+  gammaX = 0,
+  sprmethod = "PCA",
+  Z = NULL,
+  con4spv = NULL
+) {
+  structure.method <- match.arg(
+    structure.method,
+    choices = c(
+      "none",
+      "soft",
+      "exclusive"
+    )
+  )
+
+  gamma_activates_soft <- (
+    length(gammaX) == 1L &&
+      is.numeric(gammaX) &&
+      is.finite(gammaX) &&
+      gammaX > 0
+  )
+
+  if (identical(structure.method, "exclusive")) {
+    return("exclusive")
+  }
+
+  if (
+    identical(structure.method, "soft") ||
+      gamma_activates_soft
+  ) {
+    return("soft")
+  }
+
+  z_is_matrix <- (
+    !is.null(Z) &&
+      !is.null(dim(Z))
+  )
+
+  z_ncol <- if (z_is_matrix) {
+    ncol(as.matrix(Z))
+  } else if (is.null(Z)) {
+    0L
+  } else {
+    1L
+  }
+
+  z_is_multivariate <- z_ncol > 1L
+
+  use_extended <- (
+    !identical(sprmethod, "PCA") ||
+      z_is_multivariate ||
+      !is.null(con4spv)
+  )
+
+  if (use_extended) {
+    return("extended")
+  }
+
+  "legacy"
+}
+
 #' @rdname msma
 #' @method msma default
 #' @export
-# Backward-compatible dispatcher for msma 3.2.
-# The exact version 3.1 engine is used unless a version 3.2 feature is requested.
 msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
   lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL,
   inXsup=NULL, inYsup=NULL, muX=0, muY=0, defmethod="canonical",
@@ -117,18 +762,54 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
   structure.method=c("none", "soft", "exclusive")[1], gammaX=0,
   history.method=c("sumabs", "any", "count")[1], niterS4=30, ...)
 {
-  structure.method = match.arg(structure.method, c("none", "soft", "exclusive"))
-  use_s4pca = !identical(structure.method, "none") ||
-    (length(gammaX)==1L && is.numeric(gammaX) && is.finite(gammaX) && gammaX > 0)
+  dmode_requested <- if (is.null(Y)) {
+    "PCA"
+  } else {
+    "PLS"
+  }
+
+  supervision <- .canonicalize_msma_supervision(
+    Z = Z,
+    muX = muX,
+    muY = muY,
+    con4spv = con4spv,
+    dmode = dmode_requested
+  )
+
+  Z <- supervision$Z
+  muX <- supervision$muX
+  muY <- supervision$muY
+  con4spv <- supervision$con4spv
+
+  engine <- .resolve_msma_engine(
+    structure.method = structure.method,
+    gammaX = gammaX,
+    sprmethod = sprmethod,
+    Z = supervision$dispatcher_Z,
+    con4spv = supervision$dispatcher_con4spv
+  )
+
+  use_s4pca <- engine %in% c("soft", "exclusive")
+
   if(use_s4pca){
-    if(identical(structure.method, "none")) structure.method = "soft"
+    structure.method <- engine
     if(!is.matrix(X) || is.list(X)) stop("Structured PCA requires X to be a single numeric matrix", call.=FALSE)
     if(!is.null(Y)) stop("Structured PCA with Y is not supported in msma 4.0", call.=FALSE)
     if(length(comp)!=1L) stop("Structured PCA requires a single component count", call.=FALSE)
     if(!is.null(lambdaY) || !is.null(lambdaXsup) || !is.null(lambdaYsup)) stop("Y-side and super-level penalties are not supported for structured PCA", call.=FALSE)
     if(!identical(type,"lasso")) stop("Structured PCA supports type = \"lasso\" only", call.=FALSE)
     if(!is.null(inX) || !is.null(inY) || !is.null(inXsup) || !is.null(inYsup)) stop("Forced-in variables are not supported for structured PCA", call.=FALSE)
-    if(!identical(sprmethod,"PCA") || !is.null(con4spv)) stop("Structured PCA cannot be combined with NMF, sNMF, CMP, or con4spv", call.=FALSE)
+    if (
+      !identical(
+        sprmethod,
+        "PCA"
+      )
+    ) {
+      stop(
+        "Structured PCA cannot be combined with NMF, sNMF, or CMP.",
+        call. = FALSE
+      )
+    }
     if(!is.null(Z) && !is.null(dim(Z)) && ncol(as.matrix(Z))>1L) stop("Structured PCA accepts only vector or one-column Z", call.=FALSE)
     lambda_s4 = if(is.null(lambdaX)) 0 else lambdaX
     if(length(lambda_s4)!=1L) stop("Structured PCA requires scalar lambdaX", call.=FALSE)
@@ -138,7 +819,13 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
       X_scale[!is.finite(X_scale) | X_scale==0]=1
       X_input=sweep(sweep(X_input,2,X_center,"-"),2,X_scale,"/")
     } else if(!identical(scaling,FALSE)) stop("scaling must be TRUE or FALSE", call.=FALSE)
-    Z_input=if(!is.null(Z) && is.matrix(Z) && ncol(Z)==1L) drop(Z) else Z
+    Z_input <- if (is.null(Z)) {
+      NULL
+    } else {
+      drop(
+        Z %*% con4spv
+      )
+    }
     fit_s4=.s4pca_fit(X_input,Z_input,comp=comp,lambda=lambda_s4,gamma=gammaX,
       history_method=history.method,mu=muX,hard_exclusion=identical(structure.method,"exclusive"),
       niter=niterS4,seed=intseed,verbose=verbose)
@@ -147,27 +834,49 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
     fit_s4$scaling=scaling; fit_s4$structure.method=structure.method
     fit_s4$gammaX=gammaX; fit_s4$lambdaX=lambda_s4; fit_s4$muX=muX; fit_s4$dmode="PCA"
     class(fit_s4)="s4pca"
+
+    fit_s4 <- .attach_msma_supervision(
+      fit = fit_s4,
+      supervision = supervision
+    )
+
+    fit_s4 <- .attach_msma_preprocess(
+      fit = fit_s4,
+      engine = engine,
+      scaling = scaling
+    )
+
     return(fit_s4)
   }
-  z_is_matrix = !is.null(Z) && !is.null(dim(Z))
-  z_ncol = if(z_is_matrix) ncol(as.matrix(Z)) else if(is.null(Z)) 0L else 1L
-  z_is_multivariate = z_ncol > 1L
-  use_extended = !identical(sprmethod, "PCA") || z_is_multivariate || !is.null(con4spv)
-
-  if(!use_extended){
+  if(identical(engine, "legacy")){
+    z_is_matrix = !is.null(Z) && !is.null(dim(Z))
+    z_ncol = if(z_is_matrix) ncol(as.matrix(Z)) else if(is.null(Z)) 0L else 1L
     # A one-column matrix is a version 3.2 input convenience, but its
     # numerical behavior and returned object must agree with vector-valued Z.
-    Z_legacy = if(z_is_matrix && z_ncol == 1L) drop(Z) else Z
-    return(.msma_default_legacy(
+    Z_legacy <- supervision$dispatcher_Z
+    fit <- .msma_default_legacy(
       X=X, Y=Y, Z=Z_legacy, comp=comp, lambdaX=lambdaX, lambdaY=lambdaY,
       lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta=eta, type=type,
       inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX=muX, muY=muY,
       defmethod=defmethod, scaling=scaling, verbose=verbose,
       intseed=intseed, ceps=ceps, ...
-    ))
+    )
+
+    fit <- .attach_msma_supervision(
+      fit = fit,
+      supervision = supervision
+    )
+
+    fit <- .attach_msma_preprocess(
+      fit = fit,
+      engine = engine,
+      scaling = scaling
+    )
+
+    return(fit)
   }
 
-  .msma_default_extended(
+  fit <- .msma_default_extended(
     X=X, Y=Y, Z=Z, comp=comp, lambdaX=lambdaX, lambdaY=lambdaY,
     lambdaXsup=lambdaXsup, lambdaYsup=lambdaYsup, eta=eta, type=type,
     inX=inX, inY=inY, inXsup=inXsup, inYsup=inYsup, muX=muX, muY=muY,
@@ -175,6 +884,19 @@ msma.default = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL,
     intseed=intseed, ceps=ceps, sprmethod=sprmethod, nneg=nneg,
     con4spv=con4spv, ...
   )
+
+    fit <- .attach_msma_supervision(
+      fit = fit,
+      supervision = supervision
+    )
+
+  fit <- .attach_msma_preprocess(
+    fit = fit,
+    engine = engine,
+    scaling = scaling
+  )
+
+  fit
 }
 
 .msma_default_legacy = function(X, Y=NULL, Z=NULL, comp=2, lambdaX=NULL, lambdaY=NULL, lambdaXsup=NULL, lambdaYsup=NULL, eta=1, type="lasso", inX=NULL, inY=NULL, inXsup=NULL, inYsup=NULL, muX = 0, muY = 0, defmethod = "canonical", scaling = TRUE, verbose=FALSE, intseed=1, ceps=0.0001, ...)
@@ -991,77 +1713,245 @@ barplot(tmpvar[,i], width1, main=paste("Component", axes[i], main1), ylab=paste(
 }
 }
 
-#' Prediction
+.predict_msma_legacy <- function(object, newX, newY = NULL) {
+  if (missing(newX)) stop("newX should be specified")
+  if (is.null(newY) | (object$dmode == "PCA")) newY <- newX
+  if (!inherits(newX, "list")) newX <- list(newX)
+  if (!inherits(newY, "list")) newY <- list(newY)
+  if (!inherits(newX, "list")) stop("newX should be a list")
+  if (!inherits(newY, "list")) stop("newY should be a list")
+  Ynb <- length(newY)
+  Xnb <- length(newX)
+  newX <- lapply(seq_along(newX), function(x) {
+    scale(newX[[x]], center = object$Xscale[[x]]$`scaled:center`)
+  })
+  newX <- lapply(newX, function(x) apply(x, 2, function(x2) {
+    x2[is.na(x2)] <- 0
+    x2
+  }))
+  sbX <- lapply(seq_len(Xnb), function(x) newX[[x]] %*% object$wbX[[x]])
+  predX <- lapply(seq_len(Xnb), function(x) {
+    cbind(sbX[[x]]) %*% project(newX[[x]], sbX[[x]])
+  })
+  if (!(is.null(newY) | object$dmode == "PCA")) {
+    newY <- lapply(seq_along(newY), function(x) {
+      scale(newY[[x]], center = object$Yscale[[x]]$`scaled:center`)
+    })
+    newY <- lapply(newY, function(y) apply(y, 2, function(y2) {
+      y2[is.na(y2)] <- 0
+      y2
+    }))
+    sbY <- lapply(seq_len(Ynb), function(x) newY[[x]] %*% object$wbY[[x]])
+    predY <- lapply(seq_len(Ynb), function(x) {
+      cbind(sbY[[x]]) %*% project(newY[[x]], sbY[[x]])
+    })
+  } else {
+    predY <- sbY <- NULL
+  }
+  list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
+}
+
+.predict_msma_replace_missing <- function(blocks) {
+  lapply(blocks, function(block) {
+    block[is.na(block)] <- 0
+    block
+  })
+}
+
+.predict_msma_fitted <- function(
+  object,
+  newX,
+  newY = NULL,
+  reconstruction = c("batch", "fitted"),
+  output_scale = c("analysis", "original")
+) {
+  reconstruction <- match.arg(reconstruction)
+  output_scale <- match.arg(output_scale)
+  if (missing(newX)) stop("newX should be specified", call. = FALSE)
+  if (is.null(object$preprocess) ||
+      !inherits(object$preprocess, "msma_preprocess")) {
+    stop(
+      "Fitted preprocessing requires a Version 5 fit with `preprocess` metadata.",
+      call. = FALSE
+    )
+  }
+  if (identical(object$dmode, "PLS") && is.null(newY)) {
+    stop("`newY` must be supplied for fitted PLS prediction.", call. = FALSE)
+  }
+  if (identical(reconstruction, "fitted") &&
+      (is.null(object$prediction_reconstruction) ||
+       !inherits(object$prediction_reconstruction, "msma_prediction_reconstruction"))) {
+    stop(
+      "Fitted reconstruction requires Version 5 reconstruction metadata.",
+      call. = FALSE
+    )
+  }
+
+  x_blocks <- if (is.list(newX)) newX else list(newX)
+  x_blocks <- .apply_msma_preprocessor(
+    preprocess = object$preprocess,
+    newdata = x_blocks,
+    side = "X"
+  )
+  x_blocks <- .predict_msma_replace_missing(x_blocks)
+  sbX <- lapply(seq_along(x_blocks), function(i) {
+    x_blocks[[i]] %*% object$wbX[[i]]
+  })
+  predX <- lapply(seq_along(x_blocks), function(i) {
+    if (identical(reconstruction, "fitted")) {
+      sbX[[i]] %*% object$prediction_reconstruction$X[[i]]
+    } else {
+      cbind(sbX[[i]]) %*% project(x_blocks[[i]], sbX[[i]])
+    }
+  })
+  names(sbX) <- names(x_blocks)
+  names(predX) <- names(x_blocks)
+
+  if (identical(object$dmode, "PCA")) {
+    predY <- sbY <- NULL
+  } else {
+    y_blocks <- if (is.list(newY)) newY else list(newY)
+    y_blocks <- .apply_msma_preprocessor(
+      preprocess = object$preprocess,
+      newdata = y_blocks,
+      side = "Y"
+    )
+    y_blocks <- .predict_msma_replace_missing(y_blocks)
+    sbY <- lapply(seq_along(y_blocks), function(i) {
+      y_blocks[[i]] %*% object$wbY[[i]]
+    })
+    predY <- lapply(seq_along(y_blocks), function(i) {
+      if (identical(reconstruction, "fitted")) {
+        sbY[[i]] %*% object$prediction_reconstruction$Y[[i]]
+      } else {
+        cbind(sbY[[i]]) %*% project(y_blocks[[i]], sbY[[i]])
+      }
+    })
+    names(sbY) <- names(y_blocks)
+    names(predY) <- names(y_blocks)
+  }
+
+  if (identical(output_scale, "original")) {
+    predX <- .invert_msma_preprocessor(
+      preprocess = object$preprocess,
+      data = predX,
+      side = "X"
+    )
+    if (!is.null(predY)) {
+      predY <- .invert_msma_preprocessor(
+        preprocess = object$preprocess,
+        data = predY,
+        side = "Y"
+      )
+    }
+  }
+
+  list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
+}
+
+#' Project and Reconstruct New Data with an msma Fit
 #'
-#' predict method for class "msma". 
+#' Projects supplied X-side and, for PLS, Y-side data into the fitted
+#' component spaces and returns component scores and low-rank
+#' reconstructions.
 #'
-#' This function produces a prediction from new data based on \code{\link{msma}} fit. It is mainly used in cross-validation
+#' This method does not predict Y from X. When \code{newY} is supplied,
+#' X and Y are projected and reconstructed independently in their
+#' corresponding fitted component spaces.
+#'
+#' Historical prediction behavior remains the default. Additional
+#' Version 5 prediction controls can be supplied through \code{...}.
+#'
+#' @param object an object of class \code{\"msma\"}.
+#' @param newX a numeric matrix or list of numeric matrices for the X side.
+#' @param newY an optional numeric matrix or list of numeric matrices for
+#'   the Y side. Fitted PLS prediction requires \code{newY}. The supplied
+#'   Y data are projected and reconstructed independently and are not
+#'   predicted from \code{newX}.
+#' @param ... additional prediction controls:
+#'   \describe{
+#'     \item{\code{preprocessing}}{Either \code{\"legacy\"} or
+#'       \code{\"fitted\"}. The default preserves historical numerical
+#'       behavior; fitted preprocessing reuses training center and scale.}
+#'     \item{\code{reconstruction}}{Either \code{\"batch\"} or
+#'       \code{\"fitted\"}. Fitted reconstruction uses training-derived
+#'       coefficients and is independent of prediction-batch composition.}
+#'     \item{\code{output_scale}}{Either \code{\"analysis\"} or
+#'       \code{\"original\"}. Original output applies inverse fitted
+#'       preprocessing to reconstructed X and Y blocks.}
+#'   }
+#'
+#' @return a list with four elements:
+#'   \describe{
+#'     \item{\code{X}}{X-side low-rank reconstructions.}
+#'     \item{\code{sbX}}{X-side component scores on the analysis scale.}
+#'     \item{\code{Y}}{Y-side low-rank reconstructions, or \code{NULL} for PCA.}
+#'     \item{\code{sbY}}{Y-side component scores, or \code{NULL} for PCA.}
+#'   }
+#'
+#' @details
+#' Fitted reconstruction and original-scale output require
+#' \code{preprocessing = \"fitted\"}. Scores remain on the analysis scale.
+#'
+#' @examples
+#' set.seed(1)
+#' X <- matrix(rnorm(180), nrow = 30, ncol = 6)
+#' colnames(X) <- paste0("x", seq_len(ncol(X)))
+#' fit <- msma(X = X, comp = 2, scaling = TRUE, intseed = 3)
+#' prediction <- predict(
+#'   fit,
+#'   newX = X[1:5, , drop = FALSE],
+#'   preprocessing = "fitted",
+#'   reconstruction = "fitted",
+#'   output_scale = "original"
+#' )
+#' names(prediction)
 #'
 #' @name predict.msma
 #' @aliases predict.msma
 #' @rdname predict.msma
-#' @method predict msma
 #' @docType methods
+#' @method predict msma
 #' @export
-#'
-#' @param object an object of class "\code{msma}", usually, a result of a call to \code{\link{msma}}
-#' @param newX a matrix in which to look for variables with which to predict X.
-#' @param newY a matrix in which to look for variables with which to predict Y.
-#' @param ... further arguments passed to or from other methods.
-#'
-#' @return \item{X}{predicted X}
-#' @return \item{sbX}{block score for X}
-#' @return \item{Y}{predicted Y}
-#' @return \item{sbY}{block score for Y}
-#'
-#' @examples
-#' ##### data #####
-#' tmpdata = simdata(n = 50, rho = 0.8, Yps = c(10, 12, 15), Xps = 20, seed=1)
-#' X = tmpdata$X; Y = tmpdata$Y 
-#' 
-#' ##### Two Component #####
-#' fit2 = msma(X, Y, comp=2, lambdaX=2, lambdaY=1:3)
-#' summary(fit2)
-#' 
-#' ##### Predict #####
-#' test = predict(fit2, newX=X, newY=Y)
-#' 
-predict.msma = function(object, newX, newY=NULL,...){
-##### Requirement #####
-if(missing(newX)) stop("newX should be specified")
-#if(missing(newY)) stop("newY should be specified")
-
-if(is.null(newY) | (object$dmode == "PCA")) newY = newX
-
-if(!inherits(newX, "list")) newX = list(newX)
-if(!inherits(newY, "list")) newY = list(newY)
-
-if(!inherits(newX, "list")) stop("newX should be a list")
-if(!inherits(newY, "list")) stop("newY should be a list")
-
-Ynb = length(newY)
-Xnb = length(newX)
-
-########## Start ##########
-#newX = lapply(1:length(newX), function(x) scale(newX[[x]], center=object$Xscale[[x]]$`scaled:center`, scale=object$Xscale[[x]]$`scaled:scale`))
-newX = lapply(1:length(newX), function(x) scale(newX[[x]], center=object$Xscale[[x]]$`scaled:center`))
-newX = lapply(newX, function(x) apply(x, 2, function(x2){ x2[is.na(x2)] = 0; x2}))
-sbX = lapply(1:Xnb, function(x) newX[[x]] %*% object$wbX[[x]] )
-predX = lapply(1:Xnb, function(x) cbind(sbX[[x]]) %*% project(newX[[x]], sbX[[x]]))
-
-if(!(is.null(newY) | object$dmode == "PCA")) {
-#newY = lapply(1:length(newY), function(x) scale(newY[[x]], center=object$Yscale[[x]]$`scaled:center`, scale=object$Yscale[[x]]$`scaled:scale`))
-newY = lapply(1:length(newY), function(x) scale(newY[[x]], center=object$Yscale[[x]]$`scaled:center`))
-newY = lapply(newY, function(y) apply(y, 2, function(y2){ y2[is.na(y2)] = 0; y2}))
-sbY = lapply(1:Ynb, function(x) newY[[x]] %*% object$wbY[[x]] )
-predY = lapply(1:Ynb, function(x) cbind(sbY[[x]]) %*% project(newY[[x]], sbY[[x]]))
-}else
-{
-predY = sbY = NULL
-}
-
-##### Output #####
-list(X = predX, sbX = sbX, Y = predY, sbY = sbY)
+predict.msma <- function(object, newX, newY = NULL, ...) {
+  dots <- list(...)
+  preprocessing <- if (is.null(dots$preprocessing)) {
+    "legacy"
+  } else {
+    match.arg(dots$preprocessing, c("legacy", "fitted"))
+  }
+  reconstruction <- if (is.null(dots$reconstruction)) {
+    "batch"
+  } else {
+    match.arg(dots$reconstruction, c("batch", "fitted"))
+  }
+  output_scale <- if (is.null(dots$output_scale)) {
+    "analysis"
+  } else {
+    match.arg(dots$output_scale, c("analysis", "original"))
+  }
+  if (identical(preprocessing, "legacy")) {
+    if (!identical(reconstruction, "batch")) {
+      stop(
+        "Fitted reconstruction requires `preprocessing = \"fitted\"`.",
+        call. = FALSE
+      )
+    }
+    if (!identical(output_scale, "analysis")) {
+      stop(
+        "Original-scale output requires `preprocessing = \"fitted\"`.",
+        call. = FALSE
+      )
+    }
+    return(.predict_msma_legacy(object = object, newX = newX, newY = newY))
+  }
+  .predict_msma_fitted(
+    object = object,
+    newX = newX,
+    newY = newY,
+    reconstruction = reconstruction,
+    output_scale = output_scale
+  )
 }
 
 #' Cross-Validation
@@ -1739,9 +2629,17 @@ if(any(is.null(lambdaY))){ lambdaY = rep(0, Ynb)}
 if(any(is.null(lambdaXsup))){ lambdaXsup = 0}
 if(any(is.null(lambdaYsup))){ lambdaYsup = 0}
 
-if(is.null(Z)) Z = matrix(0, nrow(X[[1]]), 1)
-if(is.null(con4spv)){ con4spv = rep(1, ncol(Z))}
-con4spv=con4spv/sum(abs(con4spv))
+if (is.null(Z)) {
+  Z <- matrix(
+    0,
+    nrow = nrow(X[[1]]),
+    ncol = 1
+  )
+}
+
+if (is.null(con4spv)) {
+  con4spv <- 1
+}
 
 muXY = 1 - muX - muY
 if(muXY < 0) stop("muX or muY should be smaller values to be 0 <= 1 - muX - muY <= 1.")
@@ -2472,14 +3370,32 @@ s4pca_reconstruct <- function(object, newdata = NULL, scaled = FALSE) {
     if (!is.numeric(X) || ncol(X) != nrow(object$W) || any(!is.finite(X))) {
       stop("newdata must be a finite numeric matrix with the fitted variables", call. = FALSE)
     }
-    if (isTRUE(object$scaling)) {
-      X <- sweep(sweep(X, 2, object$Xcenter, "-"), 2, object$Xscale, "/")
+    if (!is.null(object$preprocess) &&
+        inherits(object$preprocess, "msma_preprocess")) {
+      X <- .apply_msma_preprocessor(
+        preprocess = object$preprocess,
+        newdata = X,
+        side = "X"
+      )
+    } else if (isTRUE(object$scaling)) {
+      X <- sweep(sweep(X, 2, object$Xcenter, "-"),
+        2, object$Xscale, "/")
     }
     Xhat <- (X %*% object$W) %*% B
   }
   colnames(Xhat) <- rownames(object$W)
-  if (!scaled && isTRUE(object$scaling)) {
-    Xhat <- sweep(sweep(Xhat, 2, object$Xscale, "*"), 2, object$Xcenter, "+")
+  if (!scaled) {
+    if (!is.null(object$preprocess) &&
+        inherits(object$preprocess, "msma_preprocess")) {
+      Xhat <- .invert_msma_preprocessor(
+        preprocess = object$preprocess,
+        data = Xhat,
+        side = "X"
+      )
+    } else if (isTRUE(object$scaling)) {
+      Xhat <- sweep(sweep(Xhat, 2, object$Xscale, "*"),
+        2, object$Xcenter, "+")
+    }
   }
   Xhat
 }

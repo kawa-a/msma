@@ -1,0 +1,26 @@
+msma Version 5.0 reverse-Suggests compatibility audit
+
+Date: 2026-11-07 11:17:40 +09:00
+msma version: 5.0
+mand version: 3.0
+msma commit: e666fd426c697144bf6b0a62c8b00eec17ab3d30
+mand source directory: D:\ADNI2\R4BrainImage\program\package\Ver3
+mand source archive: D:\ADNI2\Multimodal\program\package\Ver5\development\v5-mand-compatibility\check\mand_3.0.tar.gz
+
+Static API audit:
+* mand uses public msma functions and documented fitted-object components.
+* No msma::: calls were identified.
+* No getFromNamespace calls targeting msma were identified.
+* mand uses wbX, ssX, nzwbX, and prediction sbX outputs.
+* Supervised PCA and multiblock PCA/PLS calls use positive muX or muY.
+
+Dynamic validation:
+* mand source package build exit code: 0
+* mand R CMD check exit code: 0
+* mand check result: Status: OK
+* msma and mand namespace load exit code: 0
+* mand Vignettes were evaluated through R CMD check.
+* Audit library: D:\ADNI2\Multimodal\program\package\Ver5\development\v5-mand-compatibility\library
+* Saved check log: D:\ADNI2\Multimodal\program\package\Ver5\development\v5-mand-compatibility\mand-msma-5.0-00check.log
+
+Compatibility status: PASSED

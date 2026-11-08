@@ -1,0 +1,17 @@
+msma Version 5 dispatcher integration
+Date: 2026-10-31 10:36:34 +0900
+Branch: feature/v5-dispatcher
+Parent commit: 3ab062769f5fb2898554297e6d5be8c2ed02d1df
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 583
+
+Dispatcher paths:
+legacy -> .msma_default_legacy()
+extended -> .msma_default_extended()
+soft -> .s4pca_fit(hard_exclusion = FALSE)
+exclusive -> .s4pca_fit(hard_exclusion = TRUE)
+
+Numerical estimation bodies were not modified.

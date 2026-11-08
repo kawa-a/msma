@@ -1,0 +1,22 @@
+msma Version 5 preprocessing metadata contract
+Date: 2026-10-31 11:35:15 +0900
+Branch: feature/v5-preprocessing-audit
+Parent commit: c48ff214fe30d8d4febf0ace5280fa8b2e572305
+failed: 0
+error: 0
+skipped: 0
+warning: 0
+passed: 600
+
+Implementation:
+.new_msma_preprocess()
+
+Supported engine labels:
+legacy
+extended
+soft
+exclusive
+
+No numerical preprocessing transformation was changed.
+No public result fields were added or removed.
+The msma_preprocess class is internal only.

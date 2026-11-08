@@ -1,0 +1,2 @@
+"file","windows","macos","ubuntu","r_cmd_check","cache"
+".github/workflows/R-CMD-check.yaml",TRUE,TRUE,TRUE,TRUE,FALSE
