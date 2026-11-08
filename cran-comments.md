@@ -51,7 +51,9 @@ GitHub Actions completed successfully on:
 * Ubuntu, R-release
 * Ubuntu, R-devel
 
-GitHub Actions run: 42324927210
+GitHub Actions run for Version 5.1: 42435066837
+The successful macOS job used platform aarch64-apple-darwin23, directly
+covering the architecture on which the Version 5.0 test failures occurred.
 
 ## R CMD check results
 
@@ -128,3 +130,4 @@ Compatibility was checked against the msma Version 5.0 release candidate
 in an isolated library. mand 3.0 built successfully, completed R CMD check
 with Status: OK, rebuilt its Vignettes, and loaded successfully with
 msma 5.0.
+
