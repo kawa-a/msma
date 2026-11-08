@@ -1,7 +1,7 @@
-# msma 4.0.0 Release Candidate
+# msma
 
 [![R-CMD-check](https://github.com/kawa-a/msma/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/kawa-a/msma/actions/workflows/R-CMD-check.yaml)
-[![Release](https://img.shields.io/badge/release-v4.0.0--rc1-orange.svg)](https://github.com/kawa-a/msma/releases/tag/v4.0.0-rc1)
+[![Release](https://img.shields.io/badge/release-v5.1-blue.svg)](https://github.com/kawa-a/msma/releases/tag/v5.1)
 [![CRAN version](https://www.r-pkg.org/badges/version/msma)](https://CRAN.R-project.org/package=msma)
 [![R version](https://img.shields.io/badge/R-%3E%3D%203.5-276DC3.svg?logo=r&logoColor=white)](https://www.r-project.org/)
 [![License](https://img.shields.io/badge/license-GPL--2%2B-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
@@ -11,16 +11,29 @@
 `msma` is an R package for sparse multivariable analysis, including PCA, PLS,
 supervised analysis, and multiblock methods.
 
-This repository provides **msma 4.0.0 Release Candidate 1 (`v4.0.0-rc1`)**
-for pre-release testing. Version 4.0 adds supervised sparse soft-structured PCA
-while preserving the default computational paths of msma 3.2.
+This repository provides **msma 5.1**.
 
-## Release candidate notice
+Version 4.0 introduced supervised sparse soft-structured PCA while preserving
+the default computational paths of msma 3.2. Version 5.0 extended the prediction
+workflow and strengthened the supervision contract. Version 5.1 is a corrective
+release that improves the portability of prediction regression tests across
+BLAS/LAPACK platforms, including macOS on Apple Silicon.
 
-This version is intended for evaluation by collaborators and advanced users.
-It has not yet been submitted to CRAN. For production analyses that do not
-require the new structured PCA functionality, the current CRAN release should
-remain the default choice.
+The package implementation, default behavior, fitted-object structure, and
+public API are unchanged between versions 5.0 and 5.1.
+
+## Current release
+
+Version 5.1 corrects platform-dependent prediction regression tests identified
+by CRAN on macOS arm64. Numerically equivalent results are compared using an
+explicit tolerance of `1e-12`. The revised package passed 1,028 regression
+expectations and completed `R CMD check` successfully on
+`aarch64-apple-darwin23`.
+
+The package implementation, default behavior, fitted-object structure, and
+public API are unchanged from version 5.0.
+
+See [NEWS](NEWS) for release details.
 
 ## Main additions in Version 4.0
 
@@ -37,9 +50,9 @@ remain the default choice.
 The ordinary `msma()` interface remains unchanged unless structured PCA is
 explicitly requested.
 
-## Version 5 development: prediction workflow
+## Version 5 prediction workflow
 
-The Version 5 development branch extends `predict.msma()` while preserving
+Version 5 extends `predict.msma()` while preserving
 the historical prediction behavior as the default.
 
 `predict.msma()` projects and reconstructs supplied X-side and Y-side
@@ -73,18 +86,18 @@ scale. `output_scale` controls reconstructed `X` and `Y` values.
 
 ```r
 install.packages("remotes")
-remotes::install_github("kawa-a/msma", ref = "v4.0.0-rc1")
+remotes::install_github("kawa-a/msma", ref = "v5.1")
 ```
 
 ### Separate test library
 
 ```r
-test_library <- path.expand("~/R/msma-4.0-rc1")
+test_library <- path.expand("~/R/msma-5.1")
 dir.create(test_library, recursive = TRUE, showWarnings = FALSE)
 
 remotes::install_github(
   "kawa-a/msma",
-  ref = "v4.0.0-rc1",
+  ref = "v5.1",
   lib = test_library
 )
 
@@ -303,17 +316,18 @@ https://github.com/kawa-a/msma/issues/new?template=bug_report.yml
 ## Development status
 
 ```text
-v4.0.0-rc1
-    -> collaborator testing
-    -> v4.0.0-rc2, if corrections are needed
-    -> final compatibility and reverse-dependency audit
-    -> CRAN submission of msma 4.0
+v5.0
+    -> CRAN release
+    -> macOS arm64 portability correction
+    -> v5.1 corrective release
+    -> Version 6.0 development for missing-data imputation
 ```
 
 ## Citation
 
-Until Version 4.0 is formally released, cite the current CRAN version and
-record the GitHub release tag or commit used in the analysis.
+Please cite the CRAN version of msma used in the analysis. For reproducibility,
+also record the package version and, when installing from GitHub, the release
+tag or commit.
 
 ```r
 citation("msma")
@@ -326,7 +340,3 @@ GPL version 2 or later.
 ## Maintainer
 
 Atsushi Kawaguchi
-
-
-
-
