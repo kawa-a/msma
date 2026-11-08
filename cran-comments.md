@@ -130,4 +130,3 @@ Compatibility was checked against the msma Version 5.0 release candidate
 in an isolated library. mand 3.0 built successfully, completed R CMD check
 with Status: OK, rebuilt its Vignettes, and loaded successfully with
 msma 5.0.
-
