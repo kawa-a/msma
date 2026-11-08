@@ -1,0 +1,14 @@
+"Flavor","Version","Tinstall","Tcheck","Ttotal","Status","Flags"
+"r-devel-linux-x86_64-debian-clang",4,5.44,89.87,95.31,"OK",NA
+"r-devel-linux-x86_64-debian-gcc",5,4.65,67.48,72.13,"OK",NA
+"r-devel-linux-x86_64-fedora-clang",5,NA,NA,72.89,"OK",NA
+"r-devel-linux-x86_64-fedora-gcc",5,4,73.35,77.35,"OK",NA
+"r-devel-windows-x86_64",4,6,101,107,"OK",NA
+"r-patched-linux-x86_64",4,NA,NA,NA,"OK",NA
+"r-release-linux-x86_64",4,5.5,83.6,89.1,"OK",NA
+"r-release-macos-arm64",5,2,40,42,"ERROR",NA
+"r-release-macos-x86_64",5,4,268,272,"OK",NA
+"r-release-windows-x86_64",4,7,183,190,"OK",NA
+"r-oldrel-macos-arm64",5,NA,NA,NA,"ERROR",NA
+"r-oldrel-macos-x86_64",5,5,233,238,"OK",NA
+"r-oldrel-windows-x86_64",4,7,125,132,"OK",NA

@@ -1,14 +1,14 @@
 msma Version 5 M4-A package build/check baseline audit
-Date: 2026-11-07 09:33:30 +0900
-Branch: feature/v5-supervision-contract
-Commit: 56ddeb0c8d447442eb1c0bfee97e9f75e8dc34aa
+Date: 2026-11-08 10:30:29 +0900
+Branch: fix/cran-macos-arm64-v5.1
+Commit: 06050b61e66460415d2ad4a3fce0791a83f14862
 R: R version 4.5.2 (2025-10-31 ucrt)
 Platform: x86_64-w64-mingw32
 Pandoc: 3.10.1
 
 Source parse: TRUE
 DESCRIPTION: package=TRUE, version_present=TRUE, encoding_utf8=TRUE, vignette_builder=TRUE
-Tests: failed=0, error=0, skipped=0, warning=0, passed=1026
+Tests: failed=0, error=0, skipped=0, warning=0, passed=1028
 
 Roxygen error: NONE
 Roxygen warnings: 0
@@ -19,9 +19,9 @@ predict.msma Rd: generated=TRUE, title=TRUE, preprocessing=TRUE, reconstruction=
 
 Vignettes: msma-ecmsma.Rmd=TRUE, msma-introduction.Rmd=TRUE, msma-model-selection.Rmd=TRUE, msma-multiblock.Rmd=TRUE, msma-soft-structured.Rmd=TRUE
 R CMD build status: 0
-Built tarball: C:\Users\kawaa\AppData\Local\Temp\RtmpEDpqrh/msma-m4a-build-check/msma_5.0.tar.gz
+Built tarball: C:\Users\kawaa\AppData\Local\Temp\RtmpsZQlGa/msma-m4a-build-check/msma_5.1.tar.gz
 R CMD check status: 0
-R CMD check summary: errors=0, warnings=0, notes=0
+R CMD check summary: errors=0, warnings=0, notes=1
 
 Source-package content: has_description=TRUE, has_namespace=TRUE, has_predict_rd=TRUE, has_tests=TRUE, has_vignettes=TRUE, excludes_development=TRUE, excludes_git=TRUE
 

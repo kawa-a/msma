@@ -1,3 +1,15 @@
+Changes in version 5.1
+
+* Fixed prediction regression tests on macOS arm64. Numerically
+  equivalent floating-point results are now compared using an explicit
+  absolute tolerance instead of requiring bitwise identity.
+
+* Separated the single-row legacy projection-score contract from the
+  platform-dependent reconstructed-X reference values.
+
+* No prediction algorithm, default behavior, fitted-object structure,
+  or public API was changed in this release.
+
 Changes in version 5.0
 
 * When all corresponding supervision weights are zero, supervision

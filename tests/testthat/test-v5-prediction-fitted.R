@@ -13,10 +13,15 @@ testthat::test_that("default prediction remains the legacy M3-B baseline", {
   colnames(Xnew) <- colnames(X)
   fit <- msma(X = X, comp = 2, scaling = TRUE, intseed = 3)
 
-  testthat::expect_identical(predict(fit, newX = Xnew), expected)
-  testthat::expect_identical(
-    predict(fit, newX = Xnew, preprocessing = "legacy"),
-    expected
+  testthat::expect_equal(predict(fit, newX = Xnew), expected, tolerance = 1e-12)
+  testthat::expect_equal(
+    predict(
+      fit,
+      newX = Xnew,
+      preprocessing = "legacy"
+    ),
+    expected,
+    tolerance = 1e-12
   )
 })
 

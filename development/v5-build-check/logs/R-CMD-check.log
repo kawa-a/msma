@@ -1,8 +1,8 @@
-Command: C:/R/R040502/bin/x64/R.exe CMD check C:\Users\kawaa\AppData\Local\Temp\RtmpEDpqrh/msma-m4a-build-check/msma_5.0.tar.gz --as-cran --no-manual
-Working directory: C:/Users/kawaa/AppData/Local/Temp/RtmpEDpqrh/msma-m4a-build-check/check
+Command: C:/R/R040502/bin/x64/R.exe CMD check C:\Users\kawaa\AppData\Local\Temp\RtmpsZQlGa/msma-m4a-build-check/msma_5.1.tar.gz --as-cran --no-manual
+Working directory: C:/Users/kawaa/AppData/Local/Temp/RtmpsZQlGa/msma-m4a-build-check/check
 Exit status: 0
 
-* using log directory 'C:/Users/kawaa/AppData/Local/Temp/RtmpEDpqrh/msma-m4a-build-check/check/msma.Rcheck'
+* using log directory 'C:/Users/kawaa/AppData/Local/Temp/RtmpsZQlGa/msma-m4a-build-check/check/msma.Rcheck'
 * using R version 4.5.2 (2025-10-31 ucrt)
 * using platform: x86_64-w64-mingw32
 * R was compiled by
@@ -13,9 +13,12 @@ Exit status: 0
 * using options '--no-manual --as-cran'
 * checking for file 'msma/DESCRIPTION' ... OK
 * checking extension type ... Package
-* this is package 'msma' version '5.0'
+* this is package 'msma' version '5.1'
 * package encoding: UTF-8
-* checking CRAN incoming feasibility ... [29s] OK
+* checking CRAN incoming feasibility ... [31s] NOTE
+Maintainer: 'Atsushi Kawaguchi <kawa_a24@yahoo.co.jp>'
+
+Days since last update: 1
 * checking package namespace information ... OK
 * checking package dependencies ... OK
 * checking if this is a source package ... OK
@@ -60,8 +63,8 @@ Exit status: 0
 * checking examples ... OK
 * checking for unstated dependencies in 'tests' ... OK
 * checking tests ...
-  Running 'testthat.R'
- OK
+  Running 'testthat.R' [10s]
+ [10s] OK
 * checking for unstated dependencies in vignettes ... OK
 * checking package vignettes ... OK
 * checking re-building of vignette outputs ... OK
@@ -69,5 +72,8 @@ Exit status: 0
 * checking for detritus in the temp directory ... OK
 * DONE
 
-Status: OK
+Status: 1 NOTE
+See
+  'C:/Users/kawaa/AppData/Local/Temp/RtmpsZQlGa/msma-m4a-build-check/check/msma.Rcheck/00check.log'
+for details.
 

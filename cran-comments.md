@@ -1,5 +1,31 @@
 # CRAN submission comments
 
+## Resubmission
+
+This is a corrective update from msma 5.0 to version 5.1.
+
+Version 5.0 produced test errors on the CRAN macOS arm64 release and
+old-release platforms. The failures were caused by prediction regression
+tests requiring bitwise identity with numeric reference results generated
+on another BLAS/LAPACK platform.
+
+For the ordinary prediction cases, the observed differences were
+approximately 1e-16 to 1e-15. These tests now use an explicit tolerance
+of 1e-12.
+
+The single-row legacy prediction test now verifies projection scores,
+output dimensions, and finite outputs separately rather than requiring
+platform-specific reconstructed-X reference values.
+
+The prediction implementation, defaults, fitted-object structure, and
+public API are unchanged.
+
+
+The short interval since version 5.0 is intentional.
+Version 5.1 is being submitted promptly because CRAN checks for version
+5.0 identified test errors on the macOS arm64 release and old-release
+platforms. This corrective release addresses those failures without
+changing the package implementation or public API.
 ## Submission
 
 This is an update of msma from CRAN version 4.0 to version 5.0.
@@ -29,17 +55,24 @@ GitHub Actions run: 42324927210
 
 ## R CMD check results
 
-Local R CMD check --as-cran on the Version 5.0 release tarball:
+Local R CMD check --as-cran on the Version 5.1 release tarball:
 
 * 0 errors
 * 0 warnings
-* 0 notes
+* 1 note
 
-A supplementary local R CMD check --no-manual completed with:
+The NOTE was:
 
 ```
-Status: OK
+checking CRAN incoming feasibility ... NOTE
+Days since last update: 1
 ```
+
+The short interval is intentional. Version 5.1 is a corrective update
+for test errors identified by CRAN on the macOS arm64 release and
+old-release platforms after publication of version 5.0.
+
+The package implementation and public API are unchanged.
 
 ## Test suite
 
