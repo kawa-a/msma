@@ -1,7 +1,7 @@
 msma Version 5 M4-A package build/check baseline audit
-Date: 2026-11-08 10:30:29 +0900
+Date: 2026-11-08 11:04:10 +0900
 Branch: fix/cran-macos-arm64-v5.1
-Commit: 06050b61e66460415d2ad4a3fce0791a83f14862
+Commit: e3ad433b66b1067009a18f66ad60b1e9012dd0f7
 R: R version 4.5.2 (2025-10-31 ucrt)
 Platform: x86_64-w64-mingw32
 Pandoc: 3.10.1
@@ -19,7 +19,7 @@ predict.msma Rd: generated=TRUE, title=TRUE, preprocessing=TRUE, reconstruction=
 
 Vignettes: msma-ecmsma.Rmd=TRUE, msma-introduction.Rmd=TRUE, msma-model-selection.Rmd=TRUE, msma-multiblock.Rmd=TRUE, msma-soft-structured.Rmd=TRUE
 R CMD build status: 0
-Built tarball: C:\Users\kawaa\AppData\Local\Temp\RtmpsZQlGa/msma-m4a-build-check/msma_5.1.tar.gz
+Built tarball: C:\Users\kawaa\AppData\Local\Temp\RtmpYZ6toc/msma-m4a-build-check/msma_5.1.tar.gz
 R CMD check status: 0
 R CMD check summary: errors=0, warnings=0, notes=1
 

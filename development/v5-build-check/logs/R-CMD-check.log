@@ -1,8 +1,8 @@
-Command: C:/R/R040502/bin/x64/R.exe CMD check C:\Users\kawaa\AppData\Local\Temp\RtmpsZQlGa/msma-m4a-build-check/msma_5.1.tar.gz --as-cran --no-manual
-Working directory: C:/Users/kawaa/AppData/Local/Temp/RtmpsZQlGa/msma-m4a-build-check/check
+Command: C:/R/R040502/bin/x64/R.exe CMD check C:\Users\kawaa\AppData\Local\Temp\RtmpYZ6toc/msma-m4a-build-check/msma_5.1.tar.gz --as-cran --no-manual
+Working directory: C:/Users/kawaa/AppData/Local/Temp/RtmpYZ6toc/msma-m4a-build-check/check
 Exit status: 0
 
-* using log directory 'C:/Users/kawaa/AppData/Local/Temp/RtmpsZQlGa/msma-m4a-build-check/check/msma.Rcheck'
+* using log directory 'C:/Users/kawaa/AppData/Local/Temp/RtmpYZ6toc/msma-m4a-build-check/check/msma.Rcheck'
 * using R version 4.5.2 (2025-10-31 ucrt)
 * using platform: x86_64-w64-mingw32
 * R was compiled by
@@ -15,7 +15,7 @@ Exit status: 0
 * checking extension type ... Package
 * this is package 'msma' version '5.1'
 * package encoding: UTF-8
-* checking CRAN incoming feasibility ... [31s] NOTE
+* checking CRAN incoming feasibility ... [28s] NOTE
 Maintainer: 'Atsushi Kawaguchi <kawa_a24@yahoo.co.jp>'
 
 Days since last update: 1
@@ -63,8 +63,8 @@ Days since last update: 1
 * checking examples ... OK
 * checking for unstated dependencies in 'tests' ... OK
 * checking tests ...
-  Running 'testthat.R' [10s]
- [10s] OK
+  Running 'testthat.R'
+ OK
 * checking for unstated dependencies in vignettes ... OK
 * checking package vignettes ... OK
 * checking re-building of vignette outputs ... OK
@@ -74,6 +74,6 @@ Days since last update: 1
 
 Status: 1 NOTE
 See
-  'C:/Users/kawaa/AppData/Local/Temp/RtmpsZQlGa/msma-m4a-build-check/check/msma.Rcheck/00check.log'
+  'C:/Users/kawaa/AppData/Local/Temp/RtmpYZ6toc/msma-m4a-build-check/check/msma.Rcheck/00check.log'
 for details.
 
